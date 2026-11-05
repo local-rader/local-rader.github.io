@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>동네레이더</title>
+<meta name="description" content="청주시 청원구에서 새로 허가된 건축과 공사 진행 상황을 공공데이터로 모아 보여줍니다.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F4F6F4;
+  --sheet: #FFFFFF;
+  --ink: #17212C;
+  --ink-2: #56616C;
+  --ink-3: #8A949D;
+  --rule: #D6DCD8;
+  --sign: #1E3654;
+  --sign-ink: #FFFFFF;
+  --work: #E3A21A;
+  --done: #2F7D5B;
+  --focus: #2F6FD6;
+  /* 용도 색: 도시계획 용도지역 지도의 관례(주거=노랑, 상업=분홍, 공업=보라)를 따른다 */
+  --c-house: #E2B400;
+  --c-shop: #D45A78;
+  --c-edu: #3A78CF;
+  --c-care: #2A9886;
+  --c-ind: #8660B4;
+  --c-etc: #7C8893;
+  --c-none: #C3C9CE;
+  --radius-sign: 4px;
+  --radius-ui: 999px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #12181F; --sheet: #1A222B; --ink: #E6EAEE; --ink-2: #A7B1BA; --ink-3: #7C8791;
+    --rule: #2D3742; --sign: #2C4A70; --sign-ink: #F2F5F8; --work: #F0B53A; --done: #4FB083;
+    --focus: #7FA9F0; --c-none: #4A545E; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #12181F; --sheet: #1A222B; --ink: #E6EAEE; --ink-2: #A7B1BA; --ink-3: #7C8791;
+  --rule: #2D3742; --sign: #2C4A70; --sign-ink: #F2F5F8; --work: #F0B53A; --done: #4FB083;
+  --focus: #7FA9F0; --c-none: #4A545E; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: "IBM Plex Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-size: 16px; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+a { color: inherit; text-underline-offset: 3px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.wrap { max-width: 760px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { text-wrap: balance; }
+
+/* 머리 */
+.top { padding: 28px 0 8px; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand svg { flex: none; }
+.brand h1 { margin: 0; font-size: 26px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; }
+.lede { margin: 10px 0 0; color: var(--ink-2); font-size: 16px; max-width: 34em; }
+.stamp { margin: 6px 0 0; color: var(--ink-3); font-size: 14px; }
+.notice {
+  margin: 16px 0 0; padding: 12px 14px; border-left: 3px solid var(--work);
+  background: var(--sheet); color: var(--ink-2); font-size: 14px;
+}
+
+/* 허가 표지판: 이 사이트의 한 가지 큰 장치 */
+.hero { margin: 28px 0 8px; }
+.hero h2 { margin: 0 0 12px; font-size: 18px; font-weight: 700; }
+.sign {
+  background: var(--sheet); border: 2px solid var(--sign); border-radius: var(--radius-sign);
+  box-shadow: 0 1px 0 var(--rule);
+}
+.sign-head {
+  background: var(--sign); color: var(--sign-ink); padding: 14px 18px 12px;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.sign-head .kind { font-size: 15px; font-weight: 500; opacity: .9; }
+.sign-head .date { font-size: 15px; }
+.sign-addr { padding: 16px 18px 4px; }
+.sign-addr strong { display: block; font-size: 28px; line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; }
+.sign-addr span { display: block; margin-top: 4px; color: var(--ink-2); font-size: 15px; }
+.sign dl {
+  display: grid; grid-template-columns: max-content 1fr; gap: 0; margin: 12px 18px 0;
+  border-top: 1px solid var(--rule);
+}
+.sign dt, .sign dd { margin: 0; padding: 9px 0; border-bottom: 1px solid var(--rule); font-size: 15px; }
+.sign dt { color: var(--ink-2); padding-right: 18px; }
+.sign-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 18px 16px; flex-wrap: wrap; }
+.pager { display: flex; gap: 8px; }
+.pager button {
+  border: 1px solid var(--rule); background: var(--paper); border-radius: var(--radius-ui);
+  padding: 6px 14px; font-size: 14px; cursor: pointer;
+}
+.pager button:disabled { opacity: .4; cursor: default; }
+.pager .count { color: var(--ink-3); font-size: 14px; align-self: center; }
+
+/* 단계 표시: 허가 → 착공 → 사용승인 */
+.track { display: flex; gap: 4px; align-items: center; margin: 14px 18px 0; }
+.track .step { flex: 1; }
+.track .bar { height: 6px; border-radius: 3px; background: var(--rule); }
+.track .step.on .bar { background: var(--ink-2); }
+.track .step.work .bar { background: var(--work); }
+.track .step.done .bar { background: var(--done); }
+.track .lab { margin-top: 6px; font-size: 13px; color: var(--ink-2); }
+.track .lab b { display: block; font-weight: 500; color: var(--ink); }
+
+/* 요약 문장 */
+.summary { margin: 28px 0 0; font-size: 16px; color: var(--ink-2); }
+.summary b { color: var(--ink); font-weight: 700; }
+
+/* 거르기 */
+.filters { margin: 28px 0 0; padding: 16px 0 0; border-top: 1px solid var(--rule); }
+.filters h2 { margin: 0 0 12px; font-size: 18px; }
+.frow { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.frow .label { width: 100%; font-size: 13px; color: var(--ink-3); margin: 0 0 -2px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule);
+  background: var(--sheet); border-radius: var(--radius-ui); padding: 6px 12px;
+  font-size: 14px; cursor: pointer; min-height: 34px;
+}
+.chip[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.chip .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.search {
+  width: 100%; border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px;
+  padding: 10px 12px; font: inherit; font-size: 15px; color: var(--ink);
+}
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); margin: 4px 0 0; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--ink); }
+
+/* 목록 */
+.list { margin: 20px 0 0; }
+.month { margin: 22px 0 6px; display: flex; justify-content: space-between; align-items: baseline; }
+.month h3 { margin: 0; font-size: 16px; font-weight: 700; }
+.month span { color: var(--ink-3); font-size: 14px; }
+.item { border-top: 1px solid var(--rule); }
+.item:last-child { border-bottom: 1px solid var(--rule); }
+.item > button {
+  width: 100%; text-align: left; background: none; border: 0; padding: 12px 0 12px 14px;
+  display: grid; grid-template-columns: 48px 1fr auto; gap: 4px 12px; cursor: pointer; position: relative;
+}
+.item > button::before {
+  content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; border-radius: 2px;
+  background: var(--cat, var(--c-none));
+}
+.item .d { color: var(--ink-2); font-size: 14px; padding-top: 1px; }
+.item .t { font-weight: 500; }
+.item .s { grid-column: 2 / 4; color: var(--ink-2); font-size: 14px; }
+.item .s span + span { margin-left: 10px; }
+.item .st { font-size: 13px; color: var(--ink-2); white-space: nowrap; padding-top: 2px; }
+.item .st.work { color: #8A5D00; }
+.item .st.done { color: var(--done); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .item .st.work { color: var(--work); } }
+:root[data-theme="dark"] .item .st.work { color: var(--work); }
+.detail { padding: 0 0 16px 14px; }
+.detail dl { display: grid; grid-template-columns: max-content 1fr; margin: 0; font-size: 14px; }
+.detail dt, .detail dd { margin: 0; padding: 6px 0; border-bottom: 1px dashed var(--rule); }
+.detail dt { color: var(--ink-2); padding-right: 16px; }
+.detail .track { margin: 12px 0 0; }
+.detail p { margin: 12px 0 0; font-size: 14px; color: var(--ink-2); }
+.more { margin: 16px 0 0; width: 100%; padding: 12px; border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px; cursor: pointer; }
+.empty { padding: 28px 0; color: var(--ink-2); }
+
+/* 통계 */
+.stats { margin: 44px 0 0; padding: 16px 0 0; border-top: 1px solid var(--rule); }
+.stats h2 { margin: 0 0 4px; font-size: 18px; }
+.stats > p { margin: 0 0 18px; color: var(--ink-2); font-size: 14px; }
+.chart h3 { font-size: 15px; margin: 22px 0 10px; font-weight: 700; }
+.bars { display: grid; grid-template-columns: max-content 1fr max-content; gap: 8px 12px; align-items: center; font-size: 14px; }
+.bars .k { color: var(--ink-2); }
+.bars .v { text-align: right; min-width: 3em; }
+.bars .track2 { height: 14px; background: var(--rule); border-radius: 2px; display: flex; overflow: hidden; }
+.bars .seg { height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 0; font-size: 13px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 22px 0 0; }
+.facts div { background: var(--sheet); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; font-size: 14px; color: var(--ink-2); }
+.facts b { display: block; font-size: 20px; color: var(--ink); font-weight: 700; }
+
+/* 기준 */
+.about { margin: 44px 0 0; padding: 16px 0 40px; border-top: 1px solid var(--rule); font-size: 15px; color: var(--ink-2); }
+.about h2 { margin: 0 0 8px; font-size: 18px; color: var(--ink); }
+.about ul { padding-left: 20px; margin: 8px 0; }
+.about li { margin: 4px 0; }
+.foot { color: var(--ink-3); font-size: 13px; margin-top: 24px; }
+
+@media (max-width: 480px) {
+  .sign-addr strong { font-size: 23px; }
+  .item > button { grid-template-columns: 42px 1fr auto; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .detail { animation: open .16s ease-out; }
+  @keyframes open { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="brand">
+    <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+      <circle cx="15" cy="15" r="13" fill="none" stroke="currentColor" stroke-width="2"/>
+      <circle cx="15" cy="15" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".55"/>
+      <path d="M15 15 L25.5 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="21" cy="11" r="2.4" fill="var(--work)"/>
+    </svg>
+    <h1>동네레이더</h1>
+  </div>
+  <p class="lede">청주시 청원구에서 새로 허가된 건축과 공사가 어디까지 왔는지, 공공데이터로 모아 보여줍니다.</p>
+  <p class="stamp" id="stamp"></p>
+  <p class="notice" id="coverage" hidden></p>
+</header>
+
+<section class="hero" aria-labelledby="hero-h">
+  <h2 id="hero-h">가장 최근 동네 변화</h2>
+  <article class="sign" id="sign" aria-live="polite"></article>
+</section>
+
+<p class="summary" id="summary"></p>
+
+<section class="filters" aria-labelledby="f-h">
+  <h2 id="f-h">허가 목록</h2>
+  <div class="frow" id="f-place" role="group" aria-label="동네"></div>
+  <div class="frow" id="f-cat" role="group" aria-label="용도"></div>
+  <div class="frow" id="f-stage" role="group" aria-label="진행 단계"></div>
+  <input class="search" id="q" type="search" placeholder="주소나 건물 이름으로 찾기 (예: 내덕동 650)" aria-label="주소나 건물 이름으로 찾기">
+  <label class="toggle"><input type="checkbox" id="blank"> 용도가 적히지 않은 소규모 허가도 보기</label>
+</section>
+
+<section class="list" id="list" aria-live="polite"></section>
+
+<section class="stats" aria-labelledby="s-h">
+  <h2 id="s-h">숫자로 보는 변화</h2>
+  <p id="s-sub"></p>
+  <div class="chart">
+    <h3>해마다 허가된 건수</h3>
+    <div class="bars" id="c-year"></div>
+    <div class="legend"><span><i style="background:var(--ink-2)"></i>용도가 확인된 허가</span><span><i style="background:var(--c-none)"></i>용도 미기재</span></div>
+  </div>
+  <div class="chart">
+    <h3>용도별 구성 (용도가 확인된 허가)</h3>
+    <div class="bars" id="c-cat"></div>
+  </div>
+  <div class="facts" id="facts"></div>
+</section>
+
+<section class="about" aria-labelledby="a-h">
+  <h2 id="a-h">이 자료에 대해</h2>
+  <ul>
+    <li>국토교통부 건축HUB 건축인허가정보를 매일 받아 2023년 1월 1일 이후 허가된 기록만 보여줍니다.</li>
+    <li>‘허가’는 건축허가일, ‘공사 중’은 실제 착공일, ‘준공’은 사용승인일이 기록된 경우입니다. 착공이나 사용승인이 늦게 등록되거나 빠진 경우가 있어 실제 현장과 다를 수 있습니다.</li>
+    <li>용도와 공사 종류가 비어 있는 소규모 기록은 기본 목록에서 빼고, 체크하면 함께 보여줍니다.</li>
+    <li>세대수 항목은 대부분 비어 있어, 주택 규모는 가구수로 표시합니다.</li>
+    <li>정확한 내용은 <a href="https://www.eais.go.kr" target="_blank" rel="noopener">세움터</a>에서 대지위치로 다시 확인하세요. 이 사이트는 투자 판단이나 법적 판단의 근거가 아닙니다.</li>
+  </ul>
+  <p class="foot" id="foot"></p>
+</section>
+
+</div>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  "use strict";
+  var P = window.PERMITS || { fields: [], rows: [], meta: {}, places: [] };
+  var F = P.fields || [];
+  var rows = (P.rows || []).map(function (r) {
+    var o = {}; F.forEach(function (f, i) { o[f] = r[i]; }); return o;
+  });
+
+  var CATS = [
+    { id: "house", name: "주택", re: /주택|기숙사/ },
+    { id: "shop",  name: "근린생활시설", re: /근린|근생/ },
+    { id: "edu",   name: "교육·업무", re: /교육|연구|업무|노유자|공공/ },
+    { id: "care",  name: "의료·종교·문화", re: /의료|종교|문화|집회|운동|관광|장례/ },
+    { id: "ind",   name: "공장·창고", re: /공장|창고|위험물|자동차|분뇨|자원|동물|식물/ },
+    { id: "etc",   name: "기타", re: null },
+    { id: "none",  name: "용도 미기재", re: null }
+  ];
+  var CAT = {}; CATS.forEach(function (c) { CAT[c.id] = c; });
+
+  function catOf(r) {
+    if (!r.purp) return r.gb ? "etc" : "none";
+    for (var i = 0; i < CATS.length; i++) if (CATS[i].re && CATS[i].re.test(r.purp)) return CATS[i].id;
+    return "etc";
+  }
+  function stageOf(r) { return r.apr ? "done" : (r.stcns ? "work" : "permit"); }
+  var STAGE = { permit: "허가", work: "공사 중", done: "준공" };
+
+  rows.forEach(function (r) { r.cat = catOf(r); r.stage = stageOf(r); r.known = r.cat !== "none"; });
+
+  // ---------- 도구
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function dot(d) { if (!d) return ""; var p = d.split("-"); return p[0] + "." + (+p[1]) + "." + (+p[2]); }
+  function md(d) { if (!d) return ""; var p = d.split("-"); return (+p[1]) + "." + (+p[2]); }
+  function area(a) { a = +a || 0; return a ? Math.round(a).toLocaleString("ko-KR") + "㎡" : "면적 미기재"; }
+  function purpName(p) { return (p || "").replace(/^제([12])종근린생활시설$/, "$1종 근린생활시설"); }
+  function title(r) {
+    var what = r.purp ? purpName(r.purp) : "용도 미기재";
+    var how = r.gb ? " " + r.gb : "";
+    return what + how;
+  }
+  function days(a, b) { return Math.round((Date.parse(b) - Date.parse(a)) / 864e5); }
+  function median(a) { if (!a.length) return null; a = a.slice().sort(function (x, y) { return x - y; }); var m = a.length >> 1; return a.length % 2 ? a[m] : Math.round((a[m - 1] + a[m]) / 2); }
+  function color(cat) { return "var(--c-" + cat + ")"; }
+
+  function track(r) {
+    var steps = [
+      { k: "허가", d: r.pms, cls: r.pms ? "on" : "" },
+      { k: "착공", d: r.stcns, cls: r.stcns ? (r.apr ? "on" : "work") : "" },
+      { k: "사용승인", d: r.apr, cls: r.apr ? "done" : "" }
+    ];
+    return '<div class="track" aria-label="진행 단계: ' + STAGE[r.stage] + '">' + steps.map(function (s) {
+      return '<div class="step ' + s.cls + '"><div class="bar"></div><div class="lab"><b>' + s.k + "</b>" + (s.d ? dot(s.d) : "기록 없음") + "</div></div>";
+    }).join("") + "</div>";
+  }
+
+  // ---------- 머리
+  var meta = P.meta || {};
+  document.getElementById("stamp").textContent = meta.checked ? "마지막 갱신 " + meta.checked.replace(/^(\d{4})-(\d{2})-(\d{2})/, function (_, y, m, d) { return y + "년 " + (+m) + "월 " + (+d) + "일"; }) : "";
+  var places = P.places || [];
+  if (meta.seed || places.length <= 2) {
+    var cv = document.getElementById("coverage");
+    cv.hidden = false;
+    cv.textContent = "지금은 " + places.join("·") + " 자료만 들어 있어요. 자동 수집이 시작되면 청원구 전체가 채워집니다.";
+  }
+  if (meta.failed && meta.failed.length) {
+    var cv2 = document.getElementById("coverage");
+    cv2.hidden = false;
+    cv2.textContent = (cv2.textContent ? cv2.textContent + " " : "") + "최근 갱신에서 " + meta.failed.length + "개 지역 자료를 받지 못해 일부가 빠졌을 수 있습니다.";
+  }
+
+  // ---------- 표지판
+  var heroList = rows.filter(function (r) { return r.known && r.gb; }).slice(0, 12);
+  if (!heroList.length) heroList = rows.filter(function (r) { return r.known; }).slice(0, 12);
+  var hi = 0;
+  function renderSign() {
+    var el = document.getElementById("sign");
+    if (!heroList.length) { el.innerHTML = '<div class="sign-addr"><strong>아직 자료가 없습니다</strong><span>첫 자동 수집이 끝나면 여기에 나타납니다.</span></div>'; return; }
+    var r = heroList[hi];
+    var rowsHtml = [
+      ["대지위치", r.addr],
+      ["건물 용도", r.purp ? purpName(r.purp) : "기록 없음"],
+      ["공사 종류", r.gb || "기록 없음"],
+      ["연면적", area(r.area)],
+      ["용도지역", r.jiyuk || "기록 없음"]
+    ];
+    if (r.cat === "house" && r.fmly) rowsHtml.push(["가구수", r.fmly + "가구"]);
+    el.innerHTML =
+      '<div class="sign-head"><span class="kind">건축 ' + esc(r.gb || "허가") + '</span><span class="date">' + dot(r.pms) + " 허가</span></div>" +
+      '<div class="sign-addr"><strong>' + esc(r.name || r.addr) + "</strong><span>" + esc(r.name ? r.addr + "에서 " : "") + esc(title(r)) + "</span></div>" +
+      "<dl>" + rowsHtml.map(function (x) { return "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>" +
+      track(r) +
+      '<div class="sign-foot"><div class="pager"><button type="button" id="prev">이전</button><button type="button" id="next">다음</button><span class="count">' + (hi + 1) + " / " + heroList.length + "</span></div></div>";
+    var pv = document.getElementById("prev"), nx = document.getElementById("next");
+    pv.disabled = hi === 0; nx.disabled = hi === heroList.length - 1;
+    pv.onclick = function () { if (hi > 0) { hi--; renderSign(); document.getElementById("prev").focus(); } };
+    nx.onclick = function () { if (hi < heroList.length - 1) { hi++; renderSign(); document.getElementById("next").focus(); } };
+  }
+  renderSign();
+
+  // ---------- 요약
+  var known = rows.filter(function (r) { return r.known; });
+  var working = known.filter(function (r) { return r.stage === "work"; }).length;
+  var since = rows.length ? rows[rows.length - 1].pms : "";
+  document.getElementById("summary").innerHTML =
+    "2023년 이후 용도가 확인된 허가 <b>" + known.length.toLocaleString("ko-KR") + "건</b>, 그중 지금 공사 중인 곳 <b>" + working + "곳</b>. " +
+    "용도가 적히지 않은 소규모 허가 " + (rows.length - known.length).toLocaleString("ko-KR") + "건은 따로 모아 두었습니다.";
+
+  // ---------- 거르기
+  var state = { place: "all", cat: "all", stage: "all", q: "", blank: false, shown: 40, open: null };
+
+  function chips(el, items, key) {
+    el.innerHTML = "";
+    items.forEach(function (it) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip";
+      b.setAttribute("aria-pressed", String(state[key] === it.v));
+      b.innerHTML = (it.sw ? '<span class="sw" style="background:' + it.sw + '"></span>' : "") + esc(it.t);
+      b.onclick = function () { state[key] = it.v; state.shown = 40; state.open = null; drawFilters(); drawList(); };
+      el.appendChild(b);
+    });
+  }
+  function drawFilters() {
+    chips(document.getElementById("f-place"), [{ v: "all", t: "청원구 전체" }].concat(places.map(function (p) { return { v: p, t: p }; })), "place");
+    var catItems = [{ v: "all", t: "모든 용도" }].concat(CATS.filter(function (c) { return c.id !== "none"; }).map(function (c) { return { v: c.id, t: c.name, sw: color(c.id) }; }));
+    chips(document.getElementById("f-cat"), catItems, "cat");
+    chips(document.getElementById("f-stage"), [{ v: "all", t: "모든 단계" }, { v: "permit", t: "허가만" }, { v: "work", t: "공사 중" }, { v: "done", t: "준공" }], "stage");
+  }
+  document.getElementById("q").addEventListener("input", function (e) { state.q = e.target.value.trim(); state.shown = 40; drawList(); });
+  document.getElementById("blank").addEventListener("change", function (e) { state.blank = e.target.checked; state.shown = 40; drawList(); });
+
+  function filtered() {
+    var q = state.q.replace(/\s+/g, "");
+    return rows.filter(function (r) {
+      if (!state.blank && !r.known) return false;
+      if (state.place !== "all" && r.place !== state.place) return false;
+      if (state.cat !== "all" && r.cat !== state.cat) return false;
+      if (state.stage !== "all" && r.stage !== state.stage) return false;
+      if (q && (r.addr + r.name + r.purp).replace(/\s+/g, "").indexOf(q) < 0) return false;
+      return true;
+    });
+  }
+
+  function detail(r) {
+    var items = [
+      ["대지위치", r.addr], ["건물 이름", r.name || "기록 없음"], ["건물 용도", r.purp ? purpName(r.purp) : "기록 없음"],
+      ["공사 종류", r.gb || "기록 없음"], ["연면적", area(r.area)], ["대지면적", area(r.plat)],
+      ["용도지역", r.jiyuk || "기록 없음"], ["지목", r.jimok || "기록 없음"]
+    ];
+    if (r.fmly) items.push(["가구수", r.fmly + "가구"]);
+    var gap = "";
+    if (r.pms && r.stcns) gap = "허가 후 " + days(r.pms, r.stcns) + "일 만에 착공" + (r.apr ? ", 착공 후 " + days(r.stcns, r.apr) + "일 만에 사용승인." : ".");
+    return '<div class="detail" id="d-' + esc(r.pk) + '"><dl>' + items.map(function (x) { return "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>" + track(r) +
+      (gap ? "<p>" + gap + "</p>" : "") + "<p>원문은 세움터에서 대지위치로 확인할 수 있습니다.</p></div>";
+  }
+
+  function drawList() {
+    var list = document.getElementById("list");
+    var data = filtered();
+    if (!data.length) {
+      list.innerHTML = '<p class="empty">조건에 맞는 허가가 없습니다. 위의 선택을 ‘전체’로 바꾸거나 검색어를 지워 보세요.</p>';
+      return;
+    }
+    var show = data.slice(0, state.shown), html = "", cur = "", counts = {};
+    data.forEach(function (r) { var m = (r.pms || "").slice(0, 7); counts[m] = (counts[m] || 0) + 1; });
+    show.forEach(function (r) {
+      var m = (r.pms || "").slice(0, 7);
+      if (m !== cur) {
+        if (cur) html += "</div>";
+        cur = m;
+        html += '<div class="month"><h3>' + (m ? m.slice(0, 4) + "년 " + (+m.slice(5)) + "월" : "날짜 미기재") + "</h3><span>" + counts[m] + "건</span></div><div>";
+      }
+      var open = state.open === r.pk;
+      html += '<div class="item" style="--cat:' + color(r.cat) + '"><button type="button" aria-expanded="' + open + '" aria-controls="d-' + esc(r.pk) + '" data-pk="' + esc(r.pk) + '">' +
+        '<span class="d">' + md(r.pms) + '</span><span class="t">' + esc(r.addr) + '</span><span class="st ' + r.stage + '">' + STAGE[r.stage] + "</span>" +
+        '<span class="s"><span>' + esc(title(r)) + "</span><span>" + area(r.area) + "</span>" + (r.name ? "<span>" + esc(r.name) + "</span>" : "") + "</span></button>" +
+        (open ? detail(r) : "") + "</div>";
+    });
+    html += "</div>";
+    if (data.length > state.shown) html += '<button type="button" class="more" id="more">' + (data.length - state.shown).toLocaleString("ko-KR") + "건 더 보기</button>";
+    list.innerHTML = html;
+    list.querySelectorAll(".item > button").forEach(function (b) {
+      b.onclick = function () {
+        var pk = b.getAttribute("data-pk");
+        state.open = state.open === pk ? null : pk;
+        drawList();
+        var again = list.querySelector('[data-pk="' + pk.replace(/"/g, "") + '"]');
+        if (again) again.focus();
+      };
+    });
+    var more = document.getElementById("more");
+    if (more) more.onclick = function () { state.shown += 40; drawList(); };
+  }
+
+  // ---------- 통계
+  function drawStats() {
+    var years = {};
+    rows.forEach(function (r) {
+      var y = (r.pms || "").slice(0, 4); if (!y) return;
+      years[y] = years[y] || { k: 0, n: 0 };
+      years[y][r.known ? "k" : "n"]++;
+    });
+    var ys = Object.keys(years).sort();
+    var max = Math.max.apply(null, ys.map(function (y) { return years[y].k + years[y].n; }).concat([1]));
+    var lastPms = rows.length ? rows[0].pms : "";
+    document.getElementById("c-year").innerHTML = ys.map(function (y) {
+      var t = years[y], tot = t.k + t.n;
+      var ck = (meta.checked || "").slice(0, 10);
+      var partial = ck && ck.slice(0, 4) === y && ck.slice(5) !== "12-31";
+      return '<span class="k">' + y + (partial ? " (" + (+ck.slice(5, 7)) + "월 " + (+ck.slice(8, 10)) + "일까지)" : "") + '</span><span class="track2" role="img" aria-label="' + y + "년 " + tot + "건, 용도 확인 " + t.k + '건"><span class="seg" style="width:' + (t.k / max * 100) + '%;background:var(--ink-2)"></span><span class="seg" style="width:' + (t.n / max * 100) + '%;background:var(--c-none)"></span></span><span class="v">' + tot + "건</span>";
+    }).join("");
+
+    var cc = {};
+    known.forEach(function (r) { cc[r.cat] = (cc[r.cat] || 0) + 1; });
+    var cats = CATS.filter(function (c) { return cc[c.id]; }).sort(function (a, b) { return cc[b.id] - cc[a.id]; });
+    var cmax = Math.max.apply(null, cats.map(function (c) { return cc[c.id]; }).concat([1]));
+    document.getElementById("c-cat").innerHTML = cats.map(function (c) {
+      return '<span class="k">' + c.name + '</span><span class="track2" role="img" aria-label="' + c.name + " " + cc[c.id] + '건"><span class="seg" style="width:' + (cc[c.id] / cmax * 100) + "%;background:" + color(c.id) + '"></span></span><span class="v">' + cc[c.id] + "건</span>";
+    }).join("");
+
+    var g1 = [], g2 = [];
+    known.forEach(function (r) {
+      if (r.pms && r.stcns) { var a = days(r.pms, r.stcns); if (a >= 0) g1.push(a); }
+      if (r.stcns && r.apr) { var b = days(r.stcns, r.apr); if (b >= 0) g2.push(b); }
+    });
+    var fam = known.filter(function (r) { return r.cat === "house"; }).reduce(function (s, r) { return s + (+r.fmly || 0); }, 0);
+    var m1 = median(g1), m2 = median(g2);
+    document.getElementById("facts").innerHTML =
+      "<div><b>" + (m1 == null ? "자료 부족" : "약 " + m1 + "일") + "</b>허가부터 착공까지 걸린 기간(중앙값, " + g1.length + "건 기준)</div>" +
+      "<div><b>" + (m2 == null ? "자료 부족" : "약 " + m2 + "일") + "</b>착공부터 사용승인까지 걸린 기간(중앙값, " + g2.length + "건 기준)</div>" +
+      "<div><b>" + fam.toLocaleString("ko-KR") + "가구</b>새로 허가된 단독·다가구주택의 가구수 합계</div>";
+    document.getElementById("s-sub").textContent = (since ? dot(since) + "부터 " : "") + (lastPms ? dot(lastPms) + "까지 " : "") + "허가된 " + rows.length.toLocaleString("ko-KR") + "건을 기준으로 계산했습니다.";
+  }
+
+  document.getElementById("foot").textContent = "자료 출처: " + (meta.source || "국토교통부 건축HUB 건축인허가정보 서비스") + " (공공데이터포털). 동네레이더는 개인이 만든 비공식 서비스입니다.";
+
+  drawFilters();
+  drawList();
+  drawStats();
+})();
+</script>
+</body>
+</html>

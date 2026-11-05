@@ -1,0 +1,54 @@
+# 매일 새벽 건축인허가 자료를 받아 permits.json·data.js를 갱신하고 저장소에 커밋한다.
+# 인증키는 저장소 Settings → Secrets and variables → Actions 의 DATA_GO_KR_KEY 에 넣는다.
+name: 데이터 갱신
+
+on:
+  schedule:
+    - cron: "17 19 * * *"   # 매일 한국시간 04:17 (UTC 19:17)
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "이 날짜 이후 바뀐 기록을 모두 받기 (예: 20230101). 비우면 최근 14일"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 인허가 자료 받기
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          SINCE: ${{ inputs.since }}
+        run: |
+          if [ -n "$SINCE" ]; then
+            python fetch.py update --since "$SINCE"
+          else
+            python fetch.py update
+          fi
+
+      - name: 바뀐 자료 저장
+        run: |
+          git config user.name "dongne-radar-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add permits.json data.js codes.json
+          if git diff --cached --quiet; then
+            echo "바뀐 자료가 없습니다."
+          else
+            git commit -m "데이터 갱신 $(TZ=Asia/Seoul date +%F)"
+            git push
+          fi
