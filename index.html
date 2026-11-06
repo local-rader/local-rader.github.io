@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-/* 한 줄 개념: 기간 하나를 고르면 요약, 큰 사업, 목록, 지도가 모두 그 기간을 따른다 */
+/* 한 줄 개념: 홈은 한눈에 보는 대시보드, 메뉴를 누르면 지도·공급 예고·분석 화면이 따로 열린다 */
 :root {
   --paper: #F4F6F4;
   --sheet: #FFFFFF;
@@ -31,8 +31,9 @@
   --c-ind: #8660B4;
   --c-etc: #7C8893;
   --c-none: #C3C9CE;
-  --radius-sign: 4px;
+  --radius-card: 12px;
   --radius-ui: 999px;
+  --nav-h: 62px;
   --font: "IBM Plex Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   color-scheme: light;
 }
@@ -56,6 +57,7 @@ body {
   margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font);
   font-size: 16px; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 24px);
 }
 a { color: inherit; text-underline-offset: 3px; }
 button, select, input { font: inherit; color: inherit; }
@@ -67,104 +69,99 @@ h1, h2, h3 { text-wrap: balance; }
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 
-/* 머리 */
-.top { padding-block: 24px 4px; }
-.brand { display: flex; align-items: center; gap: 10px; }
+/* 위 고정 바: 화면 이름 + 동네 */
+.appbar { position: sticky; top: 0; z-index: 20; background: var(--paper); border-bottom: 1px solid var(--rule); }
+.appbar-in { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; }
+.brand { display: flex; align-items: center; gap: 8px; border: 0; background: none; padding: 6px 0; cursor: pointer; min-width: 0; }
 .brand svg { flex: none; }
-.brand h1 { margin: 0; font-size: 26px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; }
-.lede { margin: 10px 0 0; color: var(--ink-2); max-width: 34em; }
-.stamp { margin: 4px 0 0; color: var(--ink-3); font-size: 14px; }
-.notice {
-  margin: 14px 0 0; padding: 10px 14px; border-left: 3px solid var(--work);
-  background: var(--sheet); color: var(--ink-2); font-size: 14px;
+.brand span { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sel {
+  border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px;
+  padding: 8px 32px 8px 12px; min-height: 40px; font-size: 15px; min-width: 0;
+  appearance: none; -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
+  background-position: calc(100% - 17px) 55%, calc(100% - 12px) 55%;
+  background-size: 5px 5px; background-repeat: no-repeat;
 }
-h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
-.sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; margin: 0 0 10px; }
-.sec-head span { color: var(--ink-3); font-size: 14px; }
+.appbar .sel { flex: 0 1 190px; max-width: 55%; }
 
-/* 기간과 동네: 화면 전체가 따르는 범위 */
-.scope { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 20px 0 0; }
-.scope .frow { row-gap: 10px; }
-.scope .sel { flex: 1 1 220px; }
-.custom { flex-wrap: nowrap !important; }
+/* 아래 고정 메뉴 */
+.bottomnav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--sheet); border-top: 1px solid var(--rule);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.bottomnav .wrap { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); height: var(--nav-h); }
+.bottomnav a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  text-decoration: none; color: var(--ink-3); font-size: 12.5px; font-weight: 500;
+}
+.bottomnav a svg { width: 24px; height: 24px; }
+.bottomnav a[aria-current="page"] { color: var(--ink); font-weight: 700; }
+.bottomnav a[aria-current="page"] svg { stroke-width: 2.2; }
+
+/* 홈 */
+.hero { padding: 22px 0 4px; }
+.hero h1 { margin: 0; font-size: 22px; line-height: 1.35; font-weight: 700; letter-spacing: -0.01em; }
+.stamp { margin: 6px 0 0; color: var(--ink-3); font-size: 13.5px; }
+.notice { margin: 12px 0 0; padding: 10px 14px; border-left: 3px solid var(--work); background: var(--sheet); color: var(--ink-2); font-size: 14px; }
+.searchbox { display: flex; gap: 8px; margin: 14px 0 0; }
+.searchbox input {
+  flex: 1; min-width: 0; border: 1px solid var(--rule); background: var(--sheet); border-radius: 10px;
+  padding: 10px 14px; font-size: 15.5px; color: var(--ink); min-height: 46px;
+}
+.searchbox button { flex: none; border: 0; border-radius: 10px; background: var(--ink); color: var(--paper); padding: 0 18px; font-size: 15px; font-weight: 500; cursor: pointer; min-height: 46px; }
+.card { display: block; background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--radius-card); padding: 16px; margin: 14px 0 0; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; margin: 0 0 12px; }
+.card-head h2 { margin: 0; font-size: 17px; font-weight: 700; }
+.card-head span, .card-head a { color: var(--ink-3); font-size: 13.5px; }
+.card-head a { color: var(--ink-2); text-decoration: none; font-weight: 500; }
+.card-sub { margin: 16px 0 4px; font-size: 15px; font-weight: 700; }
+.card.link { text-decoration: none; color: inherit; cursor: pointer; }
+.card.link h2 { margin: 0; font-size: 16px; font-weight: 700; }
+.card.link b { display: block; margin: 8px 0 2px; font-size: 20px; line-height: 1.3; font-weight: 700; }
+.card.link .why { display: block; color: var(--ink-2); font-size: 14px; }
+.card.link .go { display: block; margin-top: 10px; color: var(--ink-2); font-size: 13.5px; font-weight: 500; }
+.card.link.w b { color: var(--work-ink); }
+.cards2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.cards2 .card { margin-top: 14px; }
+.minimap { position: relative; height: 210px; border-radius: 8px; overflow: hidden; background: var(--paper); border: 1px solid var(--rule); }
+#minimap { position: absolute; inset: 0; }
+.about { margin: 22px 0 0; font-size: 14.5px; color: var(--ink-2); }
+.about summary { cursor: pointer; color: var(--ink); font-weight: 500; padding: 8px 0; }
+.about ul { padding-left: 20px; margin: 4px 0 8px; }
+.about li { margin: 4px 0; }
+.foot { color: var(--ink-3); font-size: 13px; margin-top: 18px; }
+
+/* 기간 고르기 (홈·거르기·분석에서 함께 씀) */
+.period { display: grid; gap: 8px; margin: 0 0 12px; }
+.seg { display: inline-flex; flex: none; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--sheet); justify-self: start; }
+.seg button { border: 0; background: none; padding: 7px 13px; font-size: 14.5px; cursor: pointer; min-height: 38px; white-space: nowrap; }
+.seg button + button { border-left: 1px solid var(--rule); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); font-weight: 500; }
+.custom { display: flex; gap: 8px; align-items: center; }
 .custom .sel { flex: 1 1 0; }
 .custom span { color: var(--ink-2); }
 
-/* 요약 숫자: 누르면 그 변화만 거른다 */
-.summary { margin: 22px 0 0; }
+/* 요약 숫자 */
 .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .tile {
-  border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px; padding: 10px 10px 8px;
+  border: 1px solid var(--rule); background: var(--paper); border-radius: 8px; padding: 10px 10px 8px;
   text-align: left; cursor: pointer; min-height: 74px; display: flex; flex-direction: column; justify-content: space-between; gap: 2px;
 }
 .tile b { font-size: 24px; line-height: 1.15; font-weight: 700; }
-.tile span { font-size: 13px; color: var(--ink-2); white-space: nowrap; }
+.tile span { font-size: 13px; color: var(--ink-2); line-height: 1.35; }
 .tile.w b { color: var(--work-ink); }
 .tile.d b { color: var(--done); }
 .tile[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
 .tile[aria-pressed="true"] span { color: var(--ink); font-weight: 500; }
 .hint { margin: 8px 0 0; font-size: 13px; color: var(--ink-3); }
 
-.top5 { margin: 26px 0 0; }
-.top5 .group > .item:last-child { border-bottom: 1px solid var(--rule); }
-
-/* 공유받은 허가: 표지판 */
-.shared { margin: 22px 0 0; }
-.shared h2 { margin: 0 0 10px; font-size: 17px; font-weight: 700; }
-.sign { background: var(--sheet); border: 2px solid var(--sign); border-radius: var(--radius-sign); }
-.sign-head {
-  background: var(--sign); color: var(--sign-ink); padding: 12px 18px 10px;
-  display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap;
-}
-.sign-head span { font-size: 15px; }
-.sign-addr { padding: 14px 18px 2px; }
-.sign-addr strong { display: block; font-size: 27px; line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; }
-.sign-addr span { display: block; margin-top: 4px; color: var(--ink-2); font-size: 15px; }
-.sign dl { display: grid; grid-template-columns: max-content 1fr; margin: 10px 18px 0; border-top: 1px solid var(--rule); }
-.sign dt, .sign dd { margin: 0; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 15px; }
-.sign dt { color: var(--ink-2); padding-right: 18px; }
-.sign-foot { display: flex; align-items: center; gap: 8px; padding: 12px 18px 14px; flex-wrap: wrap; }
+/* 버튼과 칩 */
 .btn {
   border: 1px solid var(--rule); background: var(--paper); border-radius: var(--radius-ui);
-  padding: 6px 14px; font-size: 14px; cursor: pointer; min-height: 36px;
+  padding: 6px 14px; font-size: 14px; cursor: pointer; min-height: 38px;
 }
-.btn:disabled { opacity: .4; cursor: default; }
-
-/* 단계 표시: 허가 → 착공 → 사용승인 */
-.track { display: flex; gap: 4px; margin: 12px 18px 0; }
-.track .step { flex: 1; min-width: 0; }
-.track .bar { height: 6px; border-radius: 3px; background: var(--rule); }
-.track .step.on .bar { background: var(--ink-2); }
-.track .step.work .bar { background: var(--work); }
-.track .step.done .bar { background: var(--done); }
-.track .lab { margin-top: 6px; font-size: 13px; color: var(--ink-2); }
-.track .lab b { display: block; font-weight: 500; color: var(--ink); }
-
-/* 보기 전환 */
-.views {
-  position: sticky; top: 0; z-index: 5; margin: 30px 0 0; background: var(--paper);
-  border-bottom: 1px solid var(--rule);
-}
-.views .wrap { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
-.tab {
-  border: 0; background: none; padding: 12px 14px 10px; font-size: 16px; font-weight: 500;
-  color: var(--ink-2); border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; flex: none;
-}
-.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
-
-/* 거르기 */
-.filters { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding-block: 14px 4px; }
-.frow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.frow.lab { flex-wrap: nowrap; }
-.flabel { flex: none; width: 2.4em; font-size: 13px; color: var(--ink-3); }
-.sel {
-  border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px;
-  padding: 8px 32px 8px 12px; min-height: 40px; font-size: 15px; flex: 1 1 160px; min-width: 0;
-  appearance: none; -webkit-appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%);
-  background-position: calc(100% - 17px) 55%, calc(100% - 12px) 55%;
-  background-size: 5px 5px; background-repeat: no-repeat;
-}
+.btn.solid { background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 500; }
 .chip {
   display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rule);
   background: var(--sheet); border-radius: var(--radius-ui); padding: 6px 12px;
@@ -172,39 +169,64 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
 }
 .chip[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
 .chip .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
-.seg { display: inline-flex; flex: none; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--sheet); }
-.seg button { border: 0; background: none; padding: 8px 14px; font-size: 15px; cursor: pointer; min-height: 40px; white-space: nowrap; }
-.seg button + button { border-left: 1px solid var(--rule); }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); font-weight: 500; }
-/* 가로로 밀어서 더 보는 줄. 더 있는 쪽 끝을 흐리게 */
-.hscroll { position: relative; display: flex; gap: 8px; flex: 1; min-width: 0; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
-.search {
-  width: 100%; border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px;
-  padding: 9px 12px; font-size: 15px; color: var(--ink);
-}
-.toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
-.toggle input { width: 18px; height: 18px; accent-color: var(--ink); }
-.resultrow { display: flex; justify-content: space-between; align-items: center; gap: 4px 16px; flex-wrap: wrap; margin: 4px 0 0; }
-.result { margin: 0; font-size: 14px; color: var(--ink-2); }
-.resultrow .acts2 { display: flex; gap: 16px; }
+.chip .n { opacity: .75; font-size: 13px; }
+.chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 가로로 밀어서 더 보는 줄. 더 있는 쪽 끝을 흐리게, 스크롤 막대는 숨김 */
+.hscroll { position: relative; display: flex; gap: 8px; min-width: 0; overflow-x: auto; scrollbar-width: none; padding: 1px 0; }
+.hscroll::-webkit-scrollbar { display: none; }
 .linkbtn {
   border: 0; background: none; padding: 4px 0; min-height: 32px; font-size: 14px; color: var(--ink-2);
   text-decoration: underline; text-underline-offset: 3px; cursor: pointer; white-space: nowrap;
 }
+.result { margin: 0; font-size: 14px; color: var(--ink-2); }
+.empty { padding: 20px 0; color: var(--ink-2); }
+.more { margin: 16px 0 0; width: 100%; padding: 12px; border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px; cursor: pointer; }
 .copied { margin: 8px 0 0; font-size: 14px; color: var(--done); }
 .urlbox { width: 100%; margin: 8px 0 0; border: 1px solid var(--rule); background: var(--paper); border-radius: 8px; padding: 8px 10px; font-size: 14px; color: var(--ink); }
 .totop {
-  position: fixed; z-index: 10; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  position: fixed; z-index: 15; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 14px);
   border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); border-radius: var(--radius-ui);
   padding: 10px 16px; font-size: 14px; min-height: 44px; cursor: pointer; box-shadow: 0 2px 10px rgba(23, 33, 44, .14);
 }
 
-/* 목록: 달별로 접는다 */
-.months { margin: 8px 0 0; border-bottom: 1px solid var(--rule); }
-.stagehead {
-  margin: 26px 0 0; padding: 0 0 6px; border-bottom: 2px solid var(--ink);
-  display: flex; justify-content: space-between; align-items: baseline;
+/* 화면 머리 (지도·공급 예고·분석) */
+.screen-top { padding: 14px 0 0; }
+.sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; margin: 0 0 8px; }
+h2.sec { margin: 0; font-size: 18px; font-weight: 700; }
+.sec-head span { color: var(--ink-3); font-size: 13.5px; }
+.panel-note { margin: 0 0 14px; color: var(--ink-2); font-size: 14px; }
+h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
+
+/* 개발지도 */
+.map-tools { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 12px 0 0; }
+.map-tools .searchbox { margin: 0; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.filterbtn { gap: 8px; }
+.filterbtn svg { width: 16px; height: 16px; }
+.mapbox {
+  position: relative; margin: 12px 0 0; height: min(52vh, 460px); min-height: 300px;
+  border: 1px solid var(--rule); border-radius: var(--radius-card); background: var(--sheet); overflow: hidden;
 }
+#map { position: absolute; inset: 0; }
+.mapmsg {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: 24px; text-align: center; color: var(--ink-2); font-size: 14.5px;
+}
+.mapstat { margin: 8px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.pin {
+  width: 16px; height: 16px; border-radius: 50%; border: 2px solid #FFFFFF; padding: 0;
+  background: var(--cat, var(--c-etc)); box-shadow: 0 0 0 1px rgba(23, 33, 44, .45); cursor: pointer;
+}
+.pin.big { width: 22px; height: 22px; }
+.pin.on { box-shadow: 0 0 0 3px var(--ink); transform: scale(1.25); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0 0; font-size: 13px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.list-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; margin: 26px 0 0; }
+.list-head .acts2 { display: flex; gap: 16px; }
+
+/* 목록 한 줄 */
+.months { margin: 8px 0 0; border-bottom: 1px solid var(--rule); }
+.stagehead { margin: 26px 0 0; padding: 0 0 6px; border-bottom: 2px solid var(--ink); display: flex; justify-content: space-between; align-items: baseline; }
 .months > .stagehead:first-child { margin-top: 12px; }
 .stagehead h3 { margin: 0; font-size: 19px; font-weight: 700; }
 .stagehead.work h3 { color: var(--work-ink); }
@@ -216,52 +238,78 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
   background: none; border: 0; border-top: 1px solid var(--rule); padding: 14px 2px 12px 0; cursor: pointer; text-align: left; font-weight: 700;
 }
 .stagehead + .mh button { border-top: 0; }
-.mh .c { color: var(--ink-2); font-size: 14px; font-weight: 400; white-space: nowrap; }
-.mh .c::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 10px; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: translateY(-3px) rotate(45deg); }
-.mh button[aria-expanded="false"] .c::after { transform: translateY(-1px) rotate(-45deg); }
+.mh .c, .qb .c { color: var(--ink-2); font-size: 14px; font-weight: 400; white-space: nowrap; }
+.mh .c::after, .qb .c::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 10px; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: translateY(-3px) rotate(45deg); }
+.mh button[aria-expanded="false"] .c::after, .qb button[aria-expanded="false"] .c::after { transform: translateY(-1px) rotate(-45deg); }
 .item { border-top: 1px solid var(--rule); }
+.group.boxed > .item:last-child { border-bottom: 1px solid var(--rule); }
+.card .group > .item:first-child { border-top: 0; }
 .item > button {
   width: 100%; text-align: left; background: none; border: 0; padding: 12px 0 12px 14px;
   display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 2px 12px; cursor: pointer; position: relative;
 }
-.item > button::before {
-  content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; border-radius: 2px;
-  background: var(--cat, var(--c-none));
-}
+.item > button::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; border-radius: 2px; background: var(--cat, var(--c-none)); }
+.item > button[aria-current="true"] { background: var(--paper); }
+.card .item > button[aria-current="true"] { background: var(--sheet); }
 .item .d { color: var(--ink-2); font-size: 14px; padding-top: 2px; }
 .item .t { font-weight: 500; }
 .item .t small { font-weight: 400; color: var(--ink-2); font-size: 14px; margin-left: 6px; }
 .item .s { grid-column: 2 / 4; color: var(--ink-2); font-size: 14px; }
 .item .s .big { color: var(--ink); font-weight: 500; }
+.item .note { grid-column: 2 / 4; font-size: 13px; color: var(--ink-2); }
+.item .note b { font-weight: 500; color: var(--work-ink); }
 .st { font-size: 13px; color: var(--ink-2); white-space: nowrap; padding-top: 2px; }
 .st.work { color: var(--work-ink); }
 .st.done { color: var(--done); }
-.detail { padding: 0 0 16px 14px; }
-.detail dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); margin: 0; font-size: 14px; }
-.detail dt, .detail dd { margin: 0; padding: 6px 0; border-bottom: 1px dashed var(--rule); }
-.detail dt { color: var(--ink-2); padding-right: 16px; }
-.detail .track { margin: 12px 0 0; }
-.detail p { margin: 10px 0 0; font-size: 14px; color: var(--ink-2); }
-.detail .acts { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 0; }
-.more { margin: 16px 0 0; width: 100%; padding: 12px; border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px; cursor: pointer; }
-.empty { padding: 20px 0; color: var(--ink-2); }
 
-/* 공급 예고·멈춘 기록 */
-.panel-top { margin: 18px 0 0; }
-.panel-note { margin: 0 0 14px; color: var(--ink-2); font-size: 14px; }
-h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
-.item .note { grid-column: 2 / 4; font-size: 13px; color: var(--ink-2); }
-.item .note b { font-weight: 500; color: var(--work-ink); }
-.disclaimer { margin: 28px 0 0; padding: 12px 14px; background: var(--sheet); border-left: 3px solid var(--rule); font-size: 13px; color: var(--ink-2); }
-.disclaimer p { margin: 0; }
-.disclaimer p + p { margin-top: 8px; }
-.disclaimer b { font-weight: 500; color: var(--ink); }
-.st-ctrl { margin: 12px 0 0; }
-#st-tiles { margin: 0 0 4px; }
-#st-tiles .tile span { white-space: normal; line-height: 1.35; }
-#st-result { margin: 12px 0 4px; }
+/* 아래에서 올라오는 시트: 상세 정보와 거르기 */
+.sheet {
+  position: fixed; z-index: 40; left: 0; right: 0; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+  max-height: min(72vh, 640px); overflow-y: auto; overscroll-behavior: contain;
+  background: var(--sheet); border-top: 1px solid var(--rule); border-radius: 16px 16px 0 0;
+  box-shadow: 0 -6px 24px rgba(23, 33, 44, .18);
+}
+.sheet.short { max-height: 46vh; }
+.sheet .wrap { padding-top: 8px; padding-bottom: 18px; }
+.sheet .item-note { font-size: 13.5px; }
+.sheet .item-note b { color: var(--work-ink); font-weight: 500; }
+.sheet-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: 0; background: var(--sheet); padding: 6px 0 8px; z-index: 1; }
+.sheet-bar h2 { margin: 0; font-size: 18px; line-height: 1.35; font-weight: 700; }
+.sheet-bar .x { flex: none; border: 1px solid var(--rule); background: var(--paper); border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 18px; line-height: 1; }
+.grip { width: 40px; height: 4px; border-radius: 2px; background: var(--rule); margin: 4px auto 6px; }
+.sheet .badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 8px; font-size: 14px; color: var(--ink-2); }
+.badge { display: inline-block; border-radius: var(--radius-ui); padding: 2px 10px; font-size: 13px; font-weight: 500; background: var(--paper); border: 1px solid var(--rule); }
+.badge.work { color: var(--work-ink); border-color: var(--work); }
+.badge.done { color: var(--done); border-color: var(--done); }
+.sheet dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); margin: 4px 0 0; font-size: 14.5px; }
+.sheet dt, .sheet dd { margin: 0; padding: 6px 0; border-bottom: 1px dashed var(--rule); }
+.sheet dt { color: var(--ink-2); padding-right: 16px; }
+.sheet p { margin: 10px 0 0; font-size: 14px; color: var(--ink-2); }
+.sheet .acts { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 0; }
+.sheet h3 { margin: 18px 0 8px; font-size: 15px; font-weight: 700; }
+.sheet h3:first-of-type { margin-top: 6px; }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: 14.5px; color: var(--ink-2); }
+.toggle input { width: 18px; height: 18px; accent-color: var(--ink); }
+
+/* 단계 표시: 허가 → 착공 → 사용승인 */
+.track { display: flex; gap: 4px; margin: 14px 0 0; }
+.track .step { flex: 1; min-width: 0; }
+.track .bar { height: 6px; border-radius: 3px; background: var(--rule); }
+.track .step.on .bar { background: var(--ink-2); }
+.track .step.work .bar { background: var(--work); }
+.track .step.done .bar { background: var(--done); }
+.track .lab { margin-top: 6px; font-size: 13px; color: var(--ink-2); }
+.track .lab b { display: block; font-weight: 500; color: var(--ink); }
+
+/* 분석: 하위 탭 */
+.subtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--rule); margin: 12px 0 0; }
+.subtabs button { border: 0; background: none; padding: 10px 14px 9px; font-size: 16px; font-weight: 500; color: var(--ink-2); border-bottom: 3px solid transparent; cursor: pointer; }
+.subtabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
+.pane { padding-top: 16px; }
+
+/* 공급 예고 */
 .qb { border-top: 1px solid var(--rule); }
-.qb:last-child { border-bottom: 1px solid var(--rule); }
+.qb:last-of-type { border-bottom: 1px solid var(--rule); }
 .qb > h3 { margin: 0; font-size: 16px; }
 .qb > h3 > button {
   width: 100%; background: none; border: 0; padding: 14px 2px 12px 0; cursor: pointer; text-align: left;
@@ -269,9 +317,6 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
 }
 .qb .ql { font-weight: 700; }
 .qb .ql small { font-weight: 400; color: var(--ink-2); font-size: 13px; margin-left: 6px; }
-.qb .c { color: var(--ink-2); font-size: 14px; font-weight: 400; white-space: nowrap; }
-.qb .c::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 10px; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: translateY(-3px) rotate(45deg); }
-.qb button[aria-expanded="false"] .c::after { transform: translateY(-1px) rotate(-45deg); }
 .qb .qs { grid-column: 1 / 3; font-size: 14px; color: var(--ink-2); font-weight: 400; }
 .qb .qbar { grid-column: 1 / 3; height: 10px; display: flex; gap: 2px; margin: 4px 0 0; }
 .qb .qbar span { height: 100%; border-radius: 2px; }
@@ -281,193 +326,241 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
 .mtable th { color: var(--ink-2); font-weight: 500; font-size: 13px; }
 .mtable th:first-child, .mtable td:first-child { text-align: left; white-space: normal; }
 .mtable-wrap { overflow-x: auto; }
-
-/* 지도 */
-.mapbox {
-  position: relative; margin: 12px 0 0; height: min(68vh, 560px); min-height: 340px;
-  border: 1px solid var(--rule); border-radius: var(--radius-sign); background: var(--sheet); overflow: hidden;
-}
-#map { position: absolute; inset: 0; }
-.mapmsg {
-  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  padding: 24px; text-align: center; color: var(--ink-2); font-size: 15px;
-}
-.mapstat { margin: 8px 0 0; font-size: 14px; color: var(--ink-2); }
-.pin {
-  width: 16px; height: 16px; border-radius: 50%; border: 2px solid #FFFFFF; padding: 0;
-  background: var(--cat, var(--c-etc)); box-shadow: 0 0 0 1px rgba(23, 33, 44, .45); cursor: pointer;
-}
-.pin.big { width: 22px; height: 22px; }
-.pin.on { box-shadow: 0 0 0 3px var(--ink); }
-.mapcard { margin: 12px 0 0; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 0; font-size: 13px; color: var(--ink-2); }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.disclaimer { margin: 28px 0 0; padding: 12px 14px; background: var(--sheet); border-left: 3px solid var(--rule); font-size: 13px; color: var(--ink-2); }
+.disclaimer p { margin: 0; }
+.disclaimer p + p { margin-top: 8px; }
+.disclaimer b { font-weight: 500; color: var(--ink); }
+.st-ctrl { margin: 12px 0 0; display: flex; align-items: center; gap: 8px; }
+.flabel { flex: none; width: 2.4em; font-size: 13px; color: var(--ink-3); }
+#st-result { margin: 12px 0 4px; }
 
 /* 통계 */
-.stats h3 { font-size: 15px; margin: 24px 0 10px; font-weight: 700; }
-.stats > p { margin: 14px 0 0; color: var(--ink-2); font-size: 14px; }
 .bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 8px 12px; align-items: center; font-size: 14px; }
 .bars .k { color: var(--ink-2); }
 .bars .v { text-align: right; min-width: 3.5em; }
 .bars .track2 { height: 14px; background: var(--rule); border-radius: 2px; display: flex; overflow: hidden; }
 .bars .seg2 { height: 100%; }
+.stats h3 { font-size: 15px; margin: 24px 0 10px; font-weight: 700; }
+.stats h3:first-of-type { margin-top: 8px; }
+.stats > p { margin: 14px 0 0; color: var(--ink-2); font-size: 14px; }
 .facts { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--rule); }
 .facts li { padding: 12px 0; border-bottom: 1px solid var(--rule); font-size: 15px; color: var(--ink-2); }
 .facts b { color: var(--ink); font-size: 18px; margin-right: 6px; }
 
-/* 기준 */
-.about { margin: 48px 0 0; padding-block: 16px 40px; border-top: 1px solid var(--rule); font-size: 15px; color: var(--ink-2); }
-.about h2 { margin: 0 0 8px; font-size: 17px; color: var(--ink); }
-.about ul { padding-left: 20px; margin: 8px 0; }
-.about li { margin: 4px 0; }
-.foot { color: var(--ink-3); font-size: 13px; margin-top: 24px; }
-
 @media (max-width: 480px) {
-  .sign-addr strong { font-size: 23px; }
   .item > button { grid-template-columns: 40px minmax(0, 1fr) auto; }
-  .tab { padding-inline: 10px; }
   .tile { padding-inline: 8px; }
   .tile b { font-size: 21px; }
-  .seg button { padding-inline: 12px; }
+  .seg button { padding-inline: 11px; }
+  .brand span { font-size: 18px; }
+  .card { padding: 14px; }
+}
+@media (min-width: 900px) {
+  .mapbox { height: min(60vh, 560px); }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .detail { animation: open .16s ease-out; }
-  @keyframes open { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  .sheet:not([hidden]) { animation: up .18s ease-out; }
+  @keyframes up { from { transform: translateY(24px); opacity: .6; } to { transform: none; opacity: 1; } }
 }
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+<header class="appbar">
+  <div class="wrap appbar-in">
+    <button type="button" class="brand" id="brand" aria-label="동네레이더 홈으로">
+      <svg width="28" height="28" viewBox="0 0 30 30" aria-hidden="true">
         <circle cx="15" cy="15" r="13" fill="none" stroke="currentColor" stroke-width="2"/>
         <circle cx="15" cy="15" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".55"/>
         <path d="M15 15 L25.5 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         <circle cx="21" cy="11" r="2.4" fill="var(--work)"/>
       </svg>
-      <h1>동네레이더</h1>
-    </div>
-    <p class="lede">청주시 청원구에서 새로 허가된 건축과 공사가 어디까지 왔는지, 공공데이터로 모아 보여줍니다.</p>
-    <p class="stamp" id="stamp"></p>
-    <p class="notice" id="coverage" hidden></p>
-  </header>
-
-  <section class="shared" id="shared-sec" aria-labelledby="hero-h" hidden>
-    <h2 id="hero-h">공유받은 허가</h2>
-    <article class="sign" id="sign" aria-live="polite"></article>
-  </section>
-
-  <section class="scope" aria-label="기간과 동네">
-    <div class="frow">
-      <div class="frow lab"><span class="flabel" aria-hidden="true">기간</span><div class="seg" id="f-period" role="group" aria-label="기간"></div></div>
-      <select class="sel" id="f-place" aria-label="동네"></select>
-    </div>
-    <div class="frow custom" id="f-custom" hidden>
-      <select class="sel" id="f-from" aria-label="시작 달"></select><span aria-hidden="true">~</span><select class="sel" id="f-to" aria-label="끝 달"></select>
-    </div>
-  </section>
-
-  <section class="summary" aria-labelledby="sum-h">
-    <div class="sec-head"><h2 class="sec" id="sum-h"></h2><span id="sum-range"></span></div>
-    <div class="tiles" id="tiles" role="group" aria-label="변화 종류"></div>
-    <p class="hint">숫자를 누르면 아래 목록과 지도가 그 변화만 보여줍니다. 한 번 더 누르면 모든 변화로 돌아갑니다.</p>
-  </section>
-
-  <section class="top5" aria-labelledby="top5-h">
-    <div class="sec-head"><h2 class="sec" id="top5-h">이 기간 큰 사업</h2><span>연면적 큰 순 5곳</span></div>
-    <div class="group" id="top5"></div>
-  </section>
-</div>
-
-<nav class="views" aria-label="보기 전환">
-  <div class="wrap" role="tablist">
-    <button class="tab" role="tab" id="tab-list" aria-controls="view-list" data-view="list">목록</button>
-    <button class="tab" role="tab" id="tab-map" aria-controls="view-map" data-view="map">지도</button>
-    <button class="tab" role="tab" id="tab-supply" aria-controls="view-supply" data-view="supply">공급 예고</button>
-    <button class="tab" role="tab" id="tab-stall" aria-controls="view-stall" data-view="stall">멈춘 기록</button>
-    <button class="tab" role="tab" id="tab-stats" aria-controls="view-stats" data-view="stats">통계</button>
+      <span id="appbar-title">동네레이더</span>
+    </button>
+    <select class="sel" id="f-place" aria-label="동네"></select>
   </div>
-</nav>
+</header>
 
-<div class="wrap">
-  <section class="filters" id="filters" aria-label="거르기">
-    <div class="frow lab"><span class="flabel" aria-hidden="true">정렬</span><div class="hscroll" id="f-sort" role="group" aria-label="정렬"></div></div>
-    <div class="frow lab"><span class="flabel" aria-hidden="true">용도</span><div class="hscroll" id="f-cat" role="group" aria-label="용도"></div></div>
-    <input class="search" id="q" type="search" placeholder="지번, 리 이름, 건물 이름으로 찾기 (예: 여천리, 내덕동 650)" aria-label="지번, 리 이름, 건물 이름으로 찾기">
-    <label class="toggle"><input type="checkbox" id="blank"> 용도가 적히지 않은 소규모 허가도 보기</label>
-    <div class="resultrow"><p class="result" id="result" aria-live="polite"></p><div class="acts2"><button type="button" class="linkbtn" id="toggle-all" hidden>모두 펼치기</button><button type="button" class="linkbtn" id="reset" hidden>조건 초기화</button></div></div>
-  </section>
+<main>
+  <!-- 홈: 한눈에 보는 대시보드 -->
+  <section class="screen" id="scr-home" aria-labelledby="home-h">
+    <div class="wrap">
+      <div class="hero">
+        <h1 id="home-h">청주시 청원구의 개발 변화를 확인하세요</h1>
+        <p class="stamp" id="stamp"></p>
+        <p class="notice" id="coverage" hidden></p>
+        <form class="searchbox" id="home-search" role="search">
+          <input type="search" id="home-q" placeholder="동네, 지번, 건물 이름 (예: 여천리, 내덕동 650)" aria-label="동네, 지번, 건물 이름으로 찾기">
+          <button type="submit">찾기</button>
+        </form>
+      </div>
 
-  <section id="view-list" role="tabpanel" aria-labelledby="tab-list"></section>
+      <article class="card" aria-labelledby="sum-h">
+        <div class="card-head"><h2 id="sum-h">청원구 개발 현황</h2><span id="sum-range"></span></div>
+        <div class="period" data-period></div>
+        <div class="tiles" id="tiles" role="group" aria-label="변화 종류"></div>
+        <p class="hint">숫자를 누르면 개발지도에서 그 변화만 볼 수 있습니다.</p>
+      </article>
 
-  <section id="view-map" role="tabpanel" aria-labelledby="tab-map" hidden>
-    <div class="mapbox"><div id="map"></div><div class="mapmsg" id="mapmsg">지도를 불러오는 중입니다.</div></div>
-    <p class="mapstat" id="mapstat"></p>
-    <div class="legend" id="maplegend"></div>
-    <div class="mapcard" id="mapcard"></div>
-  </section>
+      <article class="card" aria-labelledby="top5-h">
+        <div class="card-head"><h2 id="top5-h">이 기간 주요 개발</h2><a href="#map" id="go-big">지도에서 전체 보기 →</a></div>
+        <div class="minimap"><div id="minimap"></div><div class="mapmsg" id="minimsg">지도를 불러오는 중입니다.</div></div>
+        <div class="group" id="top5"></div>
+      </article>
 
-  <section id="view-supply" class="panel" role="tabpanel" aria-labelledby="tab-supply" hidden>
-    <div class="sec-head panel-top"><h2 class="sec" id="sup-h">공급 예고</h2><span id="sup-asof"></span></div>
-    <p class="panel-note">지금 공사 중인 곳이 언제쯤 완공될지, 청원구에서 비슷한 건물이 착공부터 사용승인까지 걸린 기간으로 추정했습니다. 위의 기간 버튼과 상관없이 자료 기준일 현재 상태입니다.</p>
-    <div id="sup-buckets"></div>
-    <p class="panel-note" id="sup-ext" style="margin-top:12px"></p>
-    <h3 class="sub">허가만 받은 곳 (아직 착공 기록 없음)</h3>
-    <p class="panel-note" id="sup-pipe"></p>
-    <h3 class="sub">이렇게 계산했어요</h3>
-    <div id="sup-method"></div>
-    <p class="disclaimer">예상 완공 시기는 착공일에 청원구의 비슷한 건물(용도·규모)이 착공부터 사용승인까지 걸린 기간을 더해 계산한 통계적 추정 범위이며, 건축주의 공식 일정이 아닙니다. 공사비·자금 사정, 설계 변경 등으로 크게 달라질 수 있고, 아파트 입주 물량은 한국부동산원 발표와 다를 수 있습니다.</p>
-  </section>
+      <div class="cards2">
+        <a class="card link" href="#supply">
+          <h2>곧 들어설 건물</h2>
+          <b id="home-sup"></b>
+          <span class="why" id="home-sup-why"></span>
+          <span class="go">공급 예고 보기 →</span>
+        </a>
+        <a class="card link w" href="#stall">
+          <h2>진행이 멈춘 곳</h2>
+          <b id="home-stall"></b>
+          <span class="why" id="home-stall-why"></span>
+          <span class="go">멈춘 기록 보기 →</span>
+        </a>
+      </div>
+      <a class="card link" href="#analysis">
+        <h2>지역 분석</h2>
+        <b id="home-ana"></b>
+        <span class="why">동네별·용도별 새 허가, 해마다 흐름, 허가부터 착공까지 걸린 기간</span>
+        <span class="go">분석 보기 →</span>
+      </a>
 
-  <section id="view-stall" class="panel" role="tabpanel" aria-labelledby="tab-stall" hidden>
-    <div class="sec-head panel-top"><h2 class="sec" id="st-h">진행 기록이 멈춘 곳</h2><span id="st-asof"></span></div>
-    <p class="panel-note">허가를 받고 오랫동안 착공 기록이 없거나, 착공하고 오랫동안 사용승인 기록이 없는 곳입니다. 새로 짓기·넓히기처럼 착공 신고를 하는 공사만 셉니다. 위의 기간 버튼과 상관없이 자료 기준일 현재 상태입니다.</p>
-    <div class="tiles" id="st-tiles" role="group" aria-label="기록 종류"></div>
-    <div class="frow lab st-ctrl"><span class="flabel" aria-hidden="true">규모</span><div class="hscroll" id="st-size" role="group" aria-label="규모"></div></div>
-    <div class="frow lab st-ctrl"><span class="flabel" aria-hidden="true">정렬</span><div class="hscroll" id="st-sort" role="group" aria-label="정렬"></div></div>
-    <p class="result" id="st-result" aria-live="polite"></p>
-    <div id="st-list"></div>
-    <h3 class="sub" id="st-bars-h">동네별 건수</h3>
-    <div class="bars" id="st-bars"></div>
-    <div class="disclaimer">
-      <p>이 목록은 국토교통부 건축HUB 인허가 공개자료에 착공일이나 사용승인일이 <b>기록되지 않은</b> 건을 기계적으로 추린 것입니다. 실제로는 착공·완공했지만 입력이 늦거나 빠진 경우, 허가가 취소됐거나 착공 기간이 연장된 경우가 섞여 있을 수 있습니다.</p>
-      <p>건축법은 허가받은 날부터 2년(공장 승인을 받은 공장은 3년) 안에 공사를 시작하지 않으면 허가를 취소하도록 하고, 정당한 사유가 있으면 1년까지 연장할 수 있게 합니다. 공장 여부는 주용도로 짐작한 것입니다.</p>
-      <p>이 목록은 법에서 말하는 ‘공사중단 장기방치 건축물’(국토교통부 실태조사로 확인된 건축물)이 아닙니다. 정확한 상태는 청주시 청원구청 건축 부서에서 확인하세요.</p>
+      <details class="about">
+        <summary>이 자료에 대해</summary>
+        <ul>
+          <li>국토교통부 건축HUB 건축인허가정보를 매일 받아 2023년 1월 1일 이후 허가된 기록만 보여줍니다.</li>
+          <li>‘허가’는 건축허가일, ‘공사 중’은 실제 착공일, ‘완공’은 사용승인일이 기록된 경우입니다. 착공이나 사용승인이 늦게 등록되거나 빠진 경우가 있어 실제 현장과 다를 수 있습니다.</li>
+          <li>기간을 고르면 그 안에 허가·착공·사용승인 중 하나라도 있었던 기록을 보여줍니다. ‘최근 1달·3달·1년’은 오늘이 아니라 자료가 들어온 마지막 날을 기준으로 셉니다.</li>
+          <li>용도와 공사 종류가 비어 있는 소규모 기록은 기본으로 빼고, 거르기에서 체크하면 함께 보여줍니다.</li>
+          <li>‘공급 예고’는 청원구에서 비슷한 규모의 건물이 착공부터 사용승인까지 걸린 기간으로 완공 시기를 추정한 것이고, ‘멈춘 기록’은 착공이나 사용승인 기록이 오래 없는 곳을 기계적으로 추린 것입니다. 둘 다 사실 확인이 아니라 기록에 근거한 추정입니다.</li>
+          <li>지도 위치는 지번 주소로 찾은 대략의 위치입니다. 일부 허가는 위치를 찾지 못해 지도에 나오지 않습니다.</li>
+          <li>정확한 내용은 <a href="https://www.eais.go.kr" target="_blank" rel="noopener">세움터</a>에서 대지위치로 다시 확인하세요. 이 사이트는 투자 판단이나 법적 판단의 근거가 아닙니다.</li>
+        </ul>
+      </details>
+      <p class="foot" id="foot"></p>
     </div>
   </section>
 
-  <section id="view-stats" class="stats" role="tabpanel" aria-labelledby="tab-stats" hidden>
-    <h3 id="h-area"></h3>
-    <div class="bars" id="c-area"></div>
-    <h3 id="h-cat"></h3>
-    <div class="bars" id="c-cat"></div>
-    <h3 id="h-year"></h3>
-    <div class="bars" id="c-year"></div>
-    <div class="legend"><span><i style="background:var(--ink-2)"></i>용도가 확인된 허가</span><span><i style="background:var(--c-none)"></i>용도 미기재</span></div>
-    <h3 id="h-facts"></h3>
-    <ul class="facts" id="facts"></ul>
-    <p id="s-sub"></p>
+  <!-- 개발지도: 지도와 목록이 이어진다 -->
+  <section class="screen" id="scr-map" aria-label="개발지도" hidden>
+    <div class="wrap">
+      <div class="map-tools">
+        <form class="searchbox" id="map-search" role="search">
+          <input type="search" id="q" placeholder="동네, 지번, 건물 이름으로 찾기" aria-label="동네, 지번, 건물 이름으로 찾기">
+          <button type="submit">찾기</button>
+        </form>
+        <div class="hscroll" id="evchips" role="group" aria-label="변화 종류"></div>
+        <div class="toolbar">
+          <button type="button" class="chip filterbtn" id="open-filter" aria-haspopup="dialog">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 5h14M6 10h8M8.5 15h3"/></svg>
+            <span id="filter-sum">거르기</span>
+          </button>
+          <p class="result" id="result" aria-live="polite"></p>
+        </div>
+      </div>
+      <div class="mapbox"><div id="map"></div><div class="mapmsg" id="mapmsg">지도를 불러오는 중입니다.</div></div>
+      <p class="mapstat" id="mapstat"></p>
+      <div class="legend" id="maplegend"></div>
+      <div class="list-head">
+        <h2 class="sec">개발 기록</h2>
+        <div class="acts2"><button type="button" class="linkbtn" id="toggle-all" hidden>모두 펼치기</button><button type="button" class="linkbtn" id="reset" hidden>조건 초기화</button></div>
+      </div>
+      <div id="view-list"></div>
+    </div>
   </section>
 
-  <section class="about" aria-labelledby="a-h">
-    <h2 id="a-h">이 자료에 대해</h2>
-    <ul>
-      <li>국토교통부 건축HUB 건축인허가정보를 매일 받아 2023년 1월 1일 이후 허가된 기록만 보여줍니다.</li>
-      <li>‘허가’는 건축허가일, ‘공사 중’은 실제 착공일, ‘완공’은 사용승인일이 기록된 경우입니다. 착공이나 사용승인이 늦게 등록되거나 빠진 경우가 있어 실제 현장과 다를 수 있습니다.</li>
-      <li>기간을 고르면 그 안에 허가·착공·사용승인 중 하나라도 있었던 기록을 보여줍니다. ‘새 허가·공사 시작·완공’ 숫자를 누르면 그 날짜가 기간 안에 있는 기록만 남습니다.</li>
-      <li>‘최근 1달·3달·1년’은 오늘이 아니라 자료가 들어온 마지막 날을 기준으로 셉니다. 공공데이터가 한 달가량 늦게 들어오기 때문입니다.</li>
-      <li>용도와 공사 종류가 비어 있는 소규모 기록은 기본으로 빼고, 체크하면 함께 보여줍니다.</li>
-      <li>‘공급 예고’는 청원구에서 비슷한 규모의 건물이 착공부터 사용승인까지 걸린 기간으로 완공 시기를 추정한 것이고, ‘멈춘 기록’은 착공이나 사용승인 기록이 오래 없는 곳을 기계적으로 추린 것입니다. 둘 다 사실 확인이 아니라 기록에 근거한 추정입니다.</li>
-      <li>지도 위치는 지번 주소로 찾은 대략의 위치입니다. 일부 허가는 위치를 찾지 못해 지도에 나오지 않습니다.</li>
-      <li>정확한 내용은 <a href="https://www.eais.go.kr" target="_blank" rel="noopener">세움터</a>에서 대지위치로 다시 확인하세요. 이 사이트는 투자 판단이나 법적 판단의 근거가 아닙니다.</li>
-    </ul>
-    <p class="foot" id="foot"></p>
+  <!-- 공급 예고 -->
+  <section class="screen" id="scr-supply" aria-labelledby="sup-h" hidden>
+    <div class="wrap">
+      <div class="screen-top sec-head"><h2 class="sec" id="sup-h">공급 예고</h2><span id="sup-asof"></span></div>
+      <p class="panel-note">지금 공사 중인 곳이 언제쯤 완공될지, 청원구에서 비슷한 건물이 착공부터 사용승인까지 걸린 기간으로 추정했습니다. 기간 선택과 상관없이 자료 기준일 현재 상태입니다.</p>
+      <div id="sup-buckets"></div>
+      <p class="panel-note" id="sup-ext" style="margin-top:12px"></p>
+      <h3 class="sub">허가만 받은 곳 (아직 착공 기록 없음)</h3>
+      <p class="panel-note" id="sup-pipe"></p>
+      <h3 class="sub">이렇게 계산했어요</h3>
+      <div id="sup-method"></div>
+      <p class="disclaimer">예상 완공 시기는 착공일에 청원구의 비슷한 건물(규모)이 착공부터 사용승인까지 걸린 기간을 더해 계산한 통계적 추정 범위이며, 건축주의 공식 일정이 아닙니다. 공사비·자금 사정, 설계 변경 등으로 크게 달라질 수 있고, 아파트 입주 물량은 한국부동산원 발표와 다를 수 있습니다.</p>
+    </div>
   </section>
-</div>
+
+  <!-- 지역 분석: 통계와 멈춘 기록 -->
+  <section class="screen" id="scr-analysis" aria-label="지역 분석" hidden>
+    <div class="wrap">
+      <div class="subtabs" role="tablist" aria-label="분석 종류">
+        <button type="button" role="tab" id="sub-stats" aria-controls="pane-stats" data-sub="stats">지역 통계</button>
+        <button type="button" role="tab" id="sub-stall" aria-controls="pane-stall" data-sub="stall">멈춘 기록</button>
+      </div>
+
+      <div class="pane stats" id="pane-stats" role="tabpanel" aria-labelledby="sub-stats">
+        <div class="period" data-period></div>
+        <h3 id="h-area"></h3>
+        <div class="bars" id="c-area"></div>
+        <h3 id="h-cat"></h3>
+        <div class="bars" id="c-cat"></div>
+        <h3 id="h-year"></h3>
+        <div class="bars" id="c-year"></div>
+        <div class="legend"><span><i style="background:var(--ink-2)"></i>용도가 확인된 허가</span><span><i style="background:var(--c-none)"></i>용도 미기재</span></div>
+        <h3 id="h-facts"></h3>
+        <ul class="facts" id="facts"></ul>
+        <p id="s-sub"></p>
+      </div>
+
+      <div class="pane" id="pane-stall" role="tabpanel" aria-labelledby="sub-stall" hidden>
+        <div class="sec-head"><h2 class="sec" id="st-h">진행 기록이 멈춘 곳</h2><span id="st-asof"></span></div>
+        <p class="panel-note">허가를 받고 오랫동안 착공 기록이 없거나, 착공하고 오랫동안 사용승인 기록이 없는 곳입니다. 새로 짓기·넓히기처럼 착공 신고를 하는 공사만 셉니다. 기간 선택과 상관없이 자료 기준일 현재 상태입니다.</p>
+        <div class="tiles" id="st-tiles" role="group" aria-label="기록 종류"></div>
+        <div class="st-ctrl"><span class="flabel" aria-hidden="true">규모</span><div class="hscroll" id="st-size" role="group" aria-label="규모"></div></div>
+        <div class="st-ctrl"><span class="flabel" aria-hidden="true">정렬</span><div class="hscroll" id="st-sort" role="group" aria-label="정렬"></div></div>
+        <p class="result" id="st-result" aria-live="polite"></p>
+        <div id="st-list"></div>
+        <h3 class="sub" id="st-bars-h">동네별 건수</h3>
+        <div class="bars" id="st-bars"></div>
+        <div class="disclaimer">
+          <p>이 목록은 국토교통부 건축HUB 인허가 공개자료에 착공일이나 사용승인일이 <b>기록되지 않은</b> 건을 기계적으로 추린 것입니다. 실제로는 착공·완공했지만 입력이 늦거나 빠진 경우, 허가가 취소됐거나 착공 기간이 연장된 경우가 섞여 있을 수 있습니다.</p>
+          <p>건축법은 허가받은 날부터 2년(공장 승인을 받은 공장은 3년) 안에 공사를 시작하지 않으면 허가를 취소하도록 하고, 정당한 사유가 있으면 1년까지 연장할 수 있게 합니다. 자료에 기록된 착공 기한이 있으면 그 날짜를 썼고, 없으면 주용도로 공장 여부를 짐작했습니다.</p>
+          <p>이 목록은 법에서 말하는 ‘공사중단 장기방치 건축물’(국토교통부 실태조사로 확인된 건축물)이 아닙니다. 정확한 상태는 청주시 청원구청 건축 부서에서 확인하세요.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 아래에서 올라오는 시트 (상세 정보, 거르기) -->
+<section class="sheet" id="sheet" role="dialog" aria-labelledby="sheet-h" hidden>
+  <div class="wrap">
+    <div class="grip" aria-hidden="true"></div>
+    <div class="sheet-bar"><h2 id="sheet-h"></h2><button type="button" class="x" id="sheet-x" aria-label="닫기">✕</button></div>
+    <div id="sheet-body"></div>
+  </div>
+</section>
 
 <button type="button" class="totop" id="totop" hidden>↑ 위로</button>
+
+<nav class="bottomnav" aria-label="메뉴">
+  <div class="wrap">
+    <a href="#home" data-nav="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 10.5 12 4l8.5 6.5"/><path d="M5.5 9v10.5h13V9"/><path d="M10 19.5v-5h4v5"/></svg>
+      <span>홈</span>
+    </a>
+    <a href="#map" data-nav="map">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
+      <span>개발지도</span>
+    </a>
+    <a href="#supply" data-nav="supply">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M8 14h3M8 17h6"/></svg>
+      <span>공급 예고</span>
+    </a>
+    <a href="#analysis" data-nav="analysis">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>
+      <span>분석</span>
+    </a>
+  </div>
+</nav>
 
 <script src="config.js"></script>
 <script src="data.js"></script>
@@ -665,21 +758,54 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
       "<dl>" + info.map(function (x) { return "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>" +
       track(r) + '<div class="sign-foot">' + (pager || "") + "</div>";
   }
-  function renderShared() {
-    var sec = document.getElementById("shared-sec"), el = document.getElementById("sign");
-    sec.hidden = !shared;
-    if (!shared) { el.innerHTML = ""; return; }
-    el.innerHTML = signHtml(shared, '<button type="button" class="btn" id="sh-map">지도에서 보기</button><button type="button" class="btn" id="sh-share">링크 공유</button><button type="button" class="btn" id="sh-close" style="margin-left:auto">닫기</button>');
-    document.getElementById("sh-map").onclick = function () { showOnMap(shared); };
-    document.getElementById("sh-share").onclick = function () { share(shared, this); };
-    document.getElementById("sh-close").onclick = function () {
-      shared = null; renderShared();
-      try { history.replaceState(null, "", "#" + view); } catch (e) {}
-    };
+
+  // ---------- 목록 한 줄 (홈·개발지도·공급 예고·멈춘 기록이 함께 쓴다). 누르면 상세가 아래 시트로 열린다.
+  // note: 이미 이스케이프한 HTML 한 줄 (예상 시기나 경과 기간)
+  function itemHtml(r, dateText, note) {
+    var bigArea = r.area >= 1000;
+    return '<div class="item" style="--cat:' + color(r.cat) + '"><button type="button" data-pk="' + esc(r.pk) + '">' +
+      '<span class="d">' + dateText + '</span><span class="t">' + esc(r.addr) + (r.name ? "<small>" + esc(r.name) + "</small>" : "") + '</span><span class="st ' + r.stage + '">' + STAGE[r.stage] + "</span>" +
+      '<span class="s">' + esc(summaryLine(r)) + ', <span class="' + (bigArea ? "big" : "") + '">' + area(r.area) + "</span></span>" +
+      (note ? '<span class="note">' + note + "</span>" : "") + "</button></div>";
+  }
+  function ym2(d) { return d ? d.slice(2, 4) + "." + (+d.slice(5, 7)) : ""; }
+  function bindItems(box) {
+    box.querySelectorAll(".item > button").forEach(function (b) {
+      b.onclick = function () { var r = byPk[b.getAttribute("data-pk")]; if (r) openItem(r, b); };
+    });
+  }
+  function markCurrent(pk) {
+    document.querySelectorAll('.item > button[aria-current="true"]').forEach(function (b) { b.removeAttribute("aria-current"); });
+    if (pk) document.querySelectorAll('.item > button[data-pk="' + pk + '"]').forEach(function (b) { b.setAttribute("aria-current", "true"); });
+  }
+  // 개발지도에서는 목록을 누르면 지도가 그 위치로 가고, 어느 화면이든 상세가 아래 시트로 열린다
+  function openItem(r, from) {
+    sheetReturn = from || null;
+    if (screen === "map") { focusOnMap(r); scrollToMap(); }
+    openDetail(r);
   }
 
-  // ---------- 목록 한 줄과 펼친 내용 (목록과 큰 사업 5곳이 함께 쓴다)
-  function detailHtml(r, pre) {
+  // ---------- 아래에서 올라오는 시트
+  var sheetReturn = null, sheetKind = "";
+  function openSheet(kind, title, html) {
+    sheetKind = kind;
+    document.getElementById("sheet-h").textContent = title;
+    document.getElementById("sheet-body").innerHTML = html;
+    var s = document.getElementById("sheet");
+    s.classList.toggle("short", kind === "detail" && screen === "map");
+    s.hidden = false; s.scrollTop = 0;
+  }
+  function closeSheet() {
+    var s = document.getElementById("sheet");
+    if (s.hidden) return;
+    s.hidden = true; sheetKind = ""; markCurrent(null); highlight(null);
+    if (sheetReturn && document.body.contains(sheetReturn)) sheetReturn.focus();
+    sheetReturn = null;
+  }
+  document.getElementById("sheet-x").onclick = closeSheet;
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
+
+  function openDetail(r) {
     var items = [
       ["대지위치", r.addr], ["건물 이름", r.name || "기록 없음"],
       ["건물 용도", r.purp ? officialUse(r.purp) + (r.use !== r.purp ? " (" + r.use + ")" : "") : "기록 없음"],
@@ -687,64 +813,55 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
       ["용도지역", r.jiyuk || "기록 없음"], ["지목", r.jimok || "기록 없음"]
     ];
     if (r.fmly) items.push(["가구수", r.fmly + "가구"]);
+    if (+r.hhld) items.push(["세대수", r.hhld + "세대"]);
     var gap = "";
     if (r.pms && r.stcns && days(r.pms, r.stcns) >= 0) gap = "허가 후 " + days(r.pms, r.stcns) + "일 만에 착공" + (r.apr && days(r.stcns, r.apr) >= 0 ? ", 착공 후 " + days(r.stcns, r.apr) + "일 만에 사용승인." : ".");
-    return '<div class="detail" id="' + pre + "-" + esc(r.pk) + '"><dl>' + items.map(function (x) { return "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>" + track(r) +
-      (gap ? "<p>" + gap + "</p>" : "") +
-      '<div class="acts"><button type="button" class="btn" data-map="' + esc(r.pk) + '">지도에서 보기</button><button type="button" class="btn" data-share="' + esc(r.pk) + '">링크 공유</button></div>' +
-      "<p>원문은 세움터에서 대지위치로 확인할 수 있습니다.</p></div>";
+    var extra = r.stall ? r.stall.note : (NEW[r.gb] && r.known && r.stcns && !r.apr ? forecast(r).note : "");
+    var html = '<div class="badges"><span class="badge ' + r.stage + '">' + STAGE[r.stage] + "</span>" + (r.name ? "<span>" + esc(r.name) + "</span>" : "") + "</div>" +
+      "<p style=\"margin-top:0;color:var(--ink)\">" + esc(summaryLine(r)) + ", " + area(r.area) + "</p>" +
+      (extra ? '<p class="item-note">' + extra + "</p>" : "") +
+      track(r) + (gap ? "<p>" + gap + "</p>" : "") +
+      '<div class="acts"><button type="button" class="btn solid" id="sh-map">' + (screen === "map" ? "지도에서 위치 보기" : "개발지도에서 보기") + '</button><button type="button" class="btn" id="sh-share">링크 공유</button></div>' +
+      "<h3>자세한 내용</h3><dl>" + items.map(function (x) { return "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>" +
+      "<p>원문은 세움터에서 대지위치로 확인할 수 있습니다.</p>";
+    openSheet("detail", r.addr, html);
+    markCurrent(r.pk);
+    document.getElementById("sh-map").onclick = function () {
+      if (screen === "map") { focusOnMap(r); scrollToMap(); }
+      else { M.focus = r; location.hash = "#map"; }
+    };
+    document.getElementById("sh-share").onclick = function () { share(r, this); };
   }
-  // note: 이미 이스케이프한 HTML 한 줄 (공급 예고·멈춘 기록에서 예상 시기나 경과 기간을 보여줄 때)
-  function itemHtml(r, open, dateText, pre, note) {
-    var bigArea = r.area >= 1000;
-    return '<div class="item" style="--cat:' + color(r.cat) + '"><button type="button" aria-expanded="' + open + '" aria-controls="' + pre + "-" + esc(r.pk) + '" data-pk="' + esc(r.pk) + '">' +
-      '<span class="d">' + dateText + '</span><span class="t">' + esc(r.addr) + (r.name ? "<small>" + esc(r.name) + "</small>" : "") + '</span><span class="st ' + r.stage + '">' + STAGE[r.stage] + "</span>" +
-      '<span class="s">' + esc(summaryLine(r)) + ', <span class="' + (bigArea ? "big" : "") + '">' + area(r.area) + "</span></span>" +
-      (note ? '<span class="note">' + note + "</span>" : "") + "</button>" +
-      (open ? detailHtml(r, pre) : "") + "</div>";
-  }
-  function ym2(d) { return d ? d.slice(2, 4) + "." + (+d.slice(5, 7)) : ""; }
-  function bindItems(box, key, redraw) {
-    box.querySelectorAll(".item > button").forEach(function (b) {
-      b.onclick = function () {
-        var pk = b.getAttribute("data-pk");
-        state[key] = state[key] === pk ? null : pk;
-        redraw();
-        var again = box.querySelector('.item > button[data-pk="' + pk + '"]');
-        if (again) again.focus();
-      };
-    });
-    box.querySelectorAll("[data-map]").forEach(function (b) {
-      b.onclick = function () { var r = byPk[b.getAttribute("data-map")]; if (r) showOnMap(r); };
-    });
-    box.querySelectorAll("[data-share]").forEach(function (b) {
-      b.onclick = function () { var r = byPk[b.getAttribute("data-share")]; if (r) share(r, b); };
+
+  // ---------- 기간 고르기 (data-period 자리마다 같은 버튼을 그린다: 홈, 거르기, 지역 통계)
+  function drawPeriods() {
+    var opts = MONTHS.slice().reverse().map(function (m) { return '<option value="' + m + '">' + ymLabel(m) + "</option>"; }).join("");
+    document.querySelectorAll("[data-period]").forEach(function (box) {
+      box.innerHTML = '<div class="seg" role="group" aria-label="기간">' + PERIODS.map(function (p) {
+        return '<button type="button" data-p="' + p.v + '" aria-pressed="' + (state.period === p.v) + '">' + p.t + "</button>";
+      }).join("") + "</div>" +
+        (state.period === "custom" ? '<div class="custom"><select class="sel" data-f="from" aria-label="시작 달">' + opts + '</select><span aria-hidden="true">~</span><select class="sel" data-f="to" aria-label="끝 달">' + opts + "</select></div>" : "");
+      box.querySelectorAll("[data-p]").forEach(function (b) {
+        b.onclick = function () {
+          var v = b.getAttribute("data-p"); state.period = v; changed();
+          var again = box.querySelector('[data-p="' + v + '"]'); if (again) again.focus();
+        };
+      });
+      var f = box.querySelector('[data-f="from"]'), t = box.querySelector('[data-f="to"]');
+      if (f) {
+        f.value = state.from; t.value = state.to;
+        f.onchange = function () { state.from = f.value; changed(); };
+        t.onchange = function () { state.to = t.value; changed(); };
+      }
     });
   }
 
-  // ---------- 기간·동네 고르기
-  function drawPeriod() {
-    var el = document.getElementById("f-period"); el.innerHTML = "";
-    PERIODS.forEach(function (p) {
-      var b = document.createElement("button");
-      b.type = "button"; b.textContent = p.t; b.setAttribute("aria-pressed", String(state.period === p.v));
-      b.onclick = function () { state.period = p.v; changed(); if (p.v === "custom") document.getElementById("f-from").focus(); };
-      el.appendChild(b);
-    });
-    document.getElementById("f-custom").hidden = state.period !== "custom";
-  }
-  (function buildCustom() {
-    var opts = MONTHS.slice().reverse().map(function (m) { return '<option value="' + m + '">' + ymLabel(m) + "</option>"; }).join("");
-    var a = document.getElementById("f-from"), b = document.getElementById("f-to");
-    a.innerHTML = opts; b.innerHTML = opts; a.value = state.from; b.value = state.to;
-    a.onchange = function () { state.from = a.value; changed(); };
-    b.onchange = function () { state.to = b.value; changed(); };
-  })();
+  // ---------- 동네 고르기 (위 고정 바)
   function drawPlace() {
     var sel = document.getElementById("f-place");
     var cnt = {}, total = 0;
     rows.forEach(function (r) {
-      if ((!state.blank && !r.known) || !moved(r, state.ev)) return;
+      if ((!state.blank && !r.known) || !moved(r, "all")) return;
       var a = r.place.split(" ")[0]; cnt[a] = (cnt[a] || 0) + 1; total++;
     });
     var dong = areas.filter(function (a) { return /동$/.test(a); }), town = areas.filter(function (a) { return !/동$/.test(a); });
@@ -756,84 +873,148 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
   }
   document.getElementById("f-place").onchange = function () { state.place = this.value; changed(); };
 
-  // ---------- 요약 숫자
-  function drawSummary() {
-    document.getElementById("sum-h").textContent = periodName() + " · " + (state.place === "all" ? "청원구 전체" : state.place);
+  // ---------- 홈
+  // 큰 사업: 같은 지번에 허가가 여러 번 난 경우(설계 변경 등)는 가장 큰 한 건만 남긴다
+  function topList(n) {
+    var seen = {};
+    return rows.filter(function (r) { return r.known && r.gb && r.area > 0 && scopeOk(r, "all"); })
+      .sort(function (a, b) { return b.area - a.area; })
+      .filter(function (r) { if (seen[r.addr]) return false; seen[r.addr] = 1; return true; }).slice(0, n);
+  }
+  function drawHome() {
+    var pl = state.place === "all" ? "청원구" : state.place;
+    document.getElementById("sum-h").textContent = pl + " 개발 현황";
     document.getElementById("sum-range").textContent = dot(R.show) + " ~ " + dot(R.to);
     var el = document.getElementById("tiles"); el.innerHTML = "";
+    var SUBS = { all: "기간 안 모든 기록", pms: "새로 받은 건축 허가", stcns: "착공 기록", apr: "사용승인 기록" };
     EVS.forEach(function (e) {
       var n = 0; rows.forEach(function (r) { if (scopeOk(r, e.v)) n++; });
       var b = document.createElement("button");
-      b.type = "button"; b.className = "tile " + e.cls; b.setAttribute("aria-pressed", String(state.ev === e.v));
+      b.type = "button"; b.className = "tile " + e.cls;
       b.innerHTML = "<b>" + nf(n) + "</b><span>" + e.t + "</span>";
-      b.setAttribute("aria-label", e.t + " " + nf(n) + "건");
-      b.onclick = function () { state.ev = state.ev === e.v ? "all" : e.v; changed(); };
+      b.setAttribute("aria-label", e.t + " " + nf(n) + "건, " + SUBS[e.v] + ". 개발지도에서 보기");
+      b.onclick = function () { state.ev = e.v; state.openM = null; state.shown = 40; remember(); M.dirty = true; location.hash = "#map"; };
       el.appendChild(b);
     });
-  }
 
-  // ---------- 이 기간 큰 사업 5곳
-  function drawTop5() {
-    var el = document.getElementById("top5");
-    var ev = evOf(state.ev);
-    document.getElementById("top5-h").textContent = "이 기간 큰 사업" + (state.ev === "all" ? "" : " · " + ev.t);
-    // 같은 지번에 허가가 여러 번 난 경우(설계 변경 등)는 가장 큰 한 건만 남긴다
-    var seen = {};
-    var list = rows.filter(function (r) { return r.known && r.gb && r.area > 0 && scopeOk(r, state.ev); })
-      .sort(function (a, b) { return b.area - a.area; })
-      .filter(function (r) { if (seen[r.addr]) return false; seen[r.addr] = 1; return true; }).slice(0, 5);
-    if (!list.length) { el.innerHTML = '<p class="empty">이 기간에는 규모가 기록된 사업이 없습니다.</p>'; return; }
-    el.innerHTML = list.map(function (r) { return itemHtml(r, state.open5 === r.pk, md(dateFor(r)), "t"); }).join("");
-    bindItems(el, "open5", drawTop5);
-  }
+    var list = topList(5), t5 = document.getElementById("top5");
+    t5.innerHTML = list.length ? list.map(function (r) { return itemHtml(r, md(latestIn(r))); }).join("") : '<p class="empty">이 기간에는 규모가 기록된 사업이 없습니다.</p>';
+    bindItems(t5);
 
-  // ---------- 정렬·용도·검색
+    // 곧 들어설 건물: 가장 가까운 분기
+    var bq = {};
+    rows.forEach(function (r) {
+      if (!(NEW[r.gb] && r.known && r.stcns && !r.apr && !r.stall && placeOk(r))) return;
+      var k = forecast(r).bucket; if (k !== "soon" && k !== "late") bq[k] = (bq[k] || 0) + 1;
+    });
+    var qk = Object.keys(bq).sort();
+    document.getElementById("home-sup").textContent = qk.length ? qLabel(qk[0]) + " " + nf(bq[qk[0]]) + "곳" : "예정된 곳 없음";
+    document.getElementById("home-sup-why").textContent = qk.length ? "완공 예상 (공사 중인 새 건물 기준)" : "공사 중인 새 건물이 없습니다";
+
+    var due = 0, all = 0;
+    rows.forEach(function (r) { if (r.stall && placeOk(r)) { all++; if (r.stall.kind === "due") due++; } });
+    document.getElementById("home-stall").textContent = "착공 기한 지남 " + nf(due) + "곳";
+    document.getElementById("home-stall-why").textContent = "기록이 오래 멈춘 곳 모두 " + nf(all) + "곳";
+
+    var ac = {}, fresh = 0;
+    rows.forEach(function (r) {
+      if (!(r.known && placeOk(r) && inR(r.pms))) return;
+      fresh++; var a = state.place === "all" ? r.place.split(" ")[0] : r.place; ac[a] = (ac[a] || 0) + 1;
+    });
+    var top = Object.keys(ac).sort(function (a, b) { return ac[b] - ac[a]; })[0];
+    document.getElementById("home-ana").textContent = top ? "새 허가 1위 " + top + " " + nf(ac[top]) + "건" : periodName() + " 새 허가 없음";
+    drawMini();
+  }
+  document.getElementById("go-big").addEventListener("click", function () { state.sort = "big"; state.ev = "all"; state.openM = null; remember(); M.dirty = true; });
+  document.getElementById("home-search").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = document.getElementById("home-q").value.trim();
+    state.q = v; state.ev = "all"; document.getElementById("q").value = v; state.openM = null; remember(); M.dirty = true;
+    location.hash = "#map";
+  });
+
+  // ---------- 개발지도: 변화 종류 칩, 거르기 시트, 목록
   var SORTS = ["new", "old", "stage", "big"];
   function sortLabel(v) {
     var w = evOf(state.ev).word;
     return v === "new" ? "최근 " + w + "순" : v === "old" ? "오래된 " + w + "순" : v === "stage" ? "완공 → 공사 중 → 허가" : "규모 큰 순";
   }
-  function drawChips() {
-    var so = document.getElementById("f-sort"); so.innerHTML = "";
+  function catName(id) { var c = CATS.filter(function (x) { return x.id === id; })[0]; return c ? c.name : ""; }
+  function fade(row) {
+    var l = row.scrollLeft > 4, r = row.scrollLeft + row.clientWidth < row.scrollWidth - 4;
+    var g = l || r ? "linear-gradient(to right, " + (l ? "transparent, #000 28px" : "#000") + ", " + (r ? "#000 calc(100% - 36px), transparent" : "#000") + ")" : "";
+    row.style.webkitMaskImage = g; row.style.maskImage = g;
+  }
+  ["evchips", "st-size", "st-sort"].forEach(function (id) {
+    var row = document.getElementById(id);
+    row.addEventListener("scroll", function () { fade(row); }, { passive: true });
+    window.addEventListener("resize", function () { fade(row); });
+  });
+  function drawEvChips() {
+    var el = document.getElementById("evchips"); el.innerHTML = "";
+    EVS.forEach(function (e) {
+      var n = 0; rows.forEach(function (r) { if (scopeOk(r, e.v)) n++; });
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(state.ev === e.v));
+      b.innerHTML = esc(e.t) + ' <span class="n">' + nf(n) + "</span>";
+      b.onclick = function () { state.ev = state.ev === e.v && e.v !== "all" ? "all" : e.v; changed(); };
+      el.appendChild(b);
+    });
+    fade(el);
+  }
+  function filterSummary() {
+    var bits = [periodName()];
+    if (state.cat !== "all") bits.push(catName(state.cat));
+    if (state.sort !== "new") bits.push(sortLabel(state.sort));
+    if (state.blank) bits.push("소규모 포함");
+    document.getElementById("filter-sum").textContent = "거르기 · " + bits.join(" · ");
+    document.getElementById("reset").hidden = !(state.place !== "all" || state.ev !== "all" || state.cat !== "all" || state.q || state.blank);
+  }
+  function openFilter() {
+    openSheet("filter", "거르기",
+      '<h3>기간</h3><div class="period" data-period></div>' +
+      '<h3>정렬</h3><div class="chips-wrap" id="fs-sort"></div>' +
+      '<h3>용도</h3><div class="chips-wrap" id="fs-cat"></div>' +
+      '<h3>그 밖</h3><label class="toggle"><input type="checkbox" id="fs-blank"> 용도가 적히지 않은 소규모 허가도 보기</label>' +
+      '<div class="acts"><button type="button" class="btn solid" id="fs-done"></button><button type="button" class="btn" id="fs-reset">조건 초기화</button></div>');
+    sheetReturn = document.getElementById("open-filter");
+    drawPeriods(); drawFilterSheet();
+  }
+  function drawFilterSheet() {
+    if (sheetKind !== "filter") return;
+    var so = document.getElementById("fs-sort"), ca = document.getElementById("fs-cat");
+    so.innerHTML = ""; ca.innerHTML = "";
     SORTS.forEach(function (v) {
       var b = document.createElement("button");
       b.type = "button"; b.className = "chip"; b.textContent = sortLabel(v); b.setAttribute("aria-pressed", String(state.sort === v));
       b.onclick = function () { state.sort = v; changed(); };
       so.appendChild(b);
     });
-    var el = document.getElementById("f-cat"); el.innerHTML = "";
     [{ v: "all", t: "모든 용도" }].concat(CATS.filter(function (c) { return c.id !== "none"; }).map(function (c) { return { v: c.id, t: c.name, sw: color(c.id) }; })).forEach(function (it) {
       var b = document.createElement("button");
       b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(state.cat === it.v));
       b.innerHTML = (it.sw ? '<span class="sw" style="background:' + it.sw + '"></span>' : "") + esc(it.t);
       b.onclick = function () { state.cat = it.v; changed(); };
-      el.appendChild(b);
+      ca.appendChild(b);
     });
-    document.getElementById("reset").hidden = !(state.place !== "all" || state.ev !== "all" || state.cat !== "all" || state.q || state.blank);
-    [so, el].forEach(function (row) {
-      var on = row.querySelector('[aria-pressed="true"]');
-      if (on && (on.offsetLeft < row.scrollLeft || on.offsetLeft + on.offsetWidth > row.scrollLeft + row.clientWidth)) row.scrollLeft = on.offsetLeft - 8;
-      fade(row);
-    });
+    var bl = document.getElementById("fs-blank");
+    bl.checked = state.blank; bl.onchange = function () { state.blank = bl.checked; changed(); };
+    var done = document.getElementById("fs-done");
+    done.textContent = nf(filtered().length) + "건 보기"; done.onclick = closeSheet;
+    document.getElementById("fs-reset").onclick = resetAll;
   }
-  // 가로로 더 밀 수 있는 쪽 끝을 흐리게 해서 더 있다는 걸 보여준다
-  function fade(row) {
-    var l = row.scrollLeft > 4, r = row.scrollLeft + row.clientWidth < row.scrollWidth - 4;
-    var g = l || r ? "linear-gradient(to right, " + (l ? "transparent, #000 28px" : "#000") + ", " + (r ? "#000 calc(100% - 36px), transparent" : "#000") + ")" : "";
-    row.style.webkitMaskImage = g; row.style.maskImage = g;
+  function resetAll() {
+    state.place = "all"; state.ev = "all"; state.cat = "all"; state.q = ""; state.blank = false; state.sort = "new";
+    document.getElementById("q").value = ""; document.getElementById("home-q").value = "";
+    changed();
   }
-  ["f-sort", "f-cat"].forEach(function (id) {
-    var row = document.getElementById(id);
-    row.addEventListener("scroll", function () { fade(row); }, { passive: true });
-    window.addEventListener("resize", function () { fade(row); });
-  });
+  document.getElementById("open-filter").addEventListener("click", openFilter);
+  document.getElementById("reset").addEventListener("click", resetAll);
   var qTimer;
-  document.getElementById("q").addEventListener("input", function (e) { clearTimeout(qTimer); qTimer = setTimeout(function () { state.q = e.target.value.trim(); changed(); }, 200); });
-  document.getElementById("blank").addEventListener("change", function (e) { state.blank = e.target.checked; changed(); });
-  document.getElementById("reset").addEventListener("click", function () {
-    state.place = "all"; state.ev = "all"; state.cat = "all"; state.q = ""; state.blank = false;
-    document.getElementById("q").value = ""; document.getElementById("blank").checked = false;
-    changed(); document.getElementById("q").focus();
+  document.getElementById("q").addEventListener("input", function (e) { clearTimeout(qTimer); qTimer = setTimeout(function () { state.q = e.target.value.trim(); changed(); }, 250); });
+  document.getElementById("map-search").addEventListener("submit", function (e) {
+    e.preventDefault(); clearTimeout(qTimer); state.q = document.getElementById("q").value.trim(); changed();
+    document.getElementById("q").blur();
   });
 
   var SORTERS = {
@@ -854,18 +1035,30 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
     return out.sort(SORTERS[state.sort] || SORTERS["new"]);
   }
 
-  // ---------- 목록: 달별로 묶고 접는다 (규모순은 한 줄로)
+  // 목록: 달별로 묶고 접는다 (규모순은 한 줄로)
   var groupKeys = [];
   function drawList() {
     var list = document.getElementById("view-list");
     var data = filtered();
     var tog = document.getElementById("toggle-all");
-    document.getElementById("result").textContent = "조건에 맞는 기록 " + nf(data.length) + "건";
-    if (!data.length) { tog.hidden = true; list.innerHTML = '<p class="empty">조건에 맞는 기록이 없습니다. 기간을 늘리거나 ‘조건 초기화’를 눌러 보세요.</p>'; return; }
+    document.getElementById("result").textContent = nf(data.length) + "건" + (state.q ? " · ‘" + state.q + "’ 검색" : "");
+    if (!data.length) {
+      tog.hidden = true;
+      // 고른 기간에는 없지만 전체 기간에는 있으면 바로 넓혀 볼 수 있게 한다
+      var wider = 0, q = state.q.replace(/\s+/g, "");
+      if (state.period !== "all") rows.forEach(function (r) {
+        if ((state.blank || r.known) && placeOk(r) && (state.cat === "all" || r.cat === state.cat) && (!q || (r.addr + r.name + r.purp + r.use).replace(/\s+/g, "").indexOf(q) >= 0)) wider++;
+      });
+      list.innerHTML = '<p class="empty">' + esc(periodName()) + "에는 조건에 맞는 기록이 없습니다." + (wider ? " 2023년부터 전체 기간에서는 " + nf(wider) + "건이 있습니다." : " ‘조건 초기화’를 눌러 보세요.") + "</p>" +
+        (wider ? '<button type="button" class="btn solid" id="widen">전체 기간으로 보기</button>' : "");
+      var wb = document.getElementById("widen");
+      if (wb) wb.onclick = function () { state.period = "all"; state.ev = "all"; changed(); };
+      return;
+    }
     var html = "";
     if (state.sort === "big") {
       tog.hidden = true;
-      html += '<div class="group" style="margin-top:12px">' + data.slice(0, state.shown).map(function (r) { return itemHtml(r, state.open === r.pk, md(r._d), "l"); }).join("") + "</div>";
+      html += '<div class="group boxed" style="margin-top:12px">' + data.slice(0, state.shown).map(function (r) { return itemHtml(r, md(r._d)); }).join("") + "</div>";
       if (data.length > state.shown) html += '<button type="button" class="more" id="more">' + nf(data.length - state.shown) + "건 더 보기</button>";
     } else {
       var byStage = state.sort === "stage", groups = [], g = null, sCount = {};
@@ -889,7 +1082,7 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
         var open = single || !!state.openM[x.k];
         var word = state.ev !== "all" ? evOf(state.ev).word : byStage ? STAGE_WORD[x.s] : "";
         html += '<h3 class="mh"><button type="button" aria-expanded="' + open + '" data-m="' + esc(x.k) + '"><span>' + (x.ym ? ymLabel(x.ym) : "날짜 미기재") + (word ? " " + word : "") + '</span><span class="c">' + nf(x.items.length) + "건</span></button></h3>";
-        if (open) html += '<div class="group">' + x.items.map(function (r) { return itemHtml(r, state.open === r.pk, md(r._d), "l"); }).join("") + "</div>";
+        if (open) html += '<div class="group">' + x.items.map(function (r) { return itemHtml(r, md(r._d)); }).join("") + "</div>";
       });
       html += "</div>";
     }
@@ -903,7 +1096,7 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
         if (again) again.focus();
       };
     });
-    bindItems(list, "open", drawList);
+    bindItems(list);
     var more = document.getElementById("more");
     if (more) more.onclick = function () { state.shown += 40; drawList(); };
   }
@@ -914,10 +1107,10 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
     drawList();
   });
 
-  // ---------- 지도 (카카오맵, 화면에서 바로 주소를 위치로 바꿈)
+  // ---------- 지도 (카카오맵, 화면에서 바로 주소를 위치로 바꿈. 위치는 이 기기 브라우저에만 저장)
   var MAP_LIMIT = 150;
-  var M = { status: "idle", map: null, geo: null, overlays: [], token: 0, dirty: true, focus: null, pins: {} };
-  function mapMsg(t) { var el = document.getElementById("mapmsg"); el.hidden = !t; el.textContent = t || ""; }
+  var M = { sdk: "idle", wait: [], geo: null, map: null, mini: null, overlays: [], miniOv: [], token: 0, miniToken: 0, dirty: true, focus: null, pins: {}, sel: null };
+  function msg(id, t) { var el = document.getElementById(id); el.hidden = !t; el.textContent = t || ""; }
   function geoAddr(r) { return "충청북도 청주시 청원구 " + r.addr.replace(/\s*\d+블록.*$/, ""); }
   function cacheGet(k) { try { var v = localStorage.getItem("g1:" + k); return v === null ? undefined : JSON.parse(v); } catch (e) { return undefined; } }
   function cacheSet(k, v) { try { localStorage.setItem("g1:" + k, JSON.stringify(v)); } catch (e) {} }
@@ -930,51 +1123,73 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
       cb(v);
     });
   }
-  function loadMap(cb) {
-    if (M.status === "ready") return cb();
-    if (M.status === "loading") { M.after = cb; return; }
-    if (!CFG.kakaoJsKey) { mapMsg("지도를 준비하고 있어요. 카카오 지도 키를 넣으면 이곳에 허가 위치가 표시됩니다."); return; }
-    M.status = "loading"; M.after = cb;
+  function loadSDK(cb) {
+    if (M.sdk === "ready") return cb();
+    if (M.sdk === "error") return;
+    M.wait.push(cb);
+    if (M.sdk === "loading") return;
+    if (!CFG.kakaoJsKey) { M.sdk = "error"; msg("mapmsg", "카카오 지도 키가 없어 지도를 보여줄 수 없습니다."); msg("minimsg", "지도를 준비하고 있어요."); return; }
+    M.sdk = "loading";
     var s = document.createElement("script");
     s.src = "https://dapi.kakao.com/v2/maps/sdk.js?appkey=" + encodeURIComponent(CFG.kakaoJsKey) + "&libraries=services&autoload=false";
-    s.onerror = function () { M.status = "error"; mapMsg("지도를 불러오지 못했습니다. 잠시 뒤 새로고침해 보세요."); };
+    function fail(t) { M.sdk = "error"; M.wait = []; msg("mapmsg", t); msg("minimsg", "지도를 불러오지 못했습니다."); }
+    s.onerror = function () { fail("지도를 불러오지 못했습니다. 잠시 뒤 새로고침해 보세요."); };
     s.onload = function () {
-      if (!window.kakao || !kakao.maps) { M.status = "error"; mapMsg("지도를 불러오지 못했습니다. 카카오 개발자 설정에 이 사이트 주소가 등록됐는지 확인하세요."); return; }
+      if (!window.kakao || !kakao.maps) { fail("지도를 불러오지 못했습니다. 카카오 개발자 설정에 이 사이트 주소가 등록됐는지 확인하세요."); return; }
       kakao.maps.load(function () {
-        M.map = new kakao.maps.Map(document.getElementById("map"), { center: new kakao.maps.LatLng(36.685, 127.475), level: 9 });
-        M.map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-        M.geo = new kakao.maps.services.Geocoder();
-        M.status = "ready"; mapMsg("");
-        var f = M.after; M.after = null; if (f) f();
+        M.geo = new kakao.maps.services.Geocoder(); M.sdk = "ready";
+        var w = M.wait; M.wait = []; w.forEach(function (f) { f(); });
       });
     };
     document.head.appendChild(s);
-    mapMsg("지도를 불러오는 중입니다.");
   }
-  function clearPins() { M.overlays.forEach(function (o) { o.setMap(null); }); M.overlays = []; M.pins = {}; }
-  function pinFor(r, ll) {
+  function pinOverlay(map, r, ll, onClick) {
     var el = document.createElement("button");
     el.type = "button"; el.className = "pin" + (r.area >= 1000 ? " big" : "");
     el.style.setProperty("--cat", color(r.cat));
     el.setAttribute("aria-label", r.addr + ", " + summaryLine(r));
-    el.onclick = function () { selectPin(r); };
+    el.onclick = function () { onClick(r); };
     var ov = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(ll[0], ll[1]), content: el, yAnchor: 0.5, xAnchor: 0.5, zIndex: r.area >= 1000 ? 3 : 2 });
-    ov.setMap(M.map); M.overlays.push(ov); M.pins[r.pk] = el;
+    ov.setMap(map);
+    return { ov: ov, el: el };
   }
-  function selectPin(r) {
-    Object.keys(M.pins).forEach(function (k) { M.pins[k].classList.toggle("on", k === r.pk); });
-    var card = document.getElementById("mapcard");
-    card.innerHTML = '<article class="sign">' + signHtml(r, '<button type="button" class="btn" id="card-share">링크 공유</button>') + "</article>";
-    document.getElementById("card-share").onclick = function () { share(r, this); };
+  function highlight(pk) {
+    if (M.sel && M.pins[M.sel]) M.pins[M.sel].classList.remove("on");
+    M.sel = pk;
+    if (pk && M.pins[pk]) M.pins[pk].classList.add("on");
+  }
+  function selectPin(r) { sheetReturn = null; highlight(r.pk); openDetail(r); }
+  function scrollToMap() {
+    var box = document.querySelector("#scr-map .mapbox");
+    var y = box.getBoundingClientRect().top + window.scrollY - 64;
+    var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (Math.abs(window.scrollY - y) > 40) window.scrollTo({ top: Math.max(0, y), behavior: reduce ? "auto" : "smooth" });
+  }
+  // 그 건의 위치로 지도를 옮기고 표시한다. 지도가 아직 준비 중이면 다 그린 뒤 옮긴다.
+  function focusOnMap(r) {
+    if (M.sdk !== "ready" || !M.map || M.dirty) { M.focus = r; return; }
+    geocode(r, function (ll) {
+      if (!ll) { document.getElementById("mapstat").textContent = r.addr + "의 위치를 지도에서 찾지 못했습니다."; return; }
+      if (!M.pins[r.pk]) { var p = pinOverlay(M.map, r, ll, selectPin); M.overlays.push(p.ov); M.pins[r.pk] = p.el; }
+      M.map.setLevel(4); M.map.setCenter(new kakao.maps.LatLng(ll[0], ll[1]));
+      highlight(r.pk);
+    });
   }
   function drawMap() {
-    if (M.status !== "ready") { loadMap(drawMap); return; }
+    if (M.sdk !== "ready") { if (M.sdk !== "error") msg("mapmsg", "지도를 불러오는 중입니다."); loadSDK(drawMap); return; }
+    if (screen !== "map") return;
+    if (!M.map) {
+      M.map = new kakao.maps.Map(document.getElementById("map"), { center: new kakao.maps.LatLng(36.685, 127.475), level: 9 });
+      M.map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+    }
+    msg("mapmsg", "");
     M.dirty = false;
     var token = ++M.token;
-    clearPins();
+    M.overlays.forEach(function (o) { o.setMap(null); }); M.overlays = []; M.pins = {}; M.sel = null;
     M.map.relayout();
     var all = filtered(), data = all.slice(0, MAP_LIMIT);
-    if (M.focus && data.indexOf(M.focus) < 0) data.unshift(M.focus);
+    var focus = M.focus; M.focus = null;
+    if (focus && data.indexOf(focus) < 0) data.unshift(focus);
     var stat = document.getElementById("mapstat");
     var total = all.length, found = 0, miss = 0, i = 0, bounds = new kakao.maps.LatLngBounds();
     function line(done) {
@@ -986,25 +1201,47 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
       if (token !== M.token) return;
       if (i >= data.length) {
         line(true);
-        if (M.focus) {
-          var fpin = M.pins[M.focus.pk];
-          var fr = M.focus; M.focus = null;
-          if (fpin) { var c = cacheGet(geoAddr(fr)); if (c) { M.map.setLevel(4); M.map.setCenter(new kakao.maps.LatLng(c[0], c[1])); } selectPin(fr); }
-          else { document.getElementById("mapcard").innerHTML = '<p class="empty">' + esc(fr.addr) + "의 위치를 찾지 못했습니다.</p>"; }
-        } else if (found) M.map.setBounds(bounds, 40, 40, 40, 40);
+        if (focus) focusOnMap(focus);
+        else if (found) M.map.setBounds(bounds, 40, 40, 40, 40);
         return;
       }
       var r = data[i++];
       geocode(r, function (ll) {
         if (token !== M.token) return;
-        if (ll) { pinFor(r, ll); bounds.extend(new kakao.maps.LatLng(ll[0], ll[1])); found++; } else miss++;
+        if (ll) { var p = pinOverlay(M.map, r, ll, selectPin); M.overlays.push(p.ov); M.pins[r.pk] = p.el; bounds.extend(new kakao.maps.LatLng(ll[0], ll[1])); found++; } else miss++;
         if ((found + miss) % 10 === 0) line(false);
         setTimeout(step, 0);
       });
     }
     step();
   }
-  function showOnMap(r) { M.focus = r; go("map", true); }
+  // 홈의 작은 지도: 이 기간 주요 개발 5곳
+  function drawMini() {
+    if (M.sdk !== "ready") { loadSDK(drawMini); return; }
+    if (screen !== "home") return;
+    if (!M.mini) M.mini = new kakao.maps.Map(document.getElementById("minimap"), { center: new kakao.maps.LatLng(36.685, 127.475), level: 10, scrollwheel: false, disableDoubleClickZoom: true });
+    msg("minimsg", "");
+    var token = ++M.miniToken;
+    M.miniOv.forEach(function (o) { o.setMap(null); }); M.miniOv = [];
+    M.mini.relayout();
+    var list = topList(5), i = 0, n = 0, last = null, bounds = new kakao.maps.LatLngBounds();
+    if (!list.length) { M.mini.setCenter(new kakao.maps.LatLng(36.685, 127.475)); M.mini.setLevel(10); return; }
+    function step() {
+      if (token !== M.miniToken) return;
+      if (i >= list.length) {
+        if (n === 1) { M.mini.setLevel(6); M.mini.setCenter(last); }
+        else if (n > 1) M.mini.setBounds(bounds, 28, 28, 28, 28);
+        return;
+      }
+      var r = list[i++];
+      geocode(r, function (ll) {
+        if (token !== M.miniToken) return;
+        if (ll) { var p = pinOverlay(M.mini, r, ll, function (x) { openItem(x); }); M.miniOv.push(p.ov); last = new kakao.maps.LatLng(ll[0], ll[1]); bounds.extend(last); n++; }
+        setTimeout(step, 0);
+      });
+    }
+    step();
+  }
   (function legend() {
     document.getElementById("maplegend").innerHTML = CATS.filter(function (c) { return c.id !== "none"; }).map(function (c) {
       return '<span><i style="background:' + color(c.id) + ';border-radius:50%"></i>' + c.name + "</span>";
@@ -1147,9 +1384,9 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
     var el = document.getElementById("st-list");
     if (!data.length) { el.innerHTML = '<p class="empty">조건에 맞는 곳이 없습니다.</p>'; }
     else {
-      el.innerHTML = '<div class="group">' + data.slice(0, state.shownS).map(function (r) { return itemHtml(r, state.openS === r.pk, ym2(r.stall.since), "s", r.stall.note); }).join("") + "</div>" +
+      el.innerHTML = '<div class="group boxed">' + data.slice(0, state.shownS).map(function (r) { return itemHtml(r, ym2(r.stall.since), r.stall.note); }).join("") + "</div>" +
         (data.length > state.shownS ? '<button type="button" class="more" id="st-more">' + nf(data.length - state.shownS) + "건 더 보기</button>" : "");
-      bindItems(el, "openS", drawStall);
+      bindItems(el);
       var more = document.getElementById("st-more");
       if (more) more.onclick = function () { state.shownS += 40; drawStall(); };
     }
@@ -1251,7 +1488,7 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
         var open = !!state.openQ[k];
         return '<div class="qb"><h3><button type="button" aria-expanded="' + open + '" data-q="' + k + '"><span class="ql">' + label + (sub ? "<small>" + sub + "</small>" : "") + '</span><span class="c">' + nf(list.length) + "곳</span>" +
           '<span class="qs">' + esc(bits.join(" · ")) + '</span><span class="qbar" aria-hidden="true">' + bar + "</span></button></h3>" +
-          (open ? '<div class="group">' + list.map(function (r) { return itemHtml(r, state.openF === r.pk, ym2(r.stcns), "f", r._f.note); }).join("") + "</div>" : "") + "</div>";
+          (open ? '<div class="group">' + list.map(function (r) { return itemHtml(r, ym2(r.stcns), r._f.note); }).join("") + "</div>" : "") + "</div>";
       }).join("") + '<div class="legend"><span><i style="background:var(--c-house)"></i>주택</span><span><i style="background:var(--c-shop)"></i>가게·사무실</span><span><i style="background:var(--c-ind)"></i>공장·창고</span><span><i style="background:var(--c-etc)"></i>그 밖</span><span>막대는 연면적</span></div>';
       el.querySelectorAll(".qb > h3 > button").forEach(function (b) {
         b.onclick = function () {
@@ -1259,10 +1496,10 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
           var again = el.querySelector('.qb > h3 > button[data-q="' + k + '"]'); if (again) again.focus();
         };
       });
-      bindItems(el, "openF", drawSupply);
+      bindItems(el);
     }
     var ext = rows.filter(function (r) { return r.gb === "증축" && r.known && r.stcns && !r.apr && !r.stall && placeOk(r); }).length;
-    document.getElementById("sup-ext").textContent = "새로 짓는 공사만 셌습니다." + (ext ? " 넓히기(증축) 공사 중인 " + nf(ext) + "곳은 자료의 연면적이 늘어난 부분이 아니라 건물 전체라서 뺐습니다. 목록 탭에서 볼 수 있습니다." : "");
+    document.getElementById("sup-ext").textContent = "새로 짓는 공사만 셌습니다." + (ext ? " 넓히기(증축) 공사 중인 " + nf(ext) + "곳은 자료의 연면적이 늘어난 부분이 아니라 건물 전체라서 뺐습니다. 개발지도 목록에서 볼 수 있습니다." : "");
     // 허가만 받은 곳: 착공 기한 안쪽인 것만 (기한이 지난 건 멈춘 기록 쪽)
     var pipe = rows.filter(function (r) { return NEW[r.gb] && r.known && !r.stcns && !r.stall && placeOk(r); });
     var pa = { house: 0, shop: 0, ind: 0, etc: 0 }, ph = 0;
@@ -1284,60 +1521,66 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
       '<div class="mtable-wrap"><table class="mtable"><thead><tr><th>규모</th><th>빠른 편(25%)</th><th>가운데</th><th>늦은 편(75%)</th></tr></thead><tbody>' + rowsM + "</tbody></table></div>";
   }
 
-  // ---------- 보기 전환
-  var view = "list";
-  var VIEWS = ["list", "map", "supply", "stall", "stats"];
-  function go(v, push) {
-    if (VIEWS.indexOf(v) < 0) v = "list";
-    view = v;
-    VIEWS.forEach(function (k) {
-      document.getElementById("view-" + k).hidden = k !== v;
-      document.getElementById("tab-" + k).setAttribute("aria-selected", String(k === v));
-      document.getElementById("tab-" + k).tabIndex = k === v ? 0 : -1;
+  // ---------- 지역 분석: 지역 통계와 멈춘 기록
+  var sub = "stats";
+  function drawAnalysis() {
+    ["stats", "stall"].forEach(function (k) {
+      document.getElementById("pane-" + k).hidden = k !== sub;
+      document.getElementById("sub-" + k).setAttribute("aria-selected", String(k === sub));
     });
-    document.getElementById("filters").hidden = v !== "list" && v !== "map";
-    var tab = document.getElementById("tab-" + v);
-    if (tab.scrollIntoView && tab.parentNode.scrollWidth > tab.parentNode.clientWidth) tab.parentNode.scrollLeft = tab.offsetLeft - 16;
-    if (v === "list") drawList();
-    if (v === "map") { if (M.dirty || M.focus) drawMap(); else if (M.map) M.map.relayout(); }
-    if (v === "supply") drawSupply();
-    if (v === "stall") drawStall();
-    if (v === "stats") drawStats();
-    if (push !== false && location.hash !== "#" + v) { try { history.replaceState(null, "", "#" + v); } catch (e) { location.hash = v; } }
-    if (push === true) document.querySelector(".views").scrollIntoView({ block: "start" });
+    if (sub === "stats") drawStats(); else drawStall();
   }
-  function drawScope() { R = range(); drawPeriod(); drawPlace(); drawSummary(); drawTop5(); drawChips(); }
-  function changed() {
-    state.shown = 40; state.open = null; state.open5 = null; state.openM = null;
-    state.shownS = 40; state.openS = null; state.openF = null;
-    remember(); drawScope();
-    M.dirty = true;
-    if (view === "list") drawList();
-    if (view === "map") drawMap();
-    if (view === "supply") drawSupply();
-    if (view === "stall") drawStall();
-    if (view === "stats") drawStats();
-  }
-  document.querySelectorAll(".tab").forEach(function (t) { t.onclick = function () { go(t.getAttribute("data-view")); }; });
-  document.querySelector('[role="tablist"]').addEventListener("keydown", function (e) {
-    var i = VIEWS.indexOf(view), n = VIEWS.length;
-    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      e.preventDefault(); var nx = VIEWS[(i + (e.key === "ArrowRight" ? 1 : n - 1)) % n]; go(nx); document.getElementById("tab-" + nx).focus();
-    }
+  document.querySelectorAll(".subtabs [data-sub]").forEach(function (b) {
+    b.onclick = function () { location.hash = "#" + b.getAttribute("data-sub"); };
   });
 
-  // 공유 링크(#p=번호)로 들어오면 맨 위에 그 건을 보여준다
-  function fromHash() {
-    var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h);
-    if (m) {
-      var r = byPk[decodeURIComponent(m[1])];
-      if (r) { shared = r; renderShared(); }
-      go("list", false);
-      return;
+  // ---------- 화면 전환: 주소(#home #map #supply #analysis #stall #p=번호)가 화면을 정한다. 뒤로 가기도 그대로 된다.
+  var screen = "";
+  var TITLES = { home: "동네레이더", map: "개발지도", supply: "공급 예고", analysis: "지역 분석" };
+  function route() {
+    var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h), target = h, sharedItem = null;
+    if (m) { sharedItem = byPk[decodeURIComponent(m[1])] || null; target = "map"; }
+    if (target === "list") target = "map";
+    if (target === "stats" || target === "stall") { sub = target; target = "analysis"; }
+    else if (target === "analysis") sub = "stats";
+    if (!TITLES[target]) target = "home";
+    var moved = target !== screen;
+    if (moved) closeSheet();
+    screen = target;
+    Object.keys(TITLES).forEach(function (k) {
+      document.getElementById("scr-" + k).hidden = k !== screen;
+      var a = document.querySelector('.bottomnav [data-nav="' + k + '"]');
+      if (k === screen) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    document.getElementById("appbar-title").textContent = TITLES[screen];
+    document.title = screen === "home" ? "동네레이더" : TITLES[screen] + " · 동네레이더";
+    if (moved) window.scrollTo(0, 0);
+    if (screen === "home") drawHome();
+    if (screen === "map") {
+      drawEvChips(); drawList(); filterSummary();
+      // 공유 링크나 '개발지도에서 보기'로 들어오면 상세를 바로 열고, 지도는 다 그린 뒤 그 위치로 간다
+      var f = sharedItem || M.focus;
+      if (f) { M.focus = f; M.dirty = true; openDetail(f); }
+      if (M.dirty || !M.map) drawMap(); else M.map.relayout();
     }
-    go(h || "list", false);
+    if (screen === "supply") drawSupply();
+    if (screen === "analysis") drawAnalysis();
   }
-  window.addEventListener("hashchange", fromHash);
+  window.addEventListener("hashchange", route);
+  document.getElementById("brand").onclick = function () { if (location.hash !== "#home") location.hash = "#home"; else window.scrollTo(0, 0); };
+
+  // 조건이 바뀌면 지금 화면을 다시 그린다
+  function changed() {
+    state.shown = 40; state.openM = null; state.shownS = 40;
+    remember(); R = range();
+    drawPlace(); drawPeriods(); filterSummary();
+    M.dirty = true;
+    if (screen === "home") drawHome();
+    if (screen === "map") { drawEvChips(); drawList(); drawMap(); }
+    if (screen === "supply") drawSupply();
+    if (screen === "analysis") drawAnalysis();
+    drawFilterSheet();
+  }
 
   // 목록이 길어지면 위로 버튼
   (function () {
@@ -1347,17 +1590,15 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
       requestAnimationFrame(function () { btn.hidden = window.scrollY < 900; ticking = false; });
     }, { passive: true });
     btn.onclick = function () {
-      var nav = document.querySelector(".views");
-      var y = nav.getBoundingClientRect().top + window.scrollY;
       var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-      window.scrollTo({ top: window.scrollY > y + 10 ? y : 0, behavior: reduce ? "auto" : "smooth" });
+      window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
     };
   })();
 
   document.getElementById("foot").textContent = "자료 출처: " + (meta.source || "국토교통부 건축HUB 건축인허가정보 서비스") + " (공공데이터포털). 지도: 카카오맵. 동네레이더는 개인이 만든 비공식 서비스입니다.";
 
-  drawScope();
-  fromHash();
+  drawPlace(); drawPeriods(); filterSummary();
+  route();
 })();
 </script>
 </body>
