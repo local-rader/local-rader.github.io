@@ -232,7 +232,7 @@ h1, h2, h3 { text-wrap: balance; }
   <div class="frow" id="f-place" role="group" aria-label="동네"></div>
   <div class="frow" id="f-cat" role="group" aria-label="용도"></div>
   <div class="frow" id="f-stage" role="group" aria-label="진행 단계"></div>
-  <input class="search" id="q" type="search" placeholder="주소나 건물 이름으로 찾기 (예: 내덕동 650)" aria-label="주소나 건물 이름으로 찾기">
+  <input class="search" id="q" type="search" placeholder="주소나 건물 이름으로 찾기 (예: 여천리, 내덕동 650)" aria-label="주소나 건물 이름으로 찾기">
   <label class="toggle"><input type="checkbox" id="blank"> 용도가 적히지 않은 소규모 허가도 보기</label>
 </section>
 
@@ -328,15 +328,22 @@ h1, h2, h3 { text-wrap: balance; }
   var meta = P.meta || {};
   document.getElementById("stamp").textContent = meta.checked ? "마지막 갱신 " + meta.checked.replace(/^(\d{4})-(\d{2})-(\d{2})/, function (_, y, m, d) { return y + "년 " + (+m) + "월 " + (+d) + "일"; }) : "";
   var places = P.places || [];
+  // 동은 그대로, 읍·면은 '오창읍 여천리'처럼 리까지 있으니 읍·면 단위로 묶어 고른다
+  var areas = [];
+  places.forEach(function (p) { var a = p.split(" ")[0]; if (areas.indexOf(a) < 0) areas.push(a); });
+  areas.sort(function (a, b) {
+    var ta = /동$/.test(a) ? 0 : 1, tb = /동$/.test(b) ? 0 : 1;
+    return ta - tb || a.localeCompare(b, "ko");
+  });
   if (meta.seed || places.length <= 2) {
     var cv = document.getElementById("coverage");
     cv.hidden = false;
-    cv.textContent = "지금은 " + places.join("·") + " 자료만 들어 있어요. 자동 수집이 시작되면 청원구 전체가 채워집니다.";
+    cv.textContent = "지금은 " + areas.join("·") + " 자료만 들어 있어요. 자동 수집이 시작되면 청원구 전체가 채워집니다.";
   }
   if (meta.failed && meta.failed.length) {
     var cv2 = document.getElementById("coverage");
     cv2.hidden = false;
-    cv2.textContent = (cv2.textContent ? cv2.textContent + " " : "") + "최근 갱신에서 " + meta.failed.length + "개 지역 자료를 받지 못해 일부가 빠졌을 수 있습니다.";
+    cv2.textContent = (cv2.textContent ? cv2.textContent + " " : "") + "최근 갱신에서 " + meta.failed.length + "개 마을 자료를 받지 못해 일부가 빠졌을 수 있습니다. 다음 갱신 때 다시 받습니다.";
   }
 
   // ---------- 표지판
@@ -391,7 +398,7 @@ h1, h2, h3 { text-wrap: balance; }
     });
   }
   function drawFilters() {
-    chips(document.getElementById("f-place"), [{ v: "all", t: "청원구 전체" }].concat(places.map(function (p) { return { v: p, t: p }; })), "place");
+    chips(document.getElementById("f-place"), [{ v: "all", t: "청원구 전체" }].concat(areas.map(function (p) { return { v: p, t: p }; })), "place");
     var catItems = [{ v: "all", t: "모든 용도" }].concat(CATS.filter(function (c) { return c.id !== "none"; }).map(function (c) { return { v: c.id, t: c.name, sw: color(c.id) }; }));
     chips(document.getElementById("f-cat"), catItems, "cat");
     chips(document.getElementById("f-stage"), [{ v: "all", t: "모든 단계" }, { v: "permit", t: "허가만" }, { v: "work", t: "공사 중" }, { v: "done", t: "준공" }], "stage");
@@ -403,7 +410,7 @@ h1, h2, h3 { text-wrap: balance; }
     var q = state.q.replace(/\s+/g, "");
     return rows.filter(function (r) {
       if (!state.blank && !r.known) return false;
-      if (state.place !== "all" && r.place !== state.place) return false;
+      if (state.place !== "all" && r.place !== state.place && r.place.indexOf(state.place + " ") !== 0) return false;
       if (state.cat !== "all" && r.cat !== state.cat) return false;
       if (state.stage !== "all" && r.stage !== state.stage) return false;
       if (q && (r.addr + r.name + r.purp).replace(/\s+/g, "").indexOf(q) < 0) return false;

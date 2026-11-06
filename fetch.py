@@ -61,7 +61,7 @@ def api_key() -> str:
     return key
 
 
-def call(key, sigungu, bjdong, page=1, rows=100, since=None, until=None, tries=3):
+def call(key, sigungu, bjdong, page=1, rows=100, since=None, until=None, tries=5):
     """API를 한 번 호출해 (전체 건수, 기록 목록)을 돌려준다."""
     params = {
         "serviceKey": key, "sigunguCd": sigungu, "bjdongCd": bjdong,
@@ -93,9 +93,9 @@ def call(key, sigungu, bjdong, page=1, rows=100, since=None, until=None, tries=3
             if isinstance(items, dict):
                 items = [items]
             return total, items
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
+        except (OSError, json.JSONDecodeError) as e:  # 503, 빈 응답, 연결 끊김 등은 잠시 뒤 다시
             last = e
-            time.sleep(2 * (attempt + 1))
+            time.sleep((3, 8, 15, 25, 40)[min(attempt, 4)])
     raise RuntimeError(f"접속 실패({sigungu}-{bjdong}, {page}쪽): {last}")
 
 
@@ -122,24 +122,39 @@ def place_name(item):
     return m.group(1) if m else ""
 
 
-def probe(key, sigungu, bjdong):
+def probe(key, sigungu, bjdong, failed=None):
     try:
         total, items = call(key, sigungu, bjdong, rows=1)
     except RuntimeError as e:
         print("  확인 실패", bjdong, e)
+        if failed is not None:
+            failed.append(bjdong)
         return 0, ""
     time.sleep(PAUSE)
     return total, (place_name(items[0]) if items else "")
+
+
+def name_towns(found):
+    """읍·면 자체 코드(예: 25300)는 이름이 없으니 같은 읍·면의 리 이름에서 가져온다."""
+    for b, name in list(found.items()):
+        if name and not name.isdigit():
+            continue
+        for other, oname in found.items():
+            if other != b and other[:3] == b[:3] and oname and not oname.isdigit():
+                found[b] = oname.split()[0]
+                break
+    return found
 
 
 def discover(key):
     codes = load(CODES, {"sigungu": "43114", "codes": {}})
     sg = codes["sigungu"]
     found = dict(codes.get("codes", {}))
+    failed = []
     print("동 지역 확인 중 (10100~12000)")
     for n in range(10100, 12001, 100):
         b = f"{n:05d}"
-        total, name = probe(key, sg, b)
+        total, name = probe(key, sg, b, failed)
         if total:
             found[b] = name or found.get(b, b)
             print(f"  {b} {found[b]} {total}건")
@@ -156,11 +171,19 @@ def discover(key):
         print(f"  {p}00 읍·면 발견, 리 확인 중")
         for r in range(0, 70):
             b = f"{p}{r:02d}"
-            total, name = probe(key, sg, b)
+            total, name = probe(key, sg, b, failed)
             if total:
                 found[b] = name or found.get(b, b)
                 print(f"    {b} {found[b]} {total}건")
-    codes["codes"] = dict(sorted(found.items()))
+    if failed:
+        print(f"확인 실패 {len(failed)}곳 다시 확인")
+        time.sleep(30)
+        for b in failed:
+            total, name = probe(key, sg, b)
+            if total:
+                found[b] = name or found.get(b, b)
+                print(f"  {b} {found[b]} {total}건")
+    codes["codes"] = name_towns(dict(sorted(found.items())))
     codes["discovered"] = now_kst().strftime("%Y-%m-%d")
     save(CODES, codes)
     print(f"코드 {len(found)}개 저장: {CODES}")
@@ -273,14 +296,40 @@ def update(key, since=None):
     quiet = bool(since)  # 날짜를 직접 준 경우 = 과거 자료 일괄 받기
     since = since or (now_kst() - timedelta(days=14)).strftime("%Y%m%d")
     names = codes["codes"]
+    pending = store.setdefault("pending", {})  # {코드: 다시 받을 시작 날짜}
     tot_new = tot_changed = 0
     failed = []
+
+    if pending:
+        print(f"지난번에 못 받은 {len(pending)}곳 다시 받기")
+    for b, p_since in sorted(pending.items()):
+        try:
+            total, items = fetch_all(key, codes["sigungu"], b, since=p_since)
+        except RuntimeError as e:
+            print("  아직 실패:", b, e)
+            continue
+        if items and b not in names:
+            names[b] = place_name(items[0]) or b
+            codes["codes"] = name_towns(dict(sorted(names.items())))
+            names = codes["codes"]
+            save(CODES, codes)
+        n, c = merge(store, items, names, today, quiet=True)
+        tot_new += n
+        tot_changed += c
+        del pending[b]
+        print(f"  {b} {names.get(b, b)}: 받은 기록 {len(items)}건 (새 기록 {n})")
+        time.sleep(PAUSE)
+
     for b, name in names.items():
         try:
             total, items = fetch_all(key, codes["sigungu"], b, since=since)
         except RuntimeError as e:
             print("실패:", b, name, e)
             failed.append(b)
+            if quiet:  # 과거 자료 받기였다면 그 날짜부터, 아니면 최근 14일부터 다음에 다시
+                pending[b] = min(pending.get(b, since), since)
+            else:
+                pending.setdefault(b, since)
             continue
         n, c = merge(store, items, names, today, quiet=quiet)
         tot_new += n
@@ -309,8 +358,13 @@ FIELDS = ["pk", "place", "addr", "name", "gb", "purp", "area", "plat", "fmly", "
 def build(store=None, codes=None):
     store = store or load(STORE, {"records": {}, "events": []})
     codes = codes or load(CODES, {"codes": {}})
-    for r in store.get("records", {}).values():  # 예전에 저장된 이름도 같은 기준으로 정리
+    names = codes.get("codes", {})
+    for r in store.get("records", {}).values():  # 예전에 저장된 기록도 같은 기준으로 정리
         r["name"] = public_name(r.get("name"), r.get("purp"), r.get("place"))
+        good = names.get(r.get("b", ""), "")
+        if r.get("place", "").isdigit() and good and not good.isdigit():
+            r["addr"] = r.get("addr", "").replace(r["place"], good, 1)
+            r["place"] = good
     rows = [r for r in store.get("records", {}).values() if r.get("pms", "") >= "2023-01-01"]
     rows.sort(key=lambda r: (r.get("pms", ""), r.get("pk", "")), reverse=True)
     keep = {r["pk"] for r in rows}
