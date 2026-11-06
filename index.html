@@ -130,7 +130,7 @@ h1, h2, h3 { text-wrap: balance; }
 .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
 
 /* 거르기 */
-.filters { display: grid; gap: 10px; padding-block: 14px 4px; }
+.filters { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding-block: 14px 4px; }
 .frow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .frow.scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
 .sel {
@@ -158,9 +158,37 @@ h1, h2, h3 { text-wrap: balance; }
 }
 .toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
 .toggle input { width: 18px; height: 18px; accent-color: var(--ink); }
-.result { margin: 6px 0 0; font-size: 14px; color: var(--ink-2); }
+.frow.lab { flex-wrap: nowrap; }
+.flabel { flex: none; width: 2.4em; font-size: 13px; color: var(--ink-3); }
+/* 가로로 밀어서 더 보는 줄. 오른쪽에 더 있으면 끝을 흐리게 */
+.hscroll { position: relative; display: flex; gap: 8px; flex: 1; min-width: 0; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.seg { flex: none; }
+.seg button { display: flex; flex-direction: column; align-items: center; justify-content: center; white-space: nowrap; line-height: 1.25; padding: 5px 12px; }
+.seg button .n { font-size: 12px; opacity: .72; }
+.resultrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 4px 0 0; }
+.result { margin: 0; font-size: 14px; color: var(--ink-2); }
+.linkbtn {
+  border: 0; background: none; padding: 4px 0; min-height: 32px; font-size: 14px; color: var(--ink-2);
+  text-decoration: underline; text-underline-offset: 3px; cursor: pointer; white-space: nowrap;
+}
+.copied { margin: 8px 0 0; font-size: 14px; color: var(--done); }
+.urlbox { width: 100%; margin: 8px 0 0; border: 1px solid var(--rule); background: var(--paper); border-radius: 8px; padding: 8px 10px; font-size: 14px; color: var(--ink); }
+.totop {
+  position: fixed; z-index: 10; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); border-radius: var(--radius-ui);
+  padding: 10px 16px; font-size: 14px; min-height: 44px; cursor: pointer; box-shadow: 0 2px 10px rgba(23, 33, 44, .14);
+}
 
 /* 목록 */
+.stagehead {
+  margin: 28px 0 0; padding: 0 0 6px; border-bottom: 2px solid var(--ink);
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.stagehead h3 { margin: 0; font-size: 19px; font-weight: 700; }
+.stagehead.work h3 { color: var(--work-ink); }
+.stagehead.done h3 { color: var(--done); }
+.stagehead span { color: var(--ink-2); font-size: 14px; }
+.stagehead + .month { margin-top: 12px; }
 .month { margin: 20px 0 4px; display: flex; justify-content: space-between; align-items: baseline; }
 .month h3 { margin: 0; font-size: 16px; font-weight: 700; }
 .month span { color: var(--ink-3); font-size: 14px; }
@@ -280,18 +308,13 @@ h1, h2, h3 { text-wrap: balance; }
   <section class="filters" id="filters" aria-label="거르기">
     <div class="frow">
       <select class="sel" id="f-place" aria-label="동네"></select>
-      <select class="sel" id="f-sort" aria-label="정렬">
-        <option value="new">최근 허가순</option>
-        <option value="big">규모 큰 순</option>
-      </select>
     </div>
-    <div class="frow scroll" id="f-cat" role="group" aria-label="용도"></div>
-    <div class="frow">
-      <div class="seg" id="f-stage" role="group" aria-label="진행 단계"></div>
-    </div>
+    <div class="frow lab"><span class="flabel" aria-hidden="true">정렬</span><div class="hscroll" id="f-sort" role="group" aria-label="정렬"></div></div>
+    <div class="frow lab"><span class="flabel" aria-hidden="true">단계</span><div class="seg" id="f-stage" role="group" aria-label="진행 단계"></div></div>
+    <div class="frow lab"><span class="flabel" aria-hidden="true">용도</span><div class="hscroll" id="f-cat" role="group" aria-label="용도"></div></div>
     <input class="search" id="q" type="search" placeholder="지번, 리 이름, 건물 이름으로 찾기 (예: 여천리, 내덕동 650)" aria-label="지번, 리 이름, 건물 이름으로 찾기">
     <label class="toggle"><input type="checkbox" id="blank"> 용도가 적히지 않은 소규모 허가도 보기</label>
-    <p class="result" id="result" aria-live="polite"></p>
+    <div class="resultrow"><p class="result" id="result" aria-live="polite"></p><button type="button" class="linkbtn" id="reset" hidden>조건 초기화</button></div>
   </section>
 
   <section id="view-list" role="tabpanel" aria-labelledby="tab-list"></section>
@@ -321,12 +344,15 @@ h1, h2, h3 { text-wrap: balance; }
       <li>국토교통부 건축HUB 건축인허가정보를 매일 받아 2023년 1월 1일 이후 허가된 기록만 보여줍니다.</li>
       <li>‘허가’는 건축허가일, ‘공사 중’은 실제 착공일, ‘완공’은 사용승인일이 기록된 경우입니다. 착공이나 사용승인이 늦게 등록되거나 빠진 경우가 있어 실제 현장과 다를 수 있습니다.</li>
       <li>용도와 공사 종류가 비어 있는 소규모 기록은 기본 목록에서 빼고, 체크하면 함께 보여줍니다.</li>
+      <li>‘완공 → 공사 중 → 허가’는 단계별로 묶고 각 단계 안에서는 사용승인일·착공일·허가일이 최근인 순서입니다. ‘최근 움직임순’은 허가·착공·사용승인 중 가장 늦은 날짜를 기준으로 합니다.</li>
       <li>지도 위치는 지번 주소로 찾은 대략의 위치입니다. 일부 허가는 위치를 찾지 못해 지도에 나오지 않습니다.</li>
       <li>정확한 내용은 <a href="https://www.eais.go.kr" target="_blank" rel="noopener">세움터</a>에서 대지위치로 다시 확인하세요. 이 사이트는 투자 판단이나 법적 판단의 근거가 아닙니다.</li>
     </ul>
     <p class="foot" id="foot"></p>
   </section>
 </div>
+
+<button type="button" class="totop" id="totop" hidden>↑ 위로</button>
 
 <script src="config.js"></script>
 <script src="data.js"></script>
@@ -387,10 +413,23 @@ h1, h2, h3 { text-wrap: balance; }
   function plainGb(g) { return GB[g] || g || ""; }
   function stageOf(r) { return r.apr ? "done" : (r.stcns ? "work" : "permit"); }
   var STAGE = { permit: "허가", work: "공사 중", done: "완공" };
+  var STAGE_ORDER = { done: 0, work: 1, permit: 2 };
+  var SORTS = [
+    { v: "new", t: "최근 허가순" },
+    { v: "old", t: "오래된 허가순" },
+    { v: "stage", t: "완공 → 공사 중 → 허가" },
+    { v: "recent", t: "최근 움직임순" },
+    { v: "big", t: "규모 큰 순" }
+  ];
 
   rows.forEach(function (r) {
     r.cat = catOf(r); r.stage = stageOf(r); r.known = r.cat !== "none";
     r.area = +r.area || 0; r.use = plainUse(r.purp);
+    r.pms = r.pms || "";
+    // 단계 날짜: 그 건이 지금 단계에 들어선 날 (완공일, 착공일, 허가일 순)
+    r.sdate = r.apr || r.stcns || r.pms;
+    // 최근 움직임: 허가·착공·사용승인 중 가장 늦은 날
+    r.latest = [r.pms, r.stcns, r.apr].reduce(function (a, d) { return d && d > a ? d : a; }, "");
   });
   var known = rows.filter(function (r) { return r.known; });
 
@@ -445,10 +484,26 @@ h1, h2, h3 { text-wrap: balance; }
     document.getElementById("pulse").innerHTML = md(from) + "부터 " + md(checked) + "까지 30일 동안 청원구에서 새 허가 <b>" + nf(np) + "건</b>, 공사 시작 <b class=\"w\">" + nf(ns) + "곳</b>, 완공 <b class=\"d\">" + nf(na) + "곳</b>.";
   })();
 
-  // ---------- 표지판: 최근 허가 중 규모가 어느 정도 있는 것
+  // ---------- 표지판: 최근 허가 중 규모가 어느 정도 있는 것 (공유 링크로 들어오면 그 건)
   var heroList = known.filter(function (r) { return r.gb && r.area >= 200; }).slice(0, 12);
   if (!heroList.length) heroList = known.slice(0, 12);
-  var hi = 0;
+  var hi = 0, shared = null;
+  function shareUrl(r) { return location.origin + location.pathname + "#p=" + encodeURIComponent(r.pk); }
+  function share(r, btn) {
+    var url = shareUrl(r);
+    var text = r.addr + " · " + summaryLine(r) + " (" + STAGE[r.stage] + ")";
+    var box = btn.closest(".sign-foot, .acts") || btn.parentNode;
+    var old = box.parentNode.querySelector(".copied, .urlbox"); if (old) old.remove();
+    function note(html) { box.insertAdjacentHTML("afterend", html); }
+    function fallback() {
+      note('<input class="urlbox" readonly aria-label="공유 링크" value="' + esc(url) + '">');
+      var inp = box.parentNode.querySelector(".urlbox"); inp.focus(); inp.select();
+    }
+    if (navigator.share) { navigator.share({ title: "동네레이더", text: text, url: url }).catch(function () {}); return; }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { note('<p class="copied" role="status">링크를 복사했어요. 카톡이나 문자에 붙여넣으면 이 건이 바로 열립니다.</p>'); }, fallback);
+    } else fallback();
+  }
   function signHtml(r, pager) {
     var info = [["대지위치", r.addr], ["무엇을", r.use + (r.purp && r.use !== r.purp ? " (" + officialUse(r.purp) + ")" : "")],
       ["어떻게", r.gb ? r.gb + " (" + plainGb(r.gb) + ")" : "기록 없음"], ["연면적", area(r.area)], ["용도지역", r.jiyuk || "기록 없음"]];
@@ -460,14 +515,26 @@ h1, h2, h3 { text-wrap: balance; }
   }
   function renderSign() {
     var el = document.getElementById("sign");
+    document.getElementById("hero-h").textContent = shared ? "공유받은 허가" : "최근 눈에 띄는 변화";
+    if (shared) {
+      el.innerHTML = signHtml(shared, '<button type="button" class="btn" id="hero-map">지도에서 보기</button><button type="button" class="btn" id="hero-share">링크 공유</button><button type="button" class="btn" id="hero-close" style="margin-left:auto">최근 변화 보기</button>');
+      document.getElementById("hero-map").onclick = function () { showOnMap(shared); };
+      document.getElementById("hero-share").onclick = function () { share(shared, this); };
+      document.getElementById("hero-close").onclick = function () {
+        shared = null; renderSign();
+        try { history.replaceState(null, "", "#" + view); } catch (e) {}
+      };
+      return;
+    }
     if (!heroList.length) { el.innerHTML = '<div class="sign-addr"><strong>아직 자료가 없습니다</strong><span>첫 자동 수집이 끝나면 여기에 나타납니다.</span></div>'; return; }
     var r = heroList[hi];
-    el.innerHTML = signHtml(r, '<button type="button" class="btn" id="prev">이전</button><button type="button" class="btn" id="next">다음</button><span class="count">' + (hi + 1) + " / " + heroList.length + '</span><button type="button" class="btn" id="hero-map" style="margin-left:auto">지도에서 보기</button>');
+    el.innerHTML = signHtml(r, '<button type="button" class="btn" id="prev">이전</button><button type="button" class="btn" id="next">다음</button><span class="count">' + (hi + 1) + " / " + heroList.length + '</span><button type="button" class="btn" id="hero-share" style="margin-left:auto">링크 공유</button><button type="button" class="btn" id="hero-map">지도에서 보기</button>');
     var pv = document.getElementById("prev"), nx = document.getElementById("next");
     pv.disabled = hi === 0; nx.disabled = hi === heroList.length - 1;
     pv.onclick = function () { if (hi > 0) { hi--; renderSign(); document.getElementById("prev").focus(); } };
     nx.onclick = function () { if (hi < heroList.length - 1) { hi++; renderSign(); document.getElementById("next").focus(); } };
     document.getElementById("hero-map").onclick = function () { showOnMap(r); };
+    document.getElementById("hero-share").onclick = function () { share(r, this); };
   }
   renderSign();
 
@@ -475,6 +542,8 @@ h1, h2, h3 { text-wrap: balance; }
   var state = { place: "all", cat: "all", stage: "all", sort: "new", q: "", blank: false, shown: 40, open: null };
   try { var saved = JSON.parse(localStorage.getItem("dr:filters") || "{}"); ["place", "cat", "stage", "sort"].forEach(function (k) { if (saved[k]) state[k] = saved[k]; }); } catch (e) {}
   if (state.place !== "all" && areas.indexOf(state.place) < 0) state.place = "all";
+  if (!SORTS.some(function (s) { return s.v === state.sort; })) state.sort = "new";
+  if (!STAGE[state.stage]) state.stage = "all";
   function remember() { try { localStorage.setItem("dr:filters", JSON.stringify({ place: state.place, cat: state.cat, stage: state.stage, sort: state.sort })); } catch (e) {} }
 
   (function buildPlace() {
@@ -486,10 +555,15 @@ h1, h2, h3 { text-wrap: balance; }
     if (town.length) h += '<optgroup label="읍·면">' + town.map(function (a) { return '<option value="' + esc(a) + '">' + esc(a) + " (" + nf(cnt[a]) + ")</option>"; }).join("") + "</optgroup>";
     sel.innerHTML = h; sel.value = state.place;
     sel.onchange = function () { state.place = sel.value; changed(); };
-    var so = document.getElementById("f-sort"); so.value = state.sort;
-    so.onchange = function () { state.sort = so.value; changed(); };
   })();
   function drawChips() {
+    var so = document.getElementById("f-sort"); so.innerHTML = "";
+    SORTS.forEach(function (it) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.textContent = it.t; b.setAttribute("aria-pressed", String(state.sort === it.v));
+      b.onclick = function () { state.sort = it.v; changed(); };
+      so.appendChild(b);
+    });
     var el = document.getElementById("f-cat"); el.innerHTML = "";
     [{ v: "all", t: "모든 용도" }].concat(CATS.filter(function (c) { return c.id !== "none"; }).map(function (c) { return { v: c.id, t: c.name, sw: color(c.id) }; })).forEach(function (it) {
       var b = document.createElement("button");
@@ -498,29 +572,66 @@ h1, h2, h3 { text-wrap: balance; }
       b.onclick = function () { state.cat = it.v; changed(); };
       el.appendChild(b);
     });
+    // 단계 버튼에는 다른 조건을 적용한 뒤의 단계별 건수를 붙인다
+    var sc = { all: 0, permit: 0, work: 0, done: 0 };
+    filtered(true).forEach(function (r) { sc.all++; sc[r.stage]++; });
     var sg = document.getElementById("f-stage"); sg.innerHTML = "";
     [{ v: "all", t: "모든 단계" }, { v: "permit", t: "허가" }, { v: "work", t: "공사 중" }, { v: "done", t: "완공" }].forEach(function (it) {
       var b = document.createElement("button");
-      b.type = "button"; b.textContent = it.t; b.setAttribute("aria-pressed", String(state.stage === it.v));
+      b.type = "button"; b.innerHTML = "<span>" + esc(it.t) + '</span><span class="n">' + nf(sc[it.v]) + "건</span>";
+      b.setAttribute("aria-pressed", String(state.stage === it.v));
       b.onclick = function () { state.stage = it.v; changed(); };
       sg.appendChild(b);
     });
+    document.getElementById("reset").hidden = !(state.place !== "all" || state.cat !== "all" || state.stage !== "all" || state.q || state.blank);
+    [so, el].forEach(function (row) {
+      var on = row.querySelector('[aria-pressed="true"]');
+      if (on && (on.offsetLeft < row.scrollLeft || on.offsetLeft + on.offsetWidth > row.scrollLeft + row.clientWidth)) row.scrollLeft = on.offsetLeft - 8;
+      fade(row);
+    });
   }
+  // 가로로 더 밀 수 있는 쪽 끝을 흐리게 해서 더 있다는 걸 보여준다
+  function fade(row) {
+    var l = row.scrollLeft > 4, r = row.scrollLeft + row.clientWidth < row.scrollWidth - 4;
+    var g = l || r ? "linear-gradient(to right, " + (l ? "transparent, #000 28px" : "#000") + ", " + (r ? "#000 calc(100% - 36px), transparent" : "#000") + ")" : "";
+    row.style.webkitMaskImage = g; row.style.maskImage = g;
+  }
+  ["f-sort", "f-cat"].forEach(function (id) {
+    var row = document.getElementById(id);
+    row.addEventListener("scroll", function () { fade(row); }, { passive: true });
+    window.addEventListener("resize", function () { fade(row); });
+  });
   var qTimer;
   document.getElementById("q").addEventListener("input", function (e) { clearTimeout(qTimer); qTimer = setTimeout(function () { state.q = e.target.value.trim(); changed(); }, 200); });
   document.getElementById("blank").addEventListener("change", function (e) { state.blank = e.target.checked; changed(); });
+  document.getElementById("reset").addEventListener("click", function () {
+    state.place = "all"; state.cat = "all"; state.stage = "all"; state.q = ""; state.blank = false;
+    document.getElementById("f-place").value = "all"; document.getElementById("q").value = ""; document.getElementById("blank").checked = false;
+    changed(); document.getElementById("f-place").focus();
+  });
 
-  function filtered() {
+  function desc(a, b) { return a < b ? 1 : a > b ? -1 : 0; }
+  var SORTERS = {
+    "new": function (a, b) { return desc(a.pms, b.pms) || desc(a.pk, b.pk); },
+    old: function (a, b) { return desc(b.pms, a.pms) || desc(b.pk, a.pk); },
+    stage: function (a, b) { return STAGE_ORDER[a.stage] - STAGE_ORDER[b.stage] || desc(a.sdate, b.sdate) || desc(a.pk, b.pk); },
+    recent: function (a, b) { return desc(a.latest, b.latest) || desc(a.pk, b.pk); },
+    big: function (a, b) { return b.area - a.area || desc(a.pms, b.pms); }
+  };
+  // 목록 왼쪽에 보여줄 날짜: 정렬 기준이 되는 날
+  function dateFor(r) { return state.sort === "stage" ? r.sdate : state.sort === "recent" ? r.latest : r.pms; }
+
+  function filtered(skipStage) {
     var q = state.q.replace(/\s+/g, "");
     var out = rows.filter(function (r) {
       if (!state.blank && !r.known) return false;
       if (state.place !== "all" && r.place !== state.place && r.place.indexOf(state.place + " ") !== 0) return false;
       if (state.cat !== "all" && r.cat !== state.cat) return false;
-      if (state.stage !== "all" && r.stage !== state.stage) return false;
+      if (!skipStage && state.stage !== "all" && r.stage !== state.stage) return false;
       if (q && (r.addr + r.name + r.purp + r.use).replace(/\s+/g, "").indexOf(q) < 0) return false;
       return true;
     });
-    if (state.sort === "big") out = out.slice().sort(function (a, b) { return b.area - a.area; });
+    if (!skipStage) out.sort(SORTERS[state.sort] || SORTERS["new"]);
     return out;
   }
 
@@ -537,37 +648,49 @@ h1, h2, h3 { text-wrap: balance; }
     if (r.pms && r.stcns && days(r.pms, r.stcns) >= 0) gap = "허가 후 " + days(r.pms, r.stcns) + "일 만에 착공" + (r.apr && days(r.stcns, r.apr) >= 0 ? ", 착공 후 " + days(r.stcns, r.apr) + "일 만에 사용승인." : ".");
     return '<div class="detail" id="d-' + esc(r.pk) + '"><dl>' + items.map(function (x) { return "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>" + track(r) +
       (gap ? "<p>" + gap + "</p>" : "") +
-      '<div class="acts"><button type="button" class="btn" data-map="' + esc(r.pk) + '">지도에서 보기</button></div>' +
+      '<div class="acts"><button type="button" class="btn" data-map="' + esc(r.pk) + '">지도에서 보기</button><button type="button" class="btn" data-share="' + esc(r.pk) + '">링크 공유</button></div>' +
       "<p>원문은 세움터에서 대지위치로 확인할 수 있습니다.</p></div>";
   }
-  function itemHtml(r, open, showDate) {
+  function itemHtml(r, open, dateText) {
     var bigArea = r.area >= 1000;
     return '<div class="item" style="--cat:' + color(r.cat) + '"><button type="button" aria-expanded="' + open + '" aria-controls="d-' + esc(r.pk) + '" data-pk="' + esc(r.pk) + '">' +
-      '<span class="d">' + (showDate ? md(r.pms) : (r.pms || "").slice(2, 4) + "년") + '</span><span class="t">' + esc(r.addr) + (r.name ? "<small>" + esc(r.name) + "</small>" : "") + '</span><span class="st ' + r.stage + '">' + STAGE[r.stage] + "</span>" +
+      '<span class="d">' + dateText + '</span><span class="t">' + esc(r.addr) + (r.name ? "<small>" + esc(r.name) + "</small>" : "") + '</span><span class="st ' + r.stage + '">' + STAGE[r.stage] + "</span>" +
       '<span class="s">' + esc(summaryLine(r)) + ', <span class="' + (bigArea ? "big" : "") + '">' + area(r.area) + "</span></span></button>" +
       (open ? detailHtml(r) : "") + "</div>";
   }
+  var MONTH_WORD = { "new": "허가", old: "허가", recent: "", stage: "" };
   function drawList() {
     var list = document.getElementById("view-list");
     var data = filtered();
     document.getElementById("result").textContent = "조건에 맞는 허가 " + nf(data.length) + "건";
-    if (!data.length) { list.innerHTML = '<p class="empty">조건에 맞는 허가가 없습니다. 동네를 ‘청원구 전체’로 바꾸거나 검색어를 지워 보세요.</p>'; return; }
+    if (!data.length) { list.innerHTML = '<p class="empty">조건에 맞는 허가가 없습니다. ‘조건 초기화’를 누르거나 검색어를 지워 보세요.</p>'; return; }
     var show = data.slice(0, state.shown), html = "";
-    if (state.sort === "new") {
-      var cur = null, counts = {};
-      data.forEach(function (r) { var m = (r.pms || "").slice(0, 7); counts[m] = (counts[m] || 0) + 1; });
-      show.forEach(function (r) {
-        var m = (r.pms || "").slice(0, 7);
-        if (m !== cur) {
-          if (cur !== null) html += "</div>";
-          cur = m;
-          html += '<div class="month"><h3>' + (m ? m.slice(0, 4) + "년 " + (+m.slice(5)) + "월" : "날짜 미기재") + "</h3><span>" + counts[m] + "건</span></div><div class=\"group\">";
-        }
-        html += itemHtml(r, state.open === r.pk, true);
+    if (state.sort !== "big") {
+      // 달별로 묶고, 단계순일 때는 단계 제목을 한 번 더 둔다
+      var byStage = state.sort === "stage";
+      var curS = null, curM = null, open = false, sCount = {}, mCount = {};
+      data.forEach(function (r) {
+        var s = byStage ? r.stage : "", m = s + "|" + dateFor(r).slice(0, 7);
+        sCount[s] = (sCount[s] || 0) + 1; mCount[m] = (mCount[m] || 0) + 1;
       });
-      html += "</div>";
+      show.forEach(function (r) {
+        var s = byStage ? r.stage : "", ym = dateFor(r).slice(0, 7), m = s + "|" + ym;
+        if (s !== curS) {
+          if (open) { html += "</div>"; open = false; }
+          curS = s; curM = null;
+          if (byStage) html += '<div class="stagehead ' + s + '"><h3>' + STAGE[s] + "</h3><span>" + nf(sCount[s]) + "건, " + (s === "done" ? "사용승인일" : s === "work" ? "착공일" : "허가일") + " 최근순</span></div>";
+        }
+        if (m !== curM) {
+          if (open) html += "</div>";
+          curM = m; open = true;
+          var word = byStage ? (s === "done" ? "완공" : s === "work" ? "착공" : "허가") : MONTH_WORD[state.sort];
+          html += '<div class="month"><h3>' + (ym ? ym.slice(0, 4) + "년 " + (+ym.slice(5)) + "월" : "날짜 미기재") + (word ? " " + word : "") + "</h3><span>" + nf(mCount[m]) + "건</span></div><div class=\"group\">";
+        }
+        html += itemHtml(r, state.open === r.pk, md(dateFor(r)));
+      });
+      if (open) html += "</div>";
     } else {
-      html += '<div class="group" style="margin-top:12px">' + show.map(function (r) { return itemHtml(r, state.open === r.pk, false); }).join("") + "</div>";
+      html += '<div class="group" style="margin-top:12px">' + show.map(function (r) { return itemHtml(r, state.open === r.pk, r.pms.slice(2, 4) + "년"); }).join("") + "</div>";
     }
     if (data.length > state.shown) html += '<button type="button" class="more" id="more">' + nf(data.length - state.shown) + "건 더 보기</button>";
     list.innerHTML = html;
@@ -582,6 +705,9 @@ h1, h2, h3 { text-wrap: balance; }
     });
     list.querySelectorAll("[data-map]").forEach(function (b) {
       b.onclick = function () { var pk = b.getAttribute("data-map"); var r = byPk[pk]; if (r) showOnMap(r); };
+    });
+    list.querySelectorAll("[data-share]").forEach(function (b) {
+      b.onclick = function () { var r = byPk[b.getAttribute("data-share")]; if (r) share(r, b); };
     });
     var more = document.getElementById("more");
     if (more) more.onclick = function () { state.shown += 40; drawList(); };
@@ -652,7 +778,8 @@ h1, h2, h3 { text-wrap: balance; }
     var stat = document.getElementById("mapstat");
     var total = filtered().length, found = 0, miss = 0, i = 0, bounds = new kakao.maps.LatLngBounds();
     function line(done) {
-      stat.textContent = (total > MAP_LIMIT ? "조건에 맞는 " + nf(total) + "건 중 " + (state.sort === "big" ? "규모 큰 " : "최근 ") + MAP_LIMIT + "건을 표시합니다. " : "조건에 맞는 " + nf(total) + "건을 표시합니다. ") +
+      var sortName = (SORTS.filter(function (s) { return s.v === state.sort; })[0] || SORTS[0]).t;
+      stat.textContent = (total > MAP_LIMIT ? "조건에 맞는 " + nf(total) + "건 중 ‘" + sortName + "’ 앞쪽 " + MAP_LIMIT + "건을 표시합니다. " : "조건에 맞는 " + nf(total) + "건을 표시합니다. ") +
         (done ? (miss ? "위치를 찾지 못한 " + miss + "건은 빠졌습니다." : "") : "위치 찾는 중 " + (found + miss) + " / " + data.length);
     }
     line(false);
@@ -757,13 +884,39 @@ h1, h2, h3 { text-wrap: balance; }
       e.preventDefault(); var n = order[(i + (e.key === "ArrowRight" ? 1 : 2)) % 3]; go(n); document.getElementById("tab-" + n).focus();
     }
   });
-  window.addEventListener("hashchange", function () { go(location.hash.slice(1), false); });
+  // 공유 링크(#p=번호)로 들어오면 맨 위 표지판에 그 건을 보여준다
+  function fromHash() {
+    var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h);
+    if (m) {
+      var r = byPk[decodeURIComponent(m[1])];
+      if (r) { shared = r; renderSign(); }
+      go("list", false);
+      return;
+    }
+    go(h || "list", false);
+  }
+  window.addEventListener("hashchange", fromHash);
+
+  // 목록이 길어지면 위로 버튼
+  (function () {
+    var btn = document.getElementById("totop"), ticking = false;
+    window.addEventListener("scroll", function () {
+      if (ticking) return; ticking = true;
+      requestAnimationFrame(function () { btn.hidden = window.scrollY < 900; ticking = false; });
+    }, { passive: true });
+    btn.onclick = function () {
+      var nav = document.querySelector(".views");
+      var y = nav.getBoundingClientRect().top + window.scrollY;
+      var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: window.scrollY > y + 10 ? y : 0, behavior: reduce ? "auto" : "smooth" });
+    };
+  })();
 
   document.getElementById("foot").textContent = "자료 출처: " + (meta.source || "국토교통부 건축HUB 건축인허가정보 서비스") + " (공공데이터포털). 지도: 카카오맵. 동네레이더는 개인이 만든 비공식 서비스입니다.";
 
   drawChips();
   drawStats();
-  go(location.hash.slice(1) || "list", false);
+  fromHash();
 })();
 </script>
 </body>
