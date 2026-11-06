@@ -225,6 +225,9 @@ def public_name(name, purp, place):
     n = re.sub(r"\([^)]*\)", "", re.sub(r"\s+", " ", str(name or ""))).strip()
     if not n or "주택" in (purp or "") or "씨" in n or (place and n.startswith(place)):
         return ""
+    # 이름 칸에 주소를 적은 경우(예: '충청북도 청주시 … 필지 공장')는 이름으로 보지 않는다
+    if "청원구 " in n or re.search(r"(번지|필지)", n):
+        return ""
     return n if PUBLIC_NAME.search(n) else ""
 
 
