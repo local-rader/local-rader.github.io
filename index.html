@@ -1088,8 +1088,10 @@ h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
     if (!BUILD[r.gb] || !r.known || !r.pms) return null;
     if (!r.stcns) {
       var fac = /공장/.test(r.purp), Y = fac ? 3 : 2;
+      // 건축HUB의 착공연기일은 기록된 착공 기한이다(대부분 허가일 + 2년, 연장되면 더 늦음). 있으면 그 날을 쓴다.
       var due = r.delay && r.delay > r.pms ? r.delay : shift(r.pms, Y);
       var maxDue = shift(r.pms, Y + 1);
+      if (due > maxDue) maxDue = due;
       var lv = END > shift(maxDue, 0, 3) ? 3 : END > shift(due, 0, 3) ? 2 : END > shift(r.pms, 1) ? 1 : 0;
       if (!lv) return null;
       var base = "허가 " + dot(r.pms) + " · " + elapsed(r.pms, END) + "째 착공 기록 없음";
