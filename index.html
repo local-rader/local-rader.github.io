@@ -145,10 +145,10 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
   position: sticky; top: 0; z-index: 5; margin: 30px 0 0; background: var(--paper);
   border-bottom: 1px solid var(--rule);
 }
-.views .wrap { display: flex; gap: 4px; }
+.views .wrap { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
 .tab {
   border: 0; background: none; padding: 12px 14px 10px; font-size: 16px; font-weight: 500;
-  color: var(--ink-2); border-bottom: 3px solid transparent; cursor: pointer;
+  color: var(--ink-2); border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; flex: none;
 }
 .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
 
@@ -245,6 +245,42 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
 .detail .acts { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 0; }
 .more { margin: 16px 0 0; width: 100%; padding: 12px; border: 1px solid var(--rule); background: var(--sheet); border-radius: 8px; cursor: pointer; }
 .empty { padding: 20px 0; color: var(--ink-2); }
+
+/* 공급 예고·멈춘 기록 */
+.panel-top { margin: 18px 0 0; }
+.panel-note { margin: 0 0 14px; color: var(--ink-2); font-size: 14px; }
+h3.sub { margin: 28px 0 8px; font-size: 16px; font-weight: 700; }
+.item .note { grid-column: 2 / 4; font-size: 13px; color: var(--ink-2); }
+.item .note b { font-weight: 500; color: var(--work-ink); }
+.disclaimer { margin: 28px 0 0; padding: 12px 14px; background: var(--sheet); border-left: 3px solid var(--rule); font-size: 13px; color: var(--ink-2); }
+.disclaimer p { margin: 0; }
+.disclaimer p + p { margin-top: 8px; }
+.disclaimer b { font-weight: 500; color: var(--ink); }
+.st-ctrl { margin: 12px 0 0; }
+#st-tiles { margin: 0 0 4px; }
+#st-tiles .tile span { white-space: normal; line-height: 1.35; }
+#st-result { margin: 12px 0 4px; }
+.qb { border-top: 1px solid var(--rule); }
+.qb:last-child { border-bottom: 1px solid var(--rule); }
+.qb > h3 { margin: 0; font-size: 16px; }
+.qb > h3 > button {
+  width: 100%; background: none; border: 0; padding: 14px 2px 12px 0; cursor: pointer; text-align: left;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline;
+}
+.qb .ql { font-weight: 700; }
+.qb .ql small { font-weight: 400; color: var(--ink-2); font-size: 13px; margin-left: 6px; }
+.qb .c { color: var(--ink-2); font-size: 14px; font-weight: 400; white-space: nowrap; }
+.qb .c::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 10px; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: translateY(-3px) rotate(45deg); }
+.qb button[aria-expanded="false"] .c::after { transform: translateY(-1px) rotate(-45deg); }
+.qb .qs { grid-column: 1 / 3; font-size: 14px; color: var(--ink-2); font-weight: 400; }
+.qb .qbar { grid-column: 1 / 3; height: 10px; display: flex; gap: 2px; margin: 4px 0 0; }
+.qb .qbar span { height: 100%; border-radius: 2px; }
+.qb .group { padding-bottom: 8px; }
+.mtable { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mtable th, .mtable td { padding: 7px 4px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+.mtable th { color: var(--ink-2); font-weight: 500; font-size: 13px; }
+.mtable th:first-child, .mtable td:first-child { text-align: left; white-space: normal; }
+.mtable-wrap { overflow-x: auto; }
 
 /* 지도 */
 .mapbox {
@@ -349,6 +385,8 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
   <div class="wrap" role="tablist">
     <button class="tab" role="tab" id="tab-list" aria-controls="view-list" data-view="list">목록</button>
     <button class="tab" role="tab" id="tab-map" aria-controls="view-map" data-view="map">지도</button>
+    <button class="tab" role="tab" id="tab-supply" aria-controls="view-supply" data-view="supply">공급 예고</button>
+    <button class="tab" role="tab" id="tab-stall" aria-controls="view-stall" data-view="stall">멈춘 기록</button>
     <button class="tab" role="tab" id="tab-stats" aria-controls="view-stats" data-view="stats">통계</button>
   </div>
 </nav>
@@ -369,6 +407,35 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
     <p class="mapstat" id="mapstat"></p>
     <div class="legend" id="maplegend"></div>
     <div class="mapcard" id="mapcard"></div>
+  </section>
+
+  <section id="view-supply" class="panel" role="tabpanel" aria-labelledby="tab-supply" hidden>
+    <div class="sec-head panel-top"><h2 class="sec" id="sup-h">공급 예고</h2><span id="sup-asof"></span></div>
+    <p class="panel-note">지금 공사 중인 곳이 언제쯤 완공될지, 청원구에서 비슷한 건물이 착공부터 사용승인까지 걸린 기간으로 추정했습니다. 위의 기간 버튼과 상관없이 자료 기준일 현재 상태입니다.</p>
+    <div id="sup-buckets"></div>
+    <p class="panel-note" id="sup-ext" style="margin-top:12px"></p>
+    <h3 class="sub">허가만 받은 곳 (아직 착공 기록 없음)</h3>
+    <p class="panel-note" id="sup-pipe"></p>
+    <h3 class="sub">이렇게 계산했어요</h3>
+    <div id="sup-method"></div>
+    <p class="disclaimer">예상 완공 시기는 착공일에 청원구의 비슷한 건물(용도·규모)이 착공부터 사용승인까지 걸린 기간을 더해 계산한 통계적 추정 범위이며, 건축주의 공식 일정이 아닙니다. 공사비·자금 사정, 설계 변경 등으로 크게 달라질 수 있고, 아파트 입주 물량은 한국부동산원 발표와 다를 수 있습니다.</p>
+  </section>
+
+  <section id="view-stall" class="panel" role="tabpanel" aria-labelledby="tab-stall" hidden>
+    <div class="sec-head panel-top"><h2 class="sec" id="st-h">진행 기록이 멈춘 곳</h2><span id="st-asof"></span></div>
+    <p class="panel-note">허가를 받고 오랫동안 착공 기록이 없거나, 착공하고 오랫동안 사용승인 기록이 없는 곳입니다. 새로 짓기·넓히기처럼 착공 신고를 하는 공사만 셉니다. 위의 기간 버튼과 상관없이 자료 기준일 현재 상태입니다.</p>
+    <div class="tiles" id="st-tiles" role="group" aria-label="기록 종류"></div>
+    <div class="frow lab st-ctrl"><span class="flabel" aria-hidden="true">규모</span><div class="hscroll" id="st-size" role="group" aria-label="규모"></div></div>
+    <div class="frow lab st-ctrl"><span class="flabel" aria-hidden="true">정렬</span><div class="hscroll" id="st-sort" role="group" aria-label="정렬"></div></div>
+    <p class="result" id="st-result" aria-live="polite"></p>
+    <div id="st-list"></div>
+    <h3 class="sub" id="st-bars-h">동네별 건수</h3>
+    <div class="bars" id="st-bars"></div>
+    <div class="disclaimer">
+      <p>이 목록은 국토교통부 건축HUB 인허가 공개자료에 착공일이나 사용승인일이 <b>기록되지 않은</b> 건을 기계적으로 추린 것입니다. 실제로는 착공·완공했지만 입력이 늦거나 빠진 경우, 허가가 취소됐거나 착공 기간이 연장된 경우가 섞여 있을 수 있습니다.</p>
+      <p>건축법은 허가받은 날부터 2년(공장 승인을 받은 공장은 3년) 안에 공사를 시작하지 않으면 허가를 취소하도록 하고, 정당한 사유가 있으면 1년까지 연장할 수 있게 합니다. 공장 여부는 주용도로 짐작한 것입니다.</p>
+      <p>이 목록은 법에서 말하는 ‘공사중단 장기방치 건축물’(국토교통부 실태조사로 확인된 건축물)이 아닙니다. 정확한 상태는 청주시 청원구청 건축 부서에서 확인하세요.</p>
+    </div>
   </section>
 
   <section id="view-stats" class="stats" role="tabpanel" aria-labelledby="tab-stats" hidden>
@@ -392,6 +459,7 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
       <li>기간을 고르면 그 안에 허가·착공·사용승인 중 하나라도 있었던 기록을 보여줍니다. ‘새 허가·공사 시작·완공’ 숫자를 누르면 그 날짜가 기간 안에 있는 기록만 남습니다.</li>
       <li>‘최근 1달·3달·1년’은 오늘이 아니라 자료가 들어온 마지막 날을 기준으로 셉니다. 공공데이터가 한 달가량 늦게 들어오기 때문입니다.</li>
       <li>용도와 공사 종류가 비어 있는 소규모 기록은 기본으로 빼고, 체크하면 함께 보여줍니다.</li>
+      <li>‘공급 예고’는 청원구에서 비슷한 규모의 건물이 착공부터 사용승인까지 걸린 기간으로 완공 시기를 추정한 것이고, ‘멈춘 기록’은 착공이나 사용승인 기록이 오래 없는 곳을 기계적으로 추린 것입니다. 둘 다 사실 확인이 아니라 기록에 근거한 추정입니다.</li>
       <li>지도 위치는 지번 주소로 찾은 대략의 위치입니다. 일부 허가는 위치를 찾지 못해 지도에 나오지 않습니다.</li>
       <li>정확한 내용은 <a href="https://www.eais.go.kr" target="_blank" rel="noopener">세움터</a>에서 대지위치로 다시 확인하세요. 이 사이트는 투자 판단이나 법적 판단의 근거가 아닙니다.</li>
     </ul>
@@ -532,7 +600,8 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
   var MONTHS = [];
   (function () { var m = FIRST.slice(0, 7), e = END.slice(0, 7); while (m <= e && MONTHS.length < 600) { MONTHS.push(m); m = addMonths(m, 1); } })();
 
-  var state = { period: "3m", from: "", to: END.slice(0, 7), place: "all", ev: "all", cat: "all", sort: "new", q: "", blank: false, shown: 40, open: null, open5: null, openM: null };
+  var state = { period: "3m", from: "", to: END.slice(0, 7), place: "all", ev: "all", cat: "all", sort: "new", q: "", blank: false, shown: 40, open: null, open5: null, openM: null,
+    stKind: "all", stSize: 0, stSort: "big", shownS: 40, openS: null, openF: null, openQ: null };
   state.from = addMonths(state.to, -11); if (state.from < MONTHS[0]) state.from = MONTHS[0];
   try {
     var saved = JSON.parse(localStorage.getItem("dr:v2") || "{}");
@@ -625,13 +694,16 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
       '<div class="acts"><button type="button" class="btn" data-map="' + esc(r.pk) + '">지도에서 보기</button><button type="button" class="btn" data-share="' + esc(r.pk) + '">링크 공유</button></div>' +
       "<p>원문은 세움터에서 대지위치로 확인할 수 있습니다.</p></div>";
   }
-  function itemHtml(r, open, dateText, pre) {
+  // note: 이미 이스케이프한 HTML 한 줄 (공급 예고·멈춘 기록에서 예상 시기나 경과 기간을 보여줄 때)
+  function itemHtml(r, open, dateText, pre, note) {
     var bigArea = r.area >= 1000;
     return '<div class="item" style="--cat:' + color(r.cat) + '"><button type="button" aria-expanded="' + open + '" aria-controls="' + pre + "-" + esc(r.pk) + '" data-pk="' + esc(r.pk) + '">' +
       '<span class="d">' + dateText + '</span><span class="t">' + esc(r.addr) + (r.name ? "<small>" + esc(r.name) + "</small>" : "") + '</span><span class="st ' + r.stage + '">' + STAGE[r.stage] + "</span>" +
-      '<span class="s">' + esc(summaryLine(r)) + ', <span class="' + (bigArea ? "big" : "") + '">' + area(r.area) + "</span></span></button>" +
+      '<span class="s">' + esc(summaryLine(r)) + ', <span class="' + (bigArea ? "big" : "") + '">' + area(r.area) + "</span></span>" +
+      (note ? '<span class="note">' + note + "</span>" : "") + "</button>" +
       (open ? detailHtml(r, pre) : "") + "</div>";
   }
+  function ym2(d) { return d ? d.slice(2, 4) + "." + (+d.slice(5, 7)) : ""; }
   function bindItems(box, key, redraw) {
     box.querySelectorAll(".item > button").forEach(function (b) {
       b.onclick = function () {
@@ -996,19 +1068,238 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
     document.getElementById("s-sub").textContent = "‘새 허가’는 허가일이 고른 기간 안에 있는 기록입니다. 해마다 막대와 걸린 기간은 기간과 상관없이 2023년부터 전체 자료로 계산했습니다.";
   }
 
+  // ---------- 공급 예고와 멈춘 기록이 함께 쓰는 기준
+  // 착공 신고를 하는 공사만 센다. 용도변경·대수선·가설은 착공 기록이 원래 없거나 짧아서 뺀다.
+  var BUILD = { "신축": 1, "증축": 1, "개축": 1, "재축": 1, "이전": 1 };
+  function shift(d, y, m, dd) {
+    var t = new Date(d + "T00:00:00Z");
+    if (y) t.setUTCFullYear(t.getUTCFullYear() + y);
+    if (m) t.setUTCMonth(t.getUTCMonth() + m);
+    if (dd) t.setUTCDate(t.getUTCDate() + dd);
+    return t.toISOString().slice(0, 10);
+  }
+  function elapsed(a, b) {
+    var m = (+b.slice(0, 4) - +a.slice(0, 4)) * 12 + (+b.slice(5, 7) - +a.slice(5, 7)) - (+b.slice(8, 10) < +a.slice(8, 10) ? 1 : 0);
+    var y = Math.floor(m / 12); m = m % 12;
+    return (y ? y + "년" : "") + (y && m ? " " : "") + (m ? m + "개월" : "") || "1개월 미만";
+  }
+  // 자료가 한 달가량 늦게 들어오므로 기한이 지난 지 3개월이 안 된 건은 한 단계 낮게 본다
+  function stallOf(r) {
+    if (!BUILD[r.gb] || !r.known || !r.pms) return null;
+    if (!r.stcns) {
+      var fac = /공장/.test(r.purp), Y = fac ? 3 : 2;
+      var due = r.delay && r.delay > r.pms ? r.delay : shift(r.pms, Y);
+      var maxDue = shift(r.pms, Y + 1);
+      var lv = END > shift(maxDue, 0, 3) ? 3 : END > shift(due, 0, 3) ? 2 : END > shift(r.pms, 1) ? 1 : 0;
+      if (!lv) return null;
+      var base = "허가 " + dot(r.pms) + " · " + elapsed(r.pms, END) + "째 착공 기록 없음";
+      var tail = lv === 3 ? "연장 가능 기간(" + (Y + 1) + "년)까지 지남" : lv === 2 ? "착공 기한 " + dot(due) + " 지남(기록상)" : "";
+      return { kind: lv >= 2 ? "due" : "year", lv: lv, since: r.pms, note: esc(base) + (tail ? " · <b>" + esc(tail) + "</b>" : "") };
+    }
+    if (!r.apr) {
+      var Y2 = r.area >= 3000 || (+r.hhld || 0) >= 30 ? 4 : r.area >= 500 ? 3 : 2;
+      if (END > shift(r.stcns, Y2)) return { kind: "finish", lv: 4, since: r.stcns, note: esc("착공 " + dot(r.stcns) + " · ") + "<b>" + esc(elapsed(r.stcns, END) + "째 사용승인 기록 없음") + "</b>" };
+    }
+    return null;
+  }
+  rows.forEach(function (r) { r.stall = stallOf(r); });
+
+  // ---------- 멈춘 기록
+  var ST_KINDS = [
+    { v: "all", t: "모두" },
+    { v: "due", t: "착공 기한 지남" },
+    { v: "year", t: "허가 1년 넘게 착공 없음" },
+    { v: "finish", t: "착공 후 오래 사용승인 없음" }
+  ];
+  var ST_SIZES = [{ v: 0, t: "모든 규모" }, { v: 500, t: "500㎡ 이상" }, { v: 1000, t: "1,000㎡ 이상" }, { v: 3000, t: "3,000㎡ 이상" }];
+  var ST_SORTS = [{ v: "big", t: "규모 큰 순" }, { v: "old", t: "오래된 순" }];
+  function chipRow(el, items, cur, set) {
+    el.innerHTML = "";
+    items.forEach(function (it) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.textContent = it.t; b.setAttribute("aria-pressed", String(cur === it.v));
+      b.onclick = function () { set(it.v); };
+      el.appendChild(b);
+    });
+  }
+  function drawStall() {
+    var pl = state.place === "all" ? "청원구 전체" : state.place;
+    document.getElementById("st-h").textContent = "진행 기록이 멈춘 곳 · " + pl;
+    document.getElementById("st-asof").textContent = dot(END) + " 기준";
+    var base = rows.filter(function (r) { return r.stall && placeOk(r) && r.area >= state.stSize; });
+    var cnt = { all: base.length, due: 0, year: 0, finish: 0 };
+    base.forEach(function (r) { cnt[r.stall.kind]++; });
+    var tl = document.getElementById("st-tiles"); tl.innerHTML = "";
+    ST_KINDS.forEach(function (k) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "tile" + (k.v === "finish" ? " w" : ""); b.setAttribute("aria-pressed", String(state.stKind === k.v));
+      b.innerHTML = "<b>" + nf(cnt[k.v]) + "</b><span>" + k.t + "</span>";
+      b.onclick = function () { state.stKind = state.stKind === k.v ? "all" : k.v; state.shownS = 40; state.openS = null; drawStall(); };
+      tl.appendChild(b);
+    });
+    chipRow(document.getElementById("st-size"), ST_SIZES, state.stSize, function (v) { state.stSize = v; state.shownS = 40; state.openS = null; drawStall(); });
+    chipRow(document.getElementById("st-sort"), ST_SORTS, state.stSort, function (v) { state.stSort = v; state.shownS = 40; state.openS = null; drawStall(); });
+    var data = base.filter(function (r) { return state.stKind === "all" || r.stall.kind === state.stKind; });
+    data.sort(state.stSort === "big" ? function (a, b) { return b.area - a.area || desc(b.stall.since, a.stall.since); } : function (a, b) { return desc(b.stall.since, a.stall.since) || b.area - a.area; });
+    document.getElementById("st-result").textContent = "해당하는 곳 " + nf(data.length) + "건";
+    var el = document.getElementById("st-list");
+    if (!data.length) { el.innerHTML = '<p class="empty">조건에 맞는 곳이 없습니다.</p>'; }
+    else {
+      el.innerHTML = '<div class="group">' + data.slice(0, state.shownS).map(function (r) { return itemHtml(r, state.openS === r.pk, ym2(r.stall.since), "s", r.stall.note); }).join("") + "</div>" +
+        (data.length > state.shownS ? '<button type="button" class="more" id="st-more">' + nf(data.length - state.shownS) + "건 더 보기</button>" : "");
+      bindItems(el, "openS", drawStall);
+      var more = document.getElementById("st-more");
+      if (more) more.onclick = function () { state.shownS += 40; drawStall(); };
+    }
+    var townLevel = state.place !== "all";
+    document.getElementById("st-bars-h").textContent = (townLevel ? pl + " 마을별" : "동네별") + " 건수 (위에서 고른 조건)";
+    var ac = {}; data.forEach(function (r) { var a = townLevel ? r.place : r.place.split(" ")[0]; ac[a] = (ac[a] || 0) + 1; });
+    var al = Object.keys(ac).sort(function (a, b) { return ac[b] - ac[a]; });
+    var bEl = document.getElementById("st-bars");
+    if (!al.length) bEl.innerHTML = "";
+    else bars(bEl, al.map(function (a) { return { k: a, label: nf(ac[a]) + "건", segs: [[ac[a], "var(--work)"]] }; }), ac[al[0]]);
+  }
+
+  // ---------- 공급 예고
+  // 새로 짓는 공사만 센다. 넓히기(증축)는 자료의 연면적이 늘어난 부분이 아니라 건물 전체라서 공급 합계를 부풀린다.
+  var NEW = { "신축": 1, "개축": 1, "재축": 1, "이전": 1 };
+  // 걸리는 기간은 용도보다 규모에 따라 크게 달라서 규모로 나눈다
+  var SUPG = {
+    S: { t: "작은 건물 (500㎡ 미만)" }, M: { t: "중간 건물 (500~3,000㎡)" },
+    L: { t: "큰 건물 (3,000㎡ 이상)" }, apt: { t: "아파트 등 공동주택 (30세대 이상)" }
+  };
+  function supGrp(r) {
+    if ((+r.hhld || 0) >= 30 || (/공동주택|아파트/.test(r.purp || "") && r.area >= 3000)) return "apt";
+    return r.area >= 3000 ? "L" : r.area >= 500 ? "M" : "S";
+  }
+  function useC(r) {
+    var p = r.purp || "";
+    return /주택|기숙사/.test(p) ? "house" : /근린|근생|업무/.test(p) ? "shop" : /공장|창고/.test(p) ? "ind" : "etc";
+  }
+  // 착공부터 사용승인까지 걸린 날: 착공한 지 2년이 지난 건만 보고, 2년 안에 사용승인이 없으면 '2년 넘음'으로 센다
+  var LAG = {}, LAG_FROM = "", LAG_TO = shift(END, -2);
+  (function () {
+    var pool = {};
+    rows.forEach(function (r) {
+      if (!NEW[r.gb] || !r.known || !r.stcns || r.stcns > LAG_TO) return;
+      if (!LAG_FROM || r.stcns < LAG_FROM) LAG_FROM = r.stcns;
+      var d = r.apr ? days(r.stcns, r.apr) : -1, v = d >= 0 && d <= 730 ? d : Infinity, g = supGrp(r);
+      (pool[g] = pool[g] || []).push(v);
+    });
+    function qs(a) {
+      a = a.slice().sort(function (x, y) { return x - y; });
+      function q(p) { return a[Math.round(p * (a.length - 1))]; }
+      return { n: a.length, p25: q(0.25), med: q(0.5), p75: q(0.75) };
+    }
+    Object.keys(SUPG).forEach(function (g) {
+      var a = pool[g] || [];
+      if (g === "apt") LAG[g] = { n: a.length, p25: 730, med: 900, p75: 1095, ref: "아파트 공사 2~3년 (전국 참고)" };
+      else if (a.length >= 30) LAG[g] = qs(a);
+      else if (a.length >= 5) { LAG[g] = qs(a); LAG[g].few = true; }
+      else LAG[g] = { n: a.length, p25: 300, med: 388, p75: 730, ref: "전국 평균 388일 참고" };
+    });
+  })();
+  function cap(d) { return d === Infinity ? 730 : d; }
+  function quarter(d) { return d.slice(0, 4) + "-" + (Math.floor((+d.slice(5, 7) - 1) / 3) + 1); }
+  function qLabel(q) { return q.slice(0, 4) + "년 " + q.slice(5) + "분기"; }
+  function months(d) { return d === Infinity ? "2년 넘게" : Math.max(1, Math.round(d / 30.4)) + "개월"; }
+  function forecast(r) {
+    var L = LAG[supGrp(r)];
+    var lo = shift(r.stcns, 0, 0, cap(L.p25)), mid = shift(r.stcns, 0, 0, cap(L.med)), hi = shift(r.stcns, 0, 0, cap(L.p75));
+    var bucket = mid > END ? quarter(mid) : hi > END ? "soon" : "late";
+    var a = quarter(lo > END ? lo : shift(END, 0, 0, 1)), b = quarter(hi > END ? hi : shift(END, 0, 0, 1));
+    var range = a === b ? qLabel(a) : qLabel(a) + " ~ " + qLabel(b).replace(a.slice(0, 4) + "년 ", "");
+    var note = "착공 " + dot(r.stcns) + " · ";
+    if (bucket === "late") note += "비슷한 건물보다 늦어지는 중 (" + elapsed(r.stcns, END) + "째)";
+    else if (bucket === "soon") note += "예상 시점이 지나 곧 완공 예상";
+    else note += "예상 " + range;
+    return { bucket: bucket, note: esc(note) };
+  }
+  function drawSupply() {
+    var pl = state.place === "all" ? "청원구 전체" : state.place;
+    document.getElementById("sup-h").textContent = "공급 예고 · " + pl;
+    document.getElementById("sup-asof").textContent = dot(END) + " 기준";
+    var data = rows.filter(function (r) { return NEW[r.gb] && r.known && r.stcns && !r.apr && !r.stall && placeOk(r); });
+    var B = {};
+    data.forEach(function (r) { var f = forecast(r); r._f = f; (B[f.bucket] = B[f.bucket] || []).push(r); });
+    var keys = Object.keys(B).filter(function (k) { return k !== "soon" && k !== "late"; }).sort();
+    if (B.soon) keys.push("soon");
+    if (B.late) keys.push("late");
+    var el = document.getElementById("sup-buckets");
+    if (!keys.length) el.innerHTML = '<p class="empty">지금 공사 중으로 기록된 곳이 없습니다.</p>';
+    else {
+      // 막대 길이는 구간별 연면적 합계를 가장 큰 구간에 맞춘다
+      var sums = keys.map(function (k) { return B[k].reduce(function (s, r) { return s + r.area; }, 0); });
+      var maxA = Math.max.apply(null, sums.concat([1]));
+      if (state.openQ === null) { state.openQ = {}; }
+      el.innerHTML = keys.map(function (k, i) {
+        var list = B[k].slice().sort(function (a, b) { return b.area - a.area; });
+        var hh = 0, ar = { house: 0, shop: 0, ind: 0, etc: 0 };
+        list.forEach(function (r) { var c = useC(r); ar[c] += r.area; if (c === "house") hh += (+r.fmly || 0) + (+r.hhld || 0); });
+        var bits = [];
+        if (ar.house) bits.push("주택 " + (hh ? nf(hh) + "가구·세대" : nf(Math.round(ar.house)) + "㎡"));
+        if (ar.shop) bits.push("가게·사무실 " + nf(Math.round(ar.shop)) + "㎡");
+        if (ar.ind) bits.push("공장·창고 " + nf(Math.round(ar.ind)) + "㎡");
+        if (ar.etc) bits.push("그 밖 " + nf(Math.round(ar.etc)) + "㎡");
+        var label = k === "soon" ? "곧 완공 예상" : k === "late" ? "예상보다 늦어지는 곳" : qLabel(k) + " 완공 예상";
+        var sub = k === "soon" ? "예상 시점이 자료 기준일보다 앞섬" : k === "late" ? "비슷한 건물 4곳 중 3곳은 이미 끝났을 시점" : "";
+        var bar = ["house", "shop", "ind", "etc"].filter(function (c) { return ar[c]; }).map(function (c) {
+          return '<span style="width:' + (ar[c] / maxA * 100) + "%;background:" + color(c) + '"></span>';
+        }).join("");
+        var open = !!state.openQ[k];
+        return '<div class="qb"><h3><button type="button" aria-expanded="' + open + '" data-q="' + k + '"><span class="ql">' + label + (sub ? "<small>" + sub + "</small>" : "") + '</span><span class="c">' + nf(list.length) + "곳</span>" +
+          '<span class="qs">' + esc(bits.join(" · ")) + '</span><span class="qbar" aria-hidden="true">' + bar + "</span></button></h3>" +
+          (open ? '<div class="group">' + list.map(function (r) { return itemHtml(r, state.openF === r.pk, ym2(r.stcns), "f", r._f.note); }).join("") + "</div>" : "") + "</div>";
+      }).join("") + '<div class="legend"><span><i style="background:var(--c-house)"></i>주택</span><span><i style="background:var(--c-shop)"></i>가게·사무실</span><span><i style="background:var(--c-ind)"></i>공장·창고</span><span><i style="background:var(--c-etc)"></i>그 밖</span><span>막대는 연면적</span></div>';
+      el.querySelectorAll(".qb > h3 > button").forEach(function (b) {
+        b.onclick = function () {
+          var k = b.getAttribute("data-q"); state.openQ[k] = !state.openQ[k]; drawSupply();
+          var again = el.querySelector('.qb > h3 > button[data-q="' + k + '"]'); if (again) again.focus();
+        };
+      });
+      bindItems(el, "openF", drawSupply);
+    }
+    var ext = rows.filter(function (r) { return r.gb === "증축" && r.known && r.stcns && !r.apr && !r.stall && placeOk(r); }).length;
+    document.getElementById("sup-ext").textContent = "새로 짓는 공사만 셌습니다." + (ext ? " 넓히기(증축) 공사 중인 " + nf(ext) + "곳은 자료의 연면적이 늘어난 부분이 아니라 건물 전체라서 뺐습니다. 목록 탭에서 볼 수 있습니다." : "");
+    // 허가만 받은 곳: 착공 기한 안쪽인 것만 (기한이 지난 건 멈춘 기록 쪽)
+    var pipe = rows.filter(function (r) { return NEW[r.gb] && r.known && !r.stcns && !r.stall && placeOk(r); });
+    var pa = { house: 0, shop: 0, ind: 0, etc: 0 }, ph = 0;
+    pipe.forEach(function (r) { var c = useC(r); pa[c] += r.area; if (c === "house") ph += (+r.fmly || 0) + (+r.hhld || 0); });
+    var pb = [];
+    if (pa.house) pb.push("주택 " + (ph ? nf(ph) + "가구·세대" : nf(Math.round(pa.house)) + "㎡"));
+    if (pa.shop) pb.push("가게·사무실 " + nf(Math.round(pa.shop)) + "㎡");
+    if (pa.ind) pb.push("공장·창고 " + nf(Math.round(pa.ind)) + "㎡");
+    if (pa.etc) pb.push("그 밖 " + nf(Math.round(pa.etc)) + "㎡");
+    document.getElementById("sup-pipe").textContent = pipe.length
+      ? "허가받은 지 1년이 안 됐고 아직 착공 기록이 없는 곳이 " + nf(pipe.length) + "곳입니다 (" + pb.join(", ") + "). 모두 지어진다는 보장이 없어서 위 예고 합계에는 넣지 않았습니다."
+      : "허가받은 지 1년이 안 됐고 아직 착공 기록이 없는 곳은 없습니다.";
+    var rowsM = Object.keys(SUPG).map(function (g) {
+      var L = LAG[g];
+      var src = L.ref ? L.ref : "청원구 " + nf(L.n) + "건" + (L.few ? " (표본이 적어 참고용)" : "");
+      return "<tr><td>" + SUPG[g].t + "<br><small>" + src + "</small></td><td>" + months(L.p25) + "</td><td>" + months(L.med) + "</td><td>" + months(L.p75) + "</td></tr>";
+    }).join("");
+    document.getElementById("sup-method").innerHTML = '<p class="panel-note">' + esc(dot(LAG_FROM) + "부터 " + dot(LAG_TO) + "까지 착공한 건을 2년 동안 지켜본 결과입니다. 예상 시기는 착공일에 가운데 값을 더하고, 범위는 4곳 중 1곳이 끝난 때부터 4곳 중 3곳이 끝난 때까지입니다.") + "</p>" +
+      '<div class="mtable-wrap"><table class="mtable"><thead><tr><th>규모</th><th>빠른 편(25%)</th><th>가운데</th><th>늦은 편(75%)</th></tr></thead><tbody>' + rowsM + "</tbody></table></div>";
+  }
+
   // ---------- 보기 전환
   var view = "list";
+  var VIEWS = ["list", "map", "supply", "stall", "stats"];
   function go(v, push) {
-    if (["list", "map", "stats"].indexOf(v) < 0) v = "list";
+    if (VIEWS.indexOf(v) < 0) v = "list";
     view = v;
-    ["list", "map", "stats"].forEach(function (k) {
+    VIEWS.forEach(function (k) {
       document.getElementById("view-" + k).hidden = k !== v;
       document.getElementById("tab-" + k).setAttribute("aria-selected", String(k === v));
       document.getElementById("tab-" + k).tabIndex = k === v ? 0 : -1;
     });
-    document.getElementById("filters").hidden = v === "stats";
+    document.getElementById("filters").hidden = v !== "list" && v !== "map";
+    var tab = document.getElementById("tab-" + v);
+    if (tab.scrollIntoView && tab.parentNode.scrollWidth > tab.parentNode.clientWidth) tab.parentNode.scrollLeft = tab.offsetLeft - 16;
     if (v === "list") drawList();
     if (v === "map") { if (M.dirty || M.focus) drawMap(); else if (M.map) M.map.relayout(); }
+    if (v === "supply") drawSupply();
+    if (v === "stall") drawStall();
     if (v === "stats") drawStats();
     if (push !== false && location.hash !== "#" + v) { try { history.replaceState(null, "", "#" + v); } catch (e) { location.hash = v; } }
     if (push === true) document.querySelector(".views").scrollIntoView({ block: "start" });
@@ -1016,17 +1307,20 @@ h2.sec { margin: 0; font-size: 17px; font-weight: 700; }
   function drawScope() { R = range(); drawPeriod(); drawPlace(); drawSummary(); drawTop5(); drawChips(); }
   function changed() {
     state.shown = 40; state.open = null; state.open5 = null; state.openM = null;
+    state.shownS = 40; state.openS = null; state.openF = null;
     remember(); drawScope();
     M.dirty = true;
     if (view === "list") drawList();
     if (view === "map") drawMap();
+    if (view === "supply") drawSupply();
+    if (view === "stall") drawStall();
     if (view === "stats") drawStats();
   }
   document.querySelectorAll(".tab").forEach(function (t) { t.onclick = function () { go(t.getAttribute("data-view")); }; });
   document.querySelector('[role="tablist"]').addEventListener("keydown", function (e) {
-    var order = ["list", "map", "stats"], i = order.indexOf(view);
+    var i = VIEWS.indexOf(view), n = VIEWS.length;
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      e.preventDefault(); var n = order[(i + (e.key === "ArrowRight" ? 1 : 2)) % 3]; go(n); document.getElementById("tab-" + n).focus();
+      e.preventDefault(); var nx = VIEWS[(i + (e.key === "ArrowRight" ? 1 : n - 1)) % n]; go(nx); document.getElementById("tab-" + nx).focus();
     }
   });
 

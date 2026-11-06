@@ -259,9 +259,24 @@ def normalize(item, names):
         "pms": ymd(item.get("archPmsDay")),
         "sched": ymd(item.get("stcnsSchedDay")),
         "stcns": ymd(item.get("realStcnsDay")),
+        "delay": ymd(item.get("stcnsDelayDay")),
         "apr": ymd(item.get("useAprDay")),
         "crtn": ymd(item.get("crtnDay")),
+        "ho": toint(item.get("hoCnt")),
+        "pnu": make_pnu(item),
     }
+
+
+def make_pnu(item):
+    """필지고유번호(19자리) = 시군구 5 + 법정동 5 + 대지구분 1(일반 1, 산 2) + 본번 4 + 부번 4.
+    공시지가를 붙일 때 쓴다. 블록·롯트 주소(platGbCd 2)는 지번이 아니라서 만들지 않는다."""
+    sg = re.sub(r"\D", "", str(item.get("sigunguCd") or ""))
+    b = re.sub(r"\D", "", str(item.get("bjdongCd") or ""))
+    land = {"0": "1", "1": "2"}.get(str(item.get("platGbCd") or "0").strip())
+    bun, ji = toint(item.get("bun")), toint(item.get("ji"))
+    if len(sg) != 5 or len(b) != 5 or not land or not bun or bun > 9999 or ji > 9999:
+        return ""
+    return f"{sg}{b}{land}{bun:04d}{ji:04d}"
 
 
 def merge(store, items, names, today, quiet=False):
@@ -365,7 +380,7 @@ def update(key, since=None):
 # ---------------------------------------------------------------- 사이트용 데이터
 
 FIELDS = ["pk", "place", "addr", "name", "gb", "purp", "area", "plat", "fmly", "hhld",
-          "jiyuk", "jimok", "pms", "sched", "stcns", "apr", "crtn", "seen"]
+          "jiyuk", "jimok", "pms", "sched", "stcns", "delay", "apr", "crtn", "seen"]
 
 
 def build(store=None, codes=None):
