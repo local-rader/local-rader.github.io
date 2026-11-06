@@ -236,7 +236,9 @@ def normalize(item, names):
         addr = f"{place} {bun}" + (f"-{ji}" if ji else "")
     else:
         blk, lot = clean(item.get("block")), clean(item.get("lot"))
-        addr = f"{place} {blk}블록 {lot}롯트".strip() if blk else place
+        blk = blk if re.search(r"블[럭록]$", blk) else blk + "블록"
+        lot = lot if not lot or re.search(r"(로트|롯트)$", lot) else lot + "롯트"
+        addr = f"{place} {blk} {lot}".strip() if clean(item.get("block")) else place
     return {
         "pk": str(item.get("mgmPmsrgstPk") or ""),
         "b": b,
@@ -294,7 +296,15 @@ def update(key, since=None):
     store = load(STORE, {"records": {}, "events": []})
     today = now_kst().strftime("%Y-%m-%d")
     quiet = bool(since)  # 날짜를 직접 준 경우 = 과거 자료 일괄 받기
-    since = since or (now_kst() - timedelta(days=14)).strftime("%Y%m%d")
+    # 건축HUB 자료는 한 달 단위로 늦게 들어온다(예: 11월 초에 9월 말까지).
+    # 새 묶음이 들어올 때 빠뜨리지 않도록, 가지고 있는 가장 최근 변경일 일주일 전부터 다시 받는다.
+    if not since:
+        latest = max((r.get("crtn", "") for r in store.get("records", {}).values()), default="")
+        start = now_kst() - timedelta(days=14)
+        if latest:
+            start = min(start, datetime.strptime(latest, "%Y-%m-%d").replace(tzinfo=KST) - timedelta(days=7))
+        start = max(start, now_kst() - timedelta(days=150))
+        since = start.strftime("%Y%m%d")
     names = codes["codes"]
     pending = store.setdefault("pending", {})  # {코드: 다시 받을 시작 날짜}
     tot_new = tot_changed = 0
@@ -361,6 +371,7 @@ def build(store=None, codes=None):
     names = codes.get("codes", {})
     for r in store.get("records", {}).values():  # 예전에 저장된 기록도 같은 기준으로 정리
         r["name"] = public_name(r.get("name"), r.get("purp"), r.get("place"))
+        r["addr"] = re.sub(r"\s(로트|롯트)$", "", re.sub(r"(블[럭록])블록", r"\1", re.sub(r"(로트|롯트)롯트", r"\1", r.get("addr", ""))))
         good = names.get(r.get("b", ""), "")
         if r.get("place", "").isdigit() and good and not good.isdigit():
             r["addr"] = r.get("addr", "").replace(r["place"], good, 1)
@@ -369,7 +380,7 @@ def build(store=None, codes=None):
     rows.sort(key=lambda r: (r.get("pms", ""), r.get("pk", "")), reverse=True)
     keep = {r["pk"] for r in rows}
     out = {
-        "meta": store.get("meta", {}),
+        "meta": dict(store.get("meta", {}), asof=max((r.get("crtn", "") for r in rows), default="")),
         "places": sorted({r["place"] for r in rows}),
         "fields": FIELDS,
         "rows": [[r.get(f, "") for f in FIELDS] for r in rows],
