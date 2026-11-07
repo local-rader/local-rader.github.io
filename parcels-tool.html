@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>필지 위치 받기 · 동네레이더 관리자</title>
+<style>
+/* 관리자 페이지: 브이월드가 해외 서버(GitHub) 접속을 막아서, 한국에서 이 페이지를 열어 필지 위치와 개별공시지가를 받는다 */
+:root { --bg: #F3F5F8; --surface: #FFFFFF; --ink: #0F1E33; --ink-2: #4B5B70; --ink-3: #75849A; --rule: #E1E6ED; --rule-2: #CBD3DE; --brand: #16325C; --ok: #1F7A4D; --bad: #B23A0B; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0D131B; --surface: #151D28; --ink: #E7ECF2; --ink-2: #A9B4C2; --ink-3: #8593A4; --rule: #263142; --rule-2: #34425A; --brand: #4A72B8; --ok: #4FB683; --bad: #F28A5A; color-scheme: dark; } }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; word-break: keep-all; }
+main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 22px; margin: 0 0 6px; }
+p { margin: 8px 0; color: var(--ink-2); }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; margin: 16px 0 0; }
+label { display: block; font-weight: 600; margin: 0 0 6px; }
+input[type=password], input[type=text] { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--rule-2); border-radius: 8px; background: var(--surface); color: var(--ink); min-height: 46px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 0; }
+button { font: inherit; font-weight: 600; border-radius: 8px; padding: 10px 18px; min-height: 46px; cursor: pointer; border: 1px solid var(--rule-2); background: var(--surface); color: var(--ink); }
+button.main { background: var(--brand); color: #fff; border-color: var(--brand); }
+button:disabled { opacity: .5; cursor: default; }
+.bar { height: 10px; background: var(--rule); border-radius: 5px; overflow: hidden; margin: 12px 0 6px; }
+.bar i { display: block; height: 100%; width: 0; background: var(--brand); }
+.nums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 10px 0 0; }
+.nums div { background: var(--bg); border-radius: 8px; padding: 8px; text-align: center; }
+.nums b { display: block; font-size: 20px; }
+.nums span { font-size: 12.5px; color: var(--ink-3); }
+.ok { color: var(--ok); font-weight: 600; }
+.bad { color: var(--bad); font-weight: 600; }
+.log { font-size: 13px; color: var(--ink-3); white-space: pre-wrap; margin: 10px 0 0; }
+ol { padding-left: 20px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<main>
+  <h1>필지 위치 받기</h1>
+  <p>동네레이더 관리자용 페이지예요. 브이월드에서 인허가 기록의 필지 위치(가운데 점)와 개별공시지가를 받아 파일로 저장해요. 브이월드가 해외 서버의 접속을 막아서 한국에서 이 페이지를 열어야 해요.</p>
+  <ol>
+    <li>브이월드 인증키를 붙여넣고 <b>받기 시작</b>을 눌러요. 키는 이 화면에서만 쓰고 어디에도 저장하지 않아요.</li>
+    <li>끝날 때까지 화면을 켜 두세요 (몇 분 걸려요). 중간에 끊겨도 받은 만큼은 이 기기에 남아서 다시 누르면 이어서 받아요.</li>
+    <li>끝나면 <b>파일 저장</b>을 눌러 <code>parcels.json</code>을 받고, Claude 대화창에 그 파일을 올려 주세요.</li>
+  </ol>
+
+  <section class="card">
+    <label for="key">브이월드 인증키</label>
+    <input type="password" id="key" autocomplete="off" spellcheck="false" placeholder="여기에 붙여넣기">
+    <div class="row">
+      <button type="button" class="main" id="start">받기 시작</button>
+      <button type="button" id="stop" disabled>멈추기</button>
+    </div>
+    <p id="status">필지 목록을 불러오는 중입니다.</p>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="nums">
+      <div><b id="n-done">0</b><span>처리</span></div>
+      <div><b id="n-ok">0</b><span>위치 받음</span></div>
+      <div><b id="n-none">0</b><span>필지 없음</span></div>
+      <div><b id="n-fail">0</b><span>실패</span></div>
+    </div>
+    <div class="log" id="log"></div>
+  </section>
+
+  <section class="card" id="done" hidden>
+    <p class="ok" id="done-msg"></p>
+    <div class="row"><button type="button" class="main" id="save">파일 저장 (parcels.json)</button></div>
+    <p>저장한 파일을 Claude 대화창에 올려 주시면 사이트에 넣을게요.</p>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  var DOMAIN = "https://local-rader.github.io";
+  var API = "https://api.vworld.kr/req/data";
+  var KEEP = "dr:parcels-progress";
+  var pnus = [], have = {}, missing = {}, todo = [], running = false, stopFlag = false, mode = "", lock = null;
+  var n = { done: 0, ok: 0, none: 0, fail: 0 }, errs = [];
+  function $(id) { return document.getElementById(id); }
+  function today() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function stamp() { var d = new Date(); return today() + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+  function log(t) { if (errs.length < 6) { errs.push(t); $("log").textContent = errs.join("\n"); } }
+  function show() {
+    ["done", "ok", "none", "fail"].forEach(function (k) { $("n-" + k).textContent = n[k].toLocaleString("ko-KR"); });
+    $("bar").style.width = (todo.length ? Math.round(n.done / todo.length * 100) : 0) + "%";
+  }
+  function keep() { try { localStorage.setItem(KEEP, JSON.stringify({ parcels: have, missing: missing })); } catch (e) {} }
+
+  // 이미 사이트에 있는 결과와 이 기기에 남은 중간 결과를 합친다
+  Promise.all([
+    fetch("pnus.json", { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error("pnus.json " + r.status); return r.json(); }),
+    fetch("parcels.json", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; })
+  ]).then(function (res) {
+    pnus = res[0] || [];
+    have = (res[1] && res[1].parcels) || {};
+    missing = (res[1] && res[1].missing) || {};
+    try { var k = JSON.parse(localStorage.getItem(KEEP) || "{}"); Object.assign(have, k.parcels || {}); Object.assign(missing, k.missing || {}); } catch (e) {}
+    var left = pnus.filter(function (p) { return !have[p]; }).length;
+    $("status").textContent = "필지 " + pnus.length.toLocaleString("ko-KR") + "개 중 " + (pnus.length - left).toLocaleString("ko-KR") + "개는 이미 위치가 있어요. 받을 필지 " + left.toLocaleString("ko-KR") + "개.";
+    if (!left) finish();
+  }).catch(function (e) { $("status").innerHTML = '<span class="bad">필지 목록을 불러오지 못했어요: ' + e.message + "</span>"; });
+
+  // 다각형 중 가장 큰 바깥 고리의 무게중심 (수집기 fetch.py와 같은 계산)
+  function centroid(g) {
+    if (!g) return null;
+    var polys = g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : [];
+    var best = null, bestA = -1;
+    polys.forEach(function (poly) {
+      var ring = poly && poly[0]; if (!ring || !ring.length) return;
+      var x0 = ring[0][0], y0 = ring[0][1], a = 0, cx = 0, cy = 0;
+      for (var i = 0; i < ring.length; i++) {
+        var p = ring[i], q = ring[(i + 1) % ring.length];
+        var x1 = p[0] - x0, y1 = p[1] - y0, x2 = q[0] - x0, y2 = q[1] - y0, cr = x1 * y2 - x2 * y1;
+        a += cr; cx += (x1 + x2) * cr; cy += (y1 + y2) * cr;
+      }
+      var pt;
+      if (Math.abs(a) > 1e-18) pt = [y0 + cy / (3 * a), x0 + cx / (3 * a)];
+      else { var sx = 0, sy = 0; ring.forEach(function (c) { sx += c[0]; sy += c[1]; }); pt = [sy / ring.length, sx / ring.length]; }
+      if (Math.abs(a) > bestA) { best = pt; bestA = Math.abs(a); }
+    });
+    return best;
+  }
+  function url(key, pnu, cb) {
+    var q = { service: "data", request: "GetFeature", data: "LP_PA_CBND_BUBUN", key: key, domain: DOMAIN, attrFilter: "pnu:=:" + pnu,
+      geometry: "true", attribute: "true", crs: "EPSG:4326", format: "json", size: "5", page: "1" };
+    if (cb) q.callback = cb;
+    return API + "?" + Object.keys(q).map(function (k) { return k + "=" + encodeURIComponent(q[k]); }).join("&");
+  }
+  var cbn = 0;
+  function jsonp(u0, timeout) {
+    return new Promise(function (ok, bad) {
+      var name = "vwcb" + (++cbn), s = document.createElement("script"), t;
+      window[name] = function (d) { clearTimeout(t); cleanup(); ok(d); };
+      function cleanup() { try { delete window[name]; } catch (e) { window[name] = undefined; } if (s.parentNode) s.parentNode.removeChild(s); }
+      s.onerror = function () { clearTimeout(t); cleanup(); bad(new Error("접속 실패")); };
+      t = setTimeout(function () { cleanup(); bad(new Error("시간 초과")); }, timeout);
+      s.src = u0(name);
+      document.head.appendChild(s);
+    });
+  }
+  function request(key, pnu) {
+    if (mode === "jsonp") return jsonp(function (cb) { return url(key, pnu, cb); }, 20000);
+    var ctl = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
+    return fetch(url(key, pnu), ctl ? { signal: ctl.signal } : {}).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); },
+      function (e) { clearTimeout(t); throw e; });
+  }
+  var FATAL = ["INCORRECT_KEY", "UNAVAILABLE_KEY", "OVER_REQUEST_LIMIT", "INVALID_KEY", "NOT_AUTHORIZED"];
+  function parse(d, pnu) {
+    var resp = (d && d.response) || {}, st = String(resp.status || "").toUpperCase();
+    if (st === "NOT_FOUND") return null;
+    if (st === "ERROR") {
+      var e = resp.error || {}, err = new Error((e.code || "") + " " + (e.text || ""));
+      err.fatal = FATAL.indexOf(String(e.code)) >= 0; throw err;
+    }
+    var feats = (((resp.result || {}).featureCollection) || {}).features || [];
+    for (var i = 0; i < feats.length; i++) {
+      var pr = feats[i].properties || {};
+      if (pr.pnu && String(pr.pnu) !== pnu) continue;
+      var c = centroid(feats[i].geometry); if (!c) continue;
+      return [Math.round(c[0] * 1e6) / 1e6, Math.round(c[1] * 1e6) / 1e6, parseInt(String(pr.jiga || "0").replace(/\D/g, ""), 10) || 0, String(pr.gosi_year || "").slice(0, 4)];
+    }
+    return null;
+  }
+  function one(key, pnu, tries) {
+    return request(key, pnu).then(function (d) { return parse(d, pnu); }).catch(function (e) {
+      if (e.fatal || tries <= 1) throw e;
+      return new Promise(function (r) { setTimeout(r, 1500); }).then(function () { return one(key, pnu, tries - 1); });
+    });
+  }
+  // 처음 한 건으로 브라우저가 바로 받을 수 있는지(fetch), 우회(JSONP)가 필요한지 정한다
+  function detect(key, pnu) {
+    mode = "fetch";
+    return one(key, pnu, 1).then(function (v) { return v; }, function (e) {
+      if (e.fatal) throw e;
+      mode = "jsonp";
+      return one(key, pnu, 2);
+    });
+  }
+  function finish(fatal) {
+    running = false; $("start").disabled = false; $("stop").disabled = true;
+    if (lock) { try { lock.release(); } catch (e) {} lock = null; }
+    var total = Object.keys(have).length;
+    if (fatal) { $("status").innerHTML = '<span class="bad">멈췄어요: ' + fatal + "</span> 인증키와 브이월드에 등록한 서비스 URL(https://local-rader.github.io)을 확인해 주세요."; }
+    else $("status").textContent = stopFlag ? "멈췄어요. 다시 누르면 이어서 받아요." : "다 받았어요.";
+    $("done").hidden = !total;
+    $("done-msg").textContent = "위치가 있는 필지 " + total.toLocaleString("ko-KR") + "개 (전체 " + pnus.length.toLocaleString("ko-KR") + "개 중)";
+  }
+  $("start").onclick = function () {
+    var key = $("key").value.trim();
+    if (!key) { $("status").innerHTML = '<span class="bad">인증키를 먼저 붙여넣어 주세요.</span>'; $("key").focus(); return; }
+    if (running) return;
+    todo = pnus.filter(function (p) { return !have[p]; });
+    if (!todo.length) return finish();
+    running = true; stopFlag = false; n = { done: 0, ok: 0, none: 0, fail: 0 }; errs = []; $("log").textContent = "";
+    // 받는 동안 화면이 꺼지지 않게 (지원하는 브라우저만)
+    try { if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function (w) { lock = w; }, function () {}); } catch (e) {}
+    $("start").disabled = true; $("stop").disabled = false; $("done").hidden = true;
+    var t0 = Date.now(), i = 0, active = 0, fatal = null;
+    function record(p, v) {
+      n.done++;
+      if (v) { have[p] = v; delete missing[p]; n.ok++; } else { missing[p] = today(); n.none++; }
+      if (n.done % 50 === 0) keep();
+    }
+    function next() {
+      if (fatal || stopFlag) { if (!active) { keep(); finish(fatal); } return; }
+      if (i >= todo.length) { if (!active) { keep(); finish(); } return; }
+      var p = todo[i++]; active++;
+      one(key, p, 3).then(function (v) { record(p, v); }, function (e) {
+        if (e.fatal) fatal = e.message; else { n.done++; n.fail++; log(p + ": " + e.message); }
+      }).then(function () {
+        active--;
+        var sec = Math.round((Date.now() - t0) / 1000);
+        $("status").textContent = "받는 중 " + n.done.toLocaleString("ko-KR") + " / " + todo.length.toLocaleString("ko-KR") + " (" + sec + "초, 방식: " + (mode === "jsonp" ? "우회" : "바로") + ")";
+        show();
+        if (n.done >= 20 && n.fail === n.done) fatal = "처음 " + n.done + "건이 모두 실패했어요. 브이월드 접속이 막혔을 수 있어요.";
+        next();
+      });
+    }
+    $("status").textContent = "브이월드에 연결하는 중…";
+    var first = todo[i++]; active++;
+    detect(key, first).then(function (v) { record(first, v); }, function (e) { if (e.fatal) fatal = e.message; else { n.done++; n.fail++; log(first + ": " + e.message); } })
+      .then(function () { active--; show(); if (fatal) { finish(fatal); return; } for (var k = 0; k < 4; k++) next(); });
+  };
+  $("stop").onclick = function () { stopFlag = true; $("stop").disabled = true; $("status").textContent = "멈추는 중…"; };
+  $("save").onclick = function () {
+    var out = { parcels: have, missing: missing, checked: stamp(), source: "parcels-tool" };
+    var blob = new Blob([JSON.stringify(out)], { type: "application/json" });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "parcels.json";
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  };
+})();
+</script>
+</body>
+</html>

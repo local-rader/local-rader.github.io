@@ -33,6 +33,7 @@ CODES = os.path.join(HERE, "codes.json")
 STORE = os.path.join(HERE, "permits.json")
 SITE = os.path.join(HERE, "data.js")
 PARCELS = os.path.join(HERE, "parcels.json")
+PNUS = os.path.join(HERE, "pnus.json")  # 관리자 페이지(parcels-tool.html)가 받을 필지번호 목록
 VWORLD = "https://api.vworld.kr/req/data"
 KST = timezone(timedelta(hours=9))
 PAUSE = 0.25  # 호출 사이 간격(초). 서버에 부담을 주지 않기 위함
@@ -562,6 +563,10 @@ def build(store=None, codes=None):
         "rows": [[cell(r, f) for f in FIELDS] for r in rows],
         "events": [e for e in store.get("events", []) if e["pk"] in keep][-300:],
     }
+    # 브이월드는 해외 서버(GitHub) 접속을 막아서, 필지 위치는 한국에서 여는 관리자 페이지가 받는다.
+    # 그 페이지가 읽을 필지번호 목록을 함께 만든다.
+    with open(PNUS, "w", encoding="utf-8") as f:
+        json.dump(sorted({r.get("pnu") for r in rows if r.get("pnu")}), f, separators=(",", ":"))
     with open(SITE, "w", encoding="utf-8") as f:
         f.write("// 자동 생성 파일입니다. 직접 고치지 마세요 (fetch.py build).\n")
         f.write("window.PERMITS = ")
