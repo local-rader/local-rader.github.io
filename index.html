@@ -326,7 +326,17 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   background: var(--cat, var(--c-etc)); box-shadow: 0 0 0 .5px rgba(15, 30, 51, .6); cursor: pointer; display: block;
 }
 .pin::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
-.pin.big { width: 13px; height: 13px; }
+.pin.pin-s { width: 7px; height: 7px; }
+.pin.pin-m { width: 9px; height: 9px; }
+.pin.pin-l { width: 12px; height: 12px; }
+.pin.pin-xl { width: 16px; height: 16px; }
+.pin.faint { opacity: .45; }
+.pin.fav { outline: 2.5px solid #B7791F; outline-offset: 1px; }
+.favmark { color: #B7791F; margin-left: 4px; font-weight: 700; }
+.sizerow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; font-size: 13px; color: var(--ink-2); }
+.sizerow .seg { display: inline-grid; grid-auto-flow: column; }
+.sizerow .seg button { min-height: 34px; padding: 4px 12px; }
+.sizerow .hint { font-size: 12px; color: var(--ink-3); }
 .pin.on { width: 18px; height: 18px; border-width: 2px; box-shadow: 0 0 0 3px var(--brand); z-index: 10; }
 .cluster {
   min-width: 34px; height: 34px; padding: 0 8px; border-radius: 17px; background: var(--brand); color: #FFFFFF;
@@ -605,6 +615,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
             </button>
             <div class="hscroll" id="fchips" aria-label="적용된 조건"></div>
           </div>
+          <div class="sizerow"><span>원 크기</span><div class="seg" role="group" aria-label="원 크기 기준"><button type="button" data-size="area" aria-pressed="true">크기</button><button type="button" data-size="jiga" aria-pressed="false">지가</button></div><span class="hint" id="size-hint"></span></div>
           <div class="seg viewtoggle" role="group" aria-label="보기 방식">
             <button type="button" data-view="map" aria-pressed="true">지도</button>
             <button type="button" data-view="list" aria-pressed="false" id="vt-list">목록</button>
@@ -886,12 +897,15 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   (function () { var m = FIRST.slice(0, 7), e = END.slice(0, 7); while (m <= e && MONTHS.length < 600) { MONTHS.push(m); m = addMonths(m, 1); } })();
 
   var state = { period: "3m", from: "", to: END.slice(0, 7), place: "all", ev: "all", cat: "all", sort: "new", q: "", blank: false, shown: 40, open: null, open5: null, openM: null,
-    stKind: "all", stSize: 0, stSort: "big", shownS: 40, openS: null, openF: null, openQ: null };
+    stKind: "all", stSize: 0, stSort: "big", shownS: 40, openS: null, openF: null, openQ: null, size: "area", favOnly: false, fav: {} };
   state.from = addMonths(state.to, -11); if (state.from < MONTHS[0]) state.from = MONTHS[0];
   try {
     var saved = JSON.parse(localStorage.getItem("dr:v2") || "{}");
-    ["period", "from", "to", "place", "ev", "cat", "sort"].forEach(function (k) { if (saved[k]) state[k] = saved[k]; });
+    ["period", "from", "to", "place", "ev", "cat", "sort", "size", "favOnly"].forEach(function (k) { if (saved[k]) state[k] = saved[k]; });
   } catch (e) {}
+  try { var fv0 = JSON.parse(localStorage.getItem("dr:fav") || "{}"); if (fv0 && typeof fv0 === "object") state.fav = fv0; } catch (e) {}
+  if (["area", "jiga"].indexOf(state.size) < 0) state.size = "area";
+  state.favOnly = !!state.favOnly;
   if (!PERIODS.some(function (p) { return p.v === state.period; })) state.period = "3m";
   if (!EVS.some(function (e) { return e.v === state.ev; })) state.ev = "all";
   if (["new", "old", "stage", "big"].indexOf(state.sort) < 0) state.sort = "new";
@@ -899,7 +913,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   if (state.cat !== "all" && !CATS.some(function (c) { return c.id === state.cat; })) state.cat = "all";
   if (MONTHS.indexOf(state.from) < 0) state.from = MONTHS[0];
   if (MONTHS.indexOf(state.to) < 0) state.to = MONTHS[MONTHS.length - 1];
-  function remember() { try { localStorage.setItem("dr:v2", JSON.stringify({ period: state.period, from: state.from, to: state.to, place: state.place, ev: state.ev, cat: state.cat, sort: state.sort })); } catch (e) {} }
+  function remember() { try { localStorage.setItem("dr:v2", JSON.stringify({ period: state.period, from: state.from, to: state.to, place: state.place, ev: state.ev, cat: state.cat, sort: state.sort, size: state.size, favOnly: state.favOnly })); } catch (e) {} }
 
   // 고른 기간의 첫날과 마지막날. 자료 기준일이 달의 마지막 날이면 달력 달 단위로 센다.
   function range() {
@@ -920,7 +934,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   function latestIn(r) { var x = ""; if (inR(r.pms)) x = r.pms; if (inR(r.stcns) && r.stcns > x) x = r.stcns; if (inR(r.apr) && r.apr > x) x = r.apr; return x; }
   function placeOk(r) { return state.place === "all" || r.place === state.place || r.place.indexOf(state.place + " ") === 0; }
   function moved(r, ev) { return ev === "all" ? !!(inR(r.pms) || inR(r.stcns) || inR(r.apr)) : inR(r[ev]); }
-  function scopeOk(r, ev) { return (state.blank || r.known) && placeOk(r) && moved(r, ev); }
+  function scopeOk(r, ev) { return (state.blank || r.known) && placeOk(r) && moved(r, ev) && (!state.favOnly || !!state.fav[r.pk]); }
   function dateFor(r) { return state.ev === "all" ? latestIn(r) : r[state.ev]; }
 
   // ---------- 공유
@@ -956,7 +970,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   function itemHtml(r, dateText, note) {
     var bigArea = r.area >= 1000;
     return '<div class="item" style="--cat:' + color(r.cat) + '"><button type="button" data-pk="' + esc(r.pk) + '">' +
-      '<span class="d">' + dateText + '</span><span class="t">' + esc(r.addr) + (r.name ? "<small>" + esc(r.name) + "</small>" : "") + '</span><span class="st badge ' + r.stage + '">' + STAGE[r.stage] + "</span>" +
+      '<span class="d">' + dateText + '</span><span class="t">' + esc(r.addr) + (r.name ? "<small>" + esc(r.name) + "</small>" : "") + (state.fav[r.pk] ? '<b class="favmark" aria-label="관심 필지">★</b>' : "") + '</span><span class="st badge' + r.stage + '">' + STAGE[r.stage] + "</span>" +
       '<span class="s">' + esc(summaryLine(r)) + ', <span class="' + (bigArea ? "big" : "") + '">' + area(r.area) + "</span></span>" +
       (note ? '<span class="note">' + note + "</span>" : "") + "</button></div>";
   }
@@ -1018,7 +1032,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
       '<dl class="keyfacts">' + key.map(function (x) { return "<div><dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd></div>"; }).join("") + "</dl>" +
       track(r) + (gap ? "<p>" + gap + "</p>" : "") +
       (r.stall ? '<p class="item-note">' + r.stall.note + "</p>" : est ? '<p class="item-note">' + est.note + "</p>" : "") +
-      '<div class="acts"><button type="button" class="btn solid" id="sh-map">' + (screen === "map" ? "지도에서 위치 보기" : "개발지도에서 보기") + '</button><button type="button" class="btn" id="sh-share">링크 공유</button></div>' +
+      '<div class="acts"><button type="button" class="btn solid" id="sh-map">' + (screen === "map" ? "지도에서 위치 보기" : "개발지도에서 보기") + '</button><button type="button" class="btn" id="sh-share">링크 공유</button><button type="button" class="btn" id="sh-fav">' + (state.fav[r.pk] ? "관심 필지 해제" : "관심 필지로 등록") + '</button></div>' +
       '<h3>자세한 내용</h3><dl class="more-facts">' + more.map(function (x) { return "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>" +
       "<p>원문은 세움터에서 대지위치로 확인할 수 있습니다.</p>";
     openSheet("detail", r.addr, html);
@@ -1028,6 +1042,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
       else { M.focus = r; location.hash = "#map"; }
     };
     document.getElementById("sh-share").onclick = function () { share(r, this); };
+    document.getElementById("sh-fav").onclick = function () { toggleFav(r, this); };
   }
 
   // ---------- 기간 고르기 (data-period 자리마다 같은 버튼을 그린다: 홈, 거르기, 지역 통계)
@@ -1174,6 +1189,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     if (state.cat !== "all") chips.push({ t: catName(state.cat), clear: function () { state.cat = "all"; } });
     if (state.sort !== "new") chips.push({ t: sortLabel(state.sort), clear: function () { state.sort = "new"; } });
     if (state.blank) chips.push({ t: "소규모 포함", clear: function () { state.blank = false; } });
+    if (state.favOnly) chips.push({ t: "관심 필지만", clear: function () { state.favOnly = false; } });
     chips.forEach(function (c) {
       var b = document.createElement("button");
       b.type = "button"; b.className = "fchip" + (c.fixed ? " static" : "");
@@ -1193,6 +1209,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
       '<h3>정렬</h3><div class="chips-wrap" id="fs-sort"></div>' +
       '<h3>용도</h3><div class="chips-wrap" id="fs-cat"></div>' +
       '<h3>그 밖</h3><label class="toggle"><input type="checkbox" id="fs-blank"> 용도가 적히지 않은 소규모 허가도 보기</label>' +
+      '<label class="toggle"><input type="checkbox" id="fs-fav"> 관심 필지만 보기 <span id="fs-favn"></span></label>' +
       '<div class="acts"><button type="button" class="btn solid" id="fs-done"></button><button type="button" class="btn" id="fs-reset">조건 초기화</button></div>');
     sheetReturn = document.getElementById("open-filter");
     drawPeriods(); drawFilterSheet();
@@ -1216,12 +1233,15 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     });
     var bl = document.getElementById("fs-blank");
     bl.checked = state.blank; bl.onchange = function () { state.blank = bl.checked; changed(); };
+    var fv = document.getElementById("fs-fav");
+    fv.checked = state.favOnly; fv.onchange = function () { state.favOnly = fv.checked; changed(); };
+    document.getElementById("fs-favn").textContent = "(" + Object.keys(state.fav).length + "곳)";
     var done = document.getElementById("fs-done");
     done.textContent = nf(filtered().length) + "건 보기"; done.onclick = closeSheet;
     document.getElementById("fs-reset").onclick = resetAll;
   }
   function resetAll() {
-    state.place = "all"; state.ev = "all"; state.cat = "all"; state.q = ""; state.blank = false; state.sort = "new";
+    state.place = "all"; state.ev = "all"; state.cat = "all"; state.q = ""; state.blank = false; state.sort = "new"; state.favOnly = false;
     document.getElementById("q").value = ""; document.getElementById("home-q").value = "";
     changed();
   }
@@ -1372,13 +1392,41 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     };
     document.head.appendChild(s);
   }
+  // 원 크기: 연면적(크기) 또는 ㎡당 공시지가(지가)를 네 단계로 나눈다. 값이 없는 곳은 가장 작고 흐리게.
+  var SIZE_CLS = ["pin-s", "pin-m", "pin-l", "pin-xl"], CUTS = {};
+  function sizeRank(r) {
+    var key = state.size, v = key === "jiga" ? r.jiga : r.area;
+    if (!(v > 0)) return -1;
+    if (!CUTS[key]) {
+      var vals = rows.map(function (x) { return key === "jiga" ? x.jiga : x.area; }).filter(function (x) { return x > 0; }).sort(function (a, b) { return a - b; });
+      CUTS[key] = [0.25, 0.5, 0.75].map(function (p) { return vals[Math.floor(vals.length * p)] || 0; });
+    }
+    var c = CUTS[key];
+    return v >= c[2] ? 3 : v >= c[1] ? 2 : v >= c[0] ? 1 : 0;
+  }
+  function toggleFav(r, btn) {
+    if (state.fav[r.pk]) delete state.fav[r.pk]; else state.fav[r.pk] = true;
+    try { localStorage.setItem("dr:fav", JSON.stringify(state.fav)); } catch (e) {}
+    btn.textContent = state.fav[r.pk] ? "관심 필지 해제" : "관심 필지로 등록";
+    if (M.pins[r.pk]) M.pins[r.pk].classList.toggle("fav", !!state.fav[r.pk]);
+    if (state.favOnly) return changed();
+    if (screen === "map") drawList();
+    filterSummary();
+  }
+  function setSize(v) { state.size = v; remember(); drawSizeRow(); M.dirty = true; if (screen === "map") drawMap(); }
+  function drawSizeRow() {
+    document.querySelectorAll("[data-size]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-size") === state.size)); });
+    document.getElementById("size-hint").textContent = (state.size === "jiga" ? "㎡당 공시지가가 높을수록 큰 원" : "연면적이 클수록 큰 원") + " · 값이 없으면 흐리게";
+  }
+  document.querySelectorAll("[data-size]").forEach(function (b) { b.onclick = function () { setSize(b.getAttribute("data-size")); }; });
+  drawSizeRow();
   function pinOverlay(map, r, ll, onClick, hold) {
-    var el = document.createElement("button");
-    el.type = "button"; el.className = "pin" + (r.area >= 1000 ? " big" : "");
+    var rk = sizeRank(r), el = document.createElement("button");
+    el.type = "button"; el.className = "pin " + SIZE_CLS[Math.max(rk, 0)] + (rk < 0 ? " faint" : "") + (state.fav[r.pk] ? " fav" : "");
     el.style.setProperty("--cat", color(r.cat));
     el.setAttribute("aria-label", r.addr + ", " + summaryLine(r));
     el.onclick = function () { onClick(r); };
-    var ov = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(ll[0], ll[1]), content: el, yAnchor: 0.5, xAnchor: 0.5, zIndex: r.area >= 1000 ? 3 : 2 });
+    var ov = new kakao.maps.CustomOverlay({ position: new kakao.maps.LatLng(ll[0], ll[1]), content: el, yAnchor: 0.5, xAnchor: 0.5, zIndex: Math.max(rk, 0) + 1 });
     if (!hold) ov.setMap(map);
     return { ov: ov, el: el };
   }
