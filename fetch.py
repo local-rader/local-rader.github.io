@@ -430,7 +430,7 @@ def vworld_parcel(key, domain, pnu, tries=4):
     for attempt in range(tries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "dongne-radar-collector", "Referer": domain})
-            with urllib.request.urlopen(req, timeout=30) as r:
+            with urllib.request.urlopen(req, timeout=20) as r:
                 data = json.loads(r.read().decode("utf-8", errors="replace"))
             resp = data.get("response") or {}
             st = str(resp.get("status", "")).upper()
@@ -458,8 +458,9 @@ def vworld_parcel(key, domain, pnu, tries=4):
     raise OSError(f"브이월드 접속 실패({pnu}): {last}")
 
 
-def parcels(limit=9000, workers=4):
-    """좌표가 없는 필지만 조회한다. 매일 실행하면 새로 생긴 필지만 받는다."""
+def parcels(limit=9000, workers=4, budget=35 * 60):
+    """좌표가 없는 필지만 조회한다. 매일 실행하면 새로 생긴 필지만 받는다.
+    한 번에 budget초까지만 받고 저장한다(남은 건 다음 실행에서). 처음 묶음이 모두 실패하면 바로 멈춘다."""
     key = os.environ.get("VWORLD_KEY", "").strip()
     if not key:
         print("VWORLD_KEY가 없어 필지 위치 받기를 건너뜁니다.")
@@ -473,41 +474,54 @@ def parcels(limit=9000, workers=4):
     want = sorted({r.get("pnu") for r in store.get("records", {}).values()
                    if r.get("pnu") and r.get("pms", "") >= "2023-01-01"}
                   - set(have) - {p for p, d in miss.items() if d > retry_after})
-    print(f"필지 위치: 저장된 {len(have)}개, 이번에 받을 {min(len(want), limit)}개 (남은 {len(want)}개)")
+    print(f"필지 위치: 저장된 {len(have)}개, 이번에 받을 최대 {min(len(want), limit)}개 (남은 {len(want)}개)", flush=True)
     want = want[:limit]
+
+    def one(p):
+        try:
+            return p, "ok", vworld_parcel(key, domain, p, tries=3)
+        except FatalVworld as e:
+            return p, "fatal", e
+        except OSError as e:
+            return p, "fail", e
+
     from concurrent.futures import ThreadPoolExecutor
-    done = found = 0
-    fatal = None
+    t0, done, found, failed, fatal, first_err = time.time(), 0, 0, 0, None, None
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        futs = {ex.submit(vworld_parcel, key, domain, p): p for p in want}
-        for fut in futs:
-            p = futs[fut]
-            try:
-                v = fut.result()
-            except FatalVworld as e:
-                fatal = e
-                for f in futs:
-                    f.cancel()
+        for start in range(0, len(want), 100):
+            if time.time() - t0 > budget:
+                print(f"  시간 한도({budget // 60}분)에 닿아 여기까지 저장하고 나머지는 다음 실행에서 받습니다.", flush=True)
                 break
-            except OSError as e:
-                print("  실패:", e)
-                continue
-            done += 1
-            if v:
-                have[p] = v
-                miss.pop(p, None)
-                found += 1
-            else:
-                miss[p] = today
-            if done % 500 == 0:
-                print(f"  {done}개 처리, 좌표 {found}개")
+            chunk = want[start:start + 100]
+            res = list(ex.map(one, chunk))
+            for p, kind, v in res:
+                if kind == "fatal":
+                    fatal = v
+                elif kind == "fail":
+                    failed += 1
+                    first_err = first_err or v
+                else:
+                    done += 1
+                    if v:
+                        have[p] = v
+                        miss.pop(p, None)
+                        found += 1
+                    else:
+                        miss[p] = today
+            if fatal:
+                break
+            if start == 0 and failed == len(chunk):
+                fatal = RuntimeError(f"첫 {len(chunk)}개 조회가 모두 실패했습니다. 브이월드 접속이 막혔을 수 있습니다: {first_err}")
+                break
+            print(f"  {start + len(chunk)}개 조회, 좌표 {found}개, 실패 {failed}개 ({int(time.time() - t0)}초)", flush=True)
+            if (start // 100) % 5 == 4:
                 save(PARCELS, par)
     par["checked"] = now_kst().strftime("%Y-%m-%d %H:%M")
     save(PARCELS, par)
-    print(f"필지 위치 완료: 이번에 {done}개 처리, 좌표 {found}개, 전체 {len(have)}개")
+    print(f"필지 위치 완료: 이번에 {done}개 처리, 좌표 {found}개, 실패 {failed}개, 전체 {len(have)}개", flush=True)
+    build(store)
     if fatal:
         sys.exit(str(fatal))
-    build(store)
 
 
 # ---------------------------------------------------------------- 사이트용 데이터
