@@ -9,8 +9,11 @@ permits.json(원장)에 합치고, 웹사이트가 읽는 data.js를 만든다.
   python fetch.py update              최근 14일 사이 바뀐 기록을 받아 합치기 (매일 자동 실행용)
   python fetch.py update --since 20230101   그 날짜 이후 바뀐 기록을 모두 받기 (처음 한 번)
   python fetch.py build               permits.json으로 data.js만 다시 만들기
+  python fetch.py parcels             필지번호로 필지 중심 좌표와 개별공시지가를 받아 parcels.json에 저장
 
-인증키는 환경변수 DATA_GO_KR_KEY 로 받는다. 코드에 직접 적지 않는다.
+인증키는 환경변수로 받는다. 코드에 직접 적지 않는다.
+  DATA_GO_KR_KEY  공공데이터포털 일반 인증키 (건축인허가)
+  VWORLD_KEY      브이월드 인증키 (국토교통부 2D데이터 API, 연속지적도). 없으면 parcels는 건너뛴다.
 표준 라이브러리만 사용하므로 설치할 패키지가 없다.
 """
 
@@ -29,6 +32,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CODES = os.path.join(HERE, "codes.json")
 STORE = os.path.join(HERE, "permits.json")
 SITE = os.path.join(HERE, "data.js")
+PARCELS = os.path.join(HERE, "parcels.json")
+VWORLD = "https://api.vworld.kr/req/data"
 KST = timezone(timedelta(hours=9))
 PAUSE = 0.25  # 호출 사이 간격(초). 서버에 부담을 주지 않기 위함
 MAX_EVENTS = 800
@@ -377,10 +382,140 @@ def update(key, since=None):
         sys.exit("모든 지역에서 실패했습니다. 인증키와 접속 상태를 확인하세요.")
 
 
+# ---------------------------------------------------------------- 필지 위치와 개별공시지가
+# 국토교통부 2D데이터 API의 연속지적도(LP_PA_CBND_BUBUN)는 공공누리 제1유형(출처표시)이라
+# 필지 경계에서 계산한 중심 좌표와 개별공시지가를 저장해 사이트에 실을 수 있다. 출처는 화면에 적는다.
+
+class FatalVworld(RuntimeError):
+    pass
+
+
+def centroid(geom):
+    """다각형(또는 다중 다각형) 중 가장 큰 바깥 고리의 무게중심 (위도, 경도)."""
+    if not geom:
+        return None
+    t, c = geom.get("type"), geom.get("coordinates") or []
+    polys = [c] if t == "Polygon" else c if t == "MultiPolygon" else []
+    best, best_a = None, -1.0
+    for poly in polys:
+        if not poly or not poly[0]:
+            continue
+        ring = poly[0]
+        x0, y0 = ring[0][0], ring[0][1]  # 원점을 옮겨 계산해야 소수점 오차가 작다
+        pts = [(x - x0, y - y0) for x, y in (q[:2] for q in ring)]
+        a = cx = cy = 0.0
+        for (x1, y1), (x2, y2) in zip(pts, pts[1:] + pts[:1]):
+            cr = x1 * y2 - x2 * y1
+            a += cr
+            cx += (x1 + x2) * cr
+            cy += (y1 + y2) * cr
+        if abs(a) > 1e-18:
+            pt = (y0 + cy / (3 * a), x0 + cx / (3 * a))
+        else:
+            pt = (sum(p[1] for p in ring) / len(ring), sum(p[0] for p in ring) / len(ring))
+        if abs(a) > best_a:
+            best, best_a = pt, abs(a)
+    return best
+
+
+def vworld_parcel(key, domain, pnu, tries=4):
+    """필지번호 하나를 조회해 [위도, 경도, 개별공시지가(원/㎡), 기준연도]를 돌려준다. 없으면 None."""
+    params = {
+        "service": "data", "request": "GetFeature", "data": "LP_PA_CBND_BUBUN",
+        "key": key, "domain": domain, "attrFilter": "pnu:=:" + pnu,
+        "geometry": "true", "attribute": "true", "crs": "EPSG:4326", "format": "json", "size": "5", "page": "1",
+    }
+    url = VWORLD + "?" + urllib.parse.urlencode(params)
+    last = None
+    for attempt in range(tries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "dongne-radar-collector", "Referer": domain})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                data = json.loads(r.read().decode("utf-8", errors="replace"))
+            resp = data.get("response") or {}
+            st = str(resp.get("status", "")).upper()
+            if st == "NOT_FOUND":
+                return None
+            if st == "ERROR":
+                err = resp.get("error") or {}
+                code = str(err.get("code", ""))
+                if code in ("INCORRECT_KEY", "UNAVAILABLE_KEY", "OVER_REQUEST_LIMIT", "INVALID_KEY", "NOT_AUTHORIZED"):
+                    raise FatalVworld(f"브이월드 오류 {code}: {err.get('text', '')}")
+                raise OSError(f"{code} {err.get('text', '')}")
+            feats = (((resp.get("result") or {}).get("featureCollection") or {}).get("features")) or []
+            for f in feats:
+                props = f.get("properties") or {}
+                if props.get("pnu") and str(props.get("pnu")) != pnu:
+                    continue
+                pt = centroid(f.get("geometry"))
+                if not pt:
+                    continue
+                return [round(pt[0], 6), round(pt[1], 6), toint(props.get("jiga")), str(props.get("gosi_year") or "")[:4]]
+            return None
+        except (OSError, json.JSONDecodeError, ValueError) as e:
+            last = e
+            time.sleep((2, 5, 10, 20)[min(attempt, 3)])
+    raise OSError(f"브이월드 접속 실패({pnu}): {last}")
+
+
+def parcels(limit=9000, workers=4):
+    """좌표가 없는 필지만 조회한다. 매일 실행하면 새로 생긴 필지만 받는다."""
+    key = os.environ.get("VWORLD_KEY", "").strip()
+    if not key:
+        print("VWORLD_KEY가 없어 필지 위치 받기를 건너뜁니다.")
+        return
+    domain = os.environ.get("VWORLD_DOMAIN", "").strip() or "https://local-rader.github.io"
+    store = load(STORE, {"records": {}, "events": []})
+    par = load(PARCELS, {"parcels": {}, "missing": {}})
+    have, miss = par.setdefault("parcels", {}), par.setdefault("missing", {})
+    today = now_kst().strftime("%Y-%m-%d")
+    retry_after = (now_kst() - timedelta(days=30)).strftime("%Y-%m-%d")
+    want = sorted({r.get("pnu") for r in store.get("records", {}).values()
+                   if r.get("pnu") and r.get("pms", "") >= "2023-01-01"}
+                  - set(have) - {p for p, d in miss.items() if d > retry_after})
+    print(f"필지 위치: 저장된 {len(have)}개, 이번에 받을 {min(len(want), limit)}개 (남은 {len(want)}개)")
+    want = want[:limit]
+    from concurrent.futures import ThreadPoolExecutor
+    done = found = 0
+    fatal = None
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futs = {ex.submit(vworld_parcel, key, domain, p): p for p in want}
+        for fut in futs:
+            p = futs[fut]
+            try:
+                v = fut.result()
+            except FatalVworld as e:
+                fatal = e
+                for f in futs:
+                    f.cancel()
+                break
+            except OSError as e:
+                print("  실패:", e)
+                continue
+            done += 1
+            if v:
+                have[p] = v
+                miss.pop(p, None)
+                found += 1
+            else:
+                miss[p] = today
+            if done % 500 == 0:
+                print(f"  {done}개 처리, 좌표 {found}개")
+                save(PARCELS, par)
+    par["checked"] = now_kst().strftime("%Y-%m-%d %H:%M")
+    save(PARCELS, par)
+    print(f"필지 위치 완료: 이번에 {done}개 처리, 좌표 {found}개, 전체 {len(have)}개")
+    if fatal:
+        sys.exit(str(fatal))
+    build(store)
+
+
 # ---------------------------------------------------------------- 사이트용 데이터
 
 FIELDS = ["pk", "place", "addr", "name", "gb", "purp", "area", "plat", "fmly", "hhld",
-          "jiyuk", "jimok", "pms", "sched", "stcns", "delay", "apr", "crtn", "seen"]
+          "jiyuk", "jimok", "pms", "sched", "stcns", "delay", "apr", "crtn", "seen",
+          "lat", "lng", "jiga", "jy"]
+PARCEL_FIELDS = ("lat", "lng", "jiga", "jy")
 
 
 def build(store=None, codes=None):
@@ -397,11 +532,20 @@ def build(store=None, codes=None):
     rows = [r for r in store.get("records", {}).values() if r.get("pms", "") >= "2023-01-01"]
     rows.sort(key=lambda r: (r.get("pms", ""), r.get("pk", "")), reverse=True)
     keep = {r["pk"] for r in rows}
+    # 필지 중심 좌표와 개별공시지가는 parcels.json에서 붙인다 (원장에는 넣지 않음)
+    have = load(PARCELS, {}).get("parcels", {})
+
+    def cell(r, f):
+        if f in PARCEL_FIELDS:
+            v = have.get(r.get("pnu") or "")
+            return v[PARCEL_FIELDS.index(f)] if v else ""
+        return r.get(f, "")
     out = {
-        "meta": dict(store.get("meta", {}), asof=max((r.get("crtn", "") for r in rows), default="")),
+        "meta": dict(store.get("meta", {}), asof=max((r.get("crtn", "") for r in rows), default=""),
+                     parcels=sum(1 for r in rows if have.get(r.get("pnu") or ""))),
         "places": sorted({r["place"] for r in rows}),
         "fields": FIELDS,
-        "rows": [[r.get(f, "") for f in FIELDS] for r in rows],
+        "rows": [[cell(r, f) for f in FIELDS] for r in rows],
         "events": [e for e in store.get("events", []) if e["pk"] in keep][-300:],
     }
     with open(SITE, "w", encoding="utf-8") as f:
@@ -421,6 +565,8 @@ def main(argv):
         discover(api_key())
     elif cmd == "update":
         update(api_key(), since)
+    elif cmd == "parcels":
+        parcels()
     elif cmd == "build":
         store = load(STORE, {"records": {}, "events": []})
         build(store)

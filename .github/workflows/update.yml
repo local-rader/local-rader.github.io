@@ -1,5 +1,7 @@
 # 매일 새벽 건축인허가 자료를 받아 permits.json·data.js를 갱신하고 저장소에 커밋한다.
-# 인증키는 저장소 Settings → Secrets and variables → Actions 의 DATA_GO_KR_KEY 에 넣는다.
+# 인증키는 저장소 Settings → Secrets and variables → Actions 에 넣는다.
+#   DATA_GO_KR_KEY  공공데이터포털 인증키 (건축인허가)
+#   VWORLD_KEY      브이월드 인증키 (필지 위치·개별공시지가). 없으면 그 단계는 건너뛴다.
 name: 데이터 갱신
 
 on:
@@ -41,11 +43,18 @@ jobs:
             python fetch.py update
           fi
 
+      - name: 필지 위치·개별공시지가 받기 (새 필지만)
+        continue-on-error: true
+        env:
+          VWORLD_KEY: ${{ secrets.VWORLD_KEY }}
+        run: python fetch.py parcels
+
       - name: 바뀐 자료 저장
         run: |
           git config user.name "dongne-radar-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add permits.json data.js codes.json
+          if [ -f parcels.json ]; then git add parcels.json; fi
           if git diff --cached --quiet; then
             echo "바뀐 자료가 없습니다."
           else

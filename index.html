@@ -322,11 +322,12 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 .maplegend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: 0; }
 .mapstat { margin: 8px 0 0; font-size: 13px; color: var(--ink-3); }
 .pin {
-  width: 14px; height: 14px; border-radius: 50%; border: 2px solid #FFFFFF; padding: 0;
-  background: var(--cat, var(--c-etc)); box-shadow: 0 0 0 1px rgba(15, 30, 51, .5); cursor: pointer;
+  position: relative; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid #FFFFFF; padding: 0;
+  background: var(--cat, var(--c-etc)); box-shadow: 0 0 0 .5px rgba(15, 30, 51, .6); cursor: pointer; display: block;
 }
-.pin.big { width: 20px; height: 20px; }
-.pin.on { box-shadow: 0 0 0 3px var(--brand); width: 24px; height: 24px; }
+.pin::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
+.pin.big { width: 13px; height: 13px; }
+.pin.on { width: 18px; height: 18px; border-width: 2px; box-shadow: 0 0 0 3px var(--brand); z-index: 10; }
 .cluster {
   min-width: 34px; height: 34px; padding: 0 8px; border-radius: 17px; background: var(--brand); color: #FFFFFF;
   border: 2px solid #FFFFFF; box-shadow: 0 0 0 1px rgba(15, 30, 51, .35); display: flex; align-items: center; justify-content: center;
@@ -575,7 +576,8 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
           <li>기간을 고르면 그 안에 허가·착공·사용승인 중 하나라도 있었던 기록을 보여줍니다. ‘최근 1달·3달·1년’은 오늘이 아니라 데이터 기준일에서 셉니다.</li>
           <li>용도와 공사 종류가 비어 있는 소규모 기록은 기본으로 빼고, 필터에서 체크하면 함께 보여줍니다.</li>
           <li>‘공급 예고’는 청원구에서 비슷한 규모의 건물이 착공부터 사용승인까지 걸린 기간으로 완공 시기를 추정한 것이고, ‘장기 미진행’은 착공이나 사용승인 기록이 오래 없는 곳을 기계적으로 추린 것입니다. 둘 다 기록에 근거한 추정입니다.</li>
-          <li>지도 위치는 지번 주소로 찾은 대략의 위치입니다. 일부 기록은 위치를 찾지 못해 지도에 나오지 않습니다.</li>
+          <li>지도 위치는 연속지적도에서 계산한 필지의 가운데 점입니다. 필지 정보가 없는 일부 기록(블록 주소 등)은 지번 주소로 찾은 대략의 위치이거나 지도에 나오지 않습니다.</li>
+          <li>개별공시지가는 매년 1월 1일 기준으로 시군구가 정해 5월 말에 공시하는 1㎡당 가격이며, 시세가 아닙니다.</li>
           <li>정확한 내용은 <a href="https://www.eais.go.kr" target="_blank" rel="noopener">세움터</a>에서 대지위치로 다시 확인하세요. 이 사이트는 투자 판단이나 법적 판단의 근거가 아닙니다.</li>
         </ul>
       </details>
@@ -816,6 +818,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     r.cat = catOf(r); r.stage = stageOf(r); r.known = r.cat !== "none";
     r.area = +r.area || 0; r.use = plainUse(r.purp);
     r.pms = r.pms || ""; r.stcns = r.stcns || ""; r.apr = r.apr || "";
+    r.lat = +r.lat || 0; r.lng = +r.lng || 0; r.jiga = +r.jiga || 0;
   });
   var byPk = {}; rows.forEach(function (r) { byPk[r.pk] = r; });
 
@@ -996,7 +999,8 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 
   function openDetail(r) {
     var house = r.cat === "house" && r.fmly;
-    var key = [["주용도", r.use], ["공사 종류", r.gb ? plainGb(r.gb) : "기록 없음"], ["연면적", area(r.area)], house ? ["가구수", r.fmly + "가구"] : ["대지면적", area(r.plat)]];
+    var key = [["주용도", r.use], ["공사 종류", r.gb ? plainGb(r.gb) : "기록 없음"], ["연면적", area(r.area)],
+      r.jiga ? ["개별공시지가 (㎡당)", nf(r.jiga) + "원"] : house ? ["가구수", r.fmly + "가구"] : ["대지면적", area(r.plat)]];
     var more = [
       ["대지위치", r.addr], ["건물 이름", r.name || "기록 없음"],
       ["건축물 용도", r.purp ? officialUse(r.purp) : "기록 없음"], ["건축 구분", r.gb || "기록 없음"],
@@ -1004,6 +1008,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     ];
     if (r.fmly) more.push(["가구수", r.fmly + "가구"]);
     if (+r.hhld) more.push(["세대수", r.hhld + "세대"]);
+    if (r.jiga) more.push(["개별공시지가", nf(r.jiga) + "원/㎡ (" + (r.jy ? r.jy + "년 1월 1일 기준, " : "") + "시세 아님)"]);
     var gap = "";
     if (r.pms && r.stcns && days(r.pms, r.stcns) >= 0) gap = "허가 후 " + nf(days(r.pms, r.stcns)) + "일 만에 착공" + (r.apr && days(r.stcns, r.apr) >= 0 ? ", 착공 후 " + nf(days(r.stcns, r.apr)) + "일 만에 사용승인." : ".");
     var est = !r.stall && NEW[r.gb] && r.known && r.stcns && !r.apr ? forecast(r) : null;
@@ -1331,13 +1336,14 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   });
 
   // ---------- 지도 (카카오맵, 화면에서 바로 주소를 위치로 바꿈. 위치는 이 기기 브라우저에만 저장)
-  var MAP_LIMIT = 150;
+  var GEO_LIMIT = 150; // 필지 좌표가 없는 기록만 브라우저에서 주소로 찾는다. 그 상한
   var M = { sdk: "idle", wait: [], geo: null, map: null, mini: null, overlays: [], miniOv: [], token: 0, miniToken: 0, dirty: true, focus: null, pins: {}, sel: null };
   function msg(id, t) { var el = document.getElementById(id); el.hidden = !t; el.textContent = t || ""; }
   function geoAddr(r) { return "충청북도 청주시 청원구 " + r.addr.replace(/\s*\d+블록.*$/, ""); }
   function cacheGet(k) { try { var v = localStorage.getItem("g1:" + k); return v === null ? undefined : JSON.parse(v); } catch (e) { return undefined; } }
   function cacheSet(k, v) { try { localStorage.setItem("g1:" + k, JSON.stringify(v)); } catch (e) {} }
   function geocode(r, cb) {
+    if (r.lat && r.lng) return cb([r.lat, r.lng]);
     var k = geoAddr(r), c = cacheGet(k);
     if (c !== undefined) return cb(c);
     M.geo.addressSearch(k, function (res, st) {
@@ -1354,7 +1360,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     if (!CFG.kakaoJsKey) { M.sdk = "error"; msg("mapmsg", "카카오 지도 키가 없어 지도를 보여줄 수 없습니다."); msg("minimsg", "지도를 준비하고 있어요."); return; }
     M.sdk = "loading";
     var s = document.createElement("script");
-    s.src = "https://dapi.kakao.com/v2/maps/sdk.js?appkey=" + encodeURIComponent(CFG.kakaoJsKey) + "&libraries=services,clusterer&autoload=false";
+    s.src = "https://dapi.kakao.com/v2/maps/sdk.js?appkey=" + encodeURIComponent(CFG.kakaoJsKey) + "&libraries=services&autoload=false";
     function fail(t) { M.sdk = "error"; M.wait = []; msg("mapmsg", t); msg("minimsg", "지도를 불러오지 못했습니다."); }
     s.onerror = function () { fail("지도를 불러오지 못했습니다. 잠시 뒤 새로고침해 보세요."); };
     s.onload = function () {
@@ -1376,20 +1382,8 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     if (!hold) ov.setMap(map);
     return { ov: ov, el: el };
   }
-  // 가까운 마커를 숫자 원으로 묶는다. 확대(레벨 5 이하)하면 하나씩 보인다.
-  function makeClusterer(map) {
-    try {
-      if (!kakao.maps.MarkerClusterer) return null;
-      return new kakao.maps.MarkerClusterer({
-        map: map, averageCenter: true, minLevel: 6, gridSize: 56, minClusterSize: 3,
-        styles: [{ width: "34px", height: "34px", lineHeight: "30px", background: "rgba(22, 50, 92, .92)", color: "#FFFFFF", textAlign: "center", fontWeight: "700", fontSize: "13px", borderRadius: "17px", border: "2px solid #FFFFFF" }]
-      });
-    } catch (e) { return null; }
-  }
-  function addPin(ov) {
-    if (M.cl) { try { M.cl.addMarker(ov, true); return; } catch (e) { M.cl = null; } }
-    ov.setMap(M.map);
-  }
+
+  function addPin(ov) { ov.setMap(M.map); }
   function highlight(pk) {
     if (M.sel && M.pins[M.sel]) M.pins[M.sel].classList.remove("on");
     M.sel = pk;
@@ -1418,42 +1412,56 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     if (!M.map) {
       M.map = new kakao.maps.Map(document.getElementById("map"), { center: new kakao.maps.LatLng(36.685, 127.475), level: 9 });
       M.map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-      M.cl = makeClusterer(M.map);
     }
     msg("mapmsg", "");
     M.dirty = false;
     var token = ++M.token;
-    if (M.cl) { try { M.cl.clear(); } catch (e) { M.cl = null; } }
     M.overlays.forEach(function (o) { o.setMap(null); }); M.overlays = []; M.pins = {}; M.sel = null;
     M.map.relayout();
-    var all = filtered(), data = all.slice(0, MAP_LIMIT);
+    var all = filtered(), known = [], unknown = [];
+    all.forEach(function (r) { (r.lat ? known : unknown).push(r); });
     var focus = M.focus; M.focus = null;
-    if (focus && data.indexOf(focus) < 0) data.unshift(focus);
+    var geoList = unknown.slice(0, GEO_LIMIT);
+    if (focus && !focus.lat && geoList.indexOf(focus) < 0) geoList.unshift(focus);
+    var skipped = unknown.length - Math.min(unknown.length, GEO_LIMIT);
     var stat = document.getElementById("mapstat");
-    var total = all.length, found = 0, miss = 0, i = 0, bounds = new kakao.maps.LatLngBounds();
-    function line(done) {
-      stat.textContent = (total > MAP_LIMIT ? "조건에 맞는 " + nf(total) + "건 중 ‘" + sortLabel(state.sort) + "’ 앞쪽 " + MAP_LIMIT + "건을 표시합니다. " : "조건에 맞는 " + nf(total) + "건을 표시합니다. ") +
-        (done ? (miss ? "위치를 찾지 못한 " + miss + "건은 빠졌습니다." : "") : "위치 찾는 중 " + (found + miss) + " / " + data.length);
+    var shown = 0, miss = 0, i = 0, j = 0, bounds = new kakao.maps.LatLngBounds();
+    function put(r, ll) {
+      var p = pinOverlay(M.map, r, ll, selectPin, true); addPin(p.ov);
+      M.overlays.push(p.ov); M.pins[r.pk] = p.el; bounds.extend(new kakao.maps.LatLng(ll[0], ll[1])); shown++;
     }
-    line(false);
-    function step() {
+    function line(done) {
+      var t = "조건에 맞는 " + nf(all.length) + "건 중 " + nf(shown) + "건을 지도에 표시했습니다.";
+      if (!done && j < geoList.length) t += " 주소로 위치 찾는 중 " + j + " / " + geoList.length;
+      if (done && (miss + skipped)) t += " 위치를 알 수 없는 " + nf(miss + skipped) + "건은 빠졌습니다.";
+      stat.textContent = t;
+    }
+    function finish() {
+      line(true);
+      if (focus) focusOnMap(focus);
+      else if (shown) M.map.setBounds(bounds, 40, 40, 40, 40);
+    }
+    // 1단계: 저장된 좌표가 있는 기록을 한 번에 400개씩 그린다 (화면이 멈추지 않게)
+    function drawKnown() {
       if (token !== M.token) return;
-      if (i >= data.length) {
-        line(true);
-        if (M.cl) { try { M.cl.redraw(); } catch (e) {} }
-        if (focus) focusOnMap(focus);
-        else if (found) M.map.setBounds(bounds, 40, 40, 40, 40);
-        return;
-      }
-      var r = data[i++];
+      var end = Math.min(i + 400, known.length);
+      for (; i < end; i++) put(known[i], [known[i].lat, known[i].lng]);
+      line(false);
+      if (i < known.length) setTimeout(drawKnown, 0); else geoStep();
+    }
+    // 2단계: 좌표가 없는 기록만 주소로 찾는다
+    function geoStep() {
+      if (token !== M.token) return;
+      if (j >= geoList.length) return finish();
+      var r = geoList[j++];
       geocode(r, function (ll) {
         if (token !== M.token) return;
-        if (ll) { var p = pinOverlay(M.map, r, ll, selectPin, true); addPin(p.ov); M.overlays.push(p.ov); M.pins[r.pk] = p.el; bounds.extend(new kakao.maps.LatLng(ll[0], ll[1])); found++; } else miss++;
-        if ((found + miss) % 10 === 0) { line(false); if (M.cl) { try { M.cl.redraw(); } catch (e) {} } }
-        setTimeout(step, 0);
+        if (ll) put(r, ll); else miss++;
+        if (j % 10 === 0) line(false);
+        setTimeout(geoStep, 0);
       });
     }
-    step();
+    drawKnown();
   }
   // 홈의 작은 지도: 이 기간 주요 개발 5곳
   function drawMini() {
@@ -1485,7 +1493,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   (function legend() {
     document.getElementById("maplegend").innerHTML = CATS.filter(function (c) { return c.id !== "none"; }).map(function (c) {
       return '<span><i style="background:' + color(c.id) + '"></i>' + c.name.split("·")[0] + "</span>";
-    }).join("") + "<span>큰 점 1,000㎡ 이상 · 숫자 원은 묶음</span>";
+    }).join("") + "<span>큰 점 1,000㎡ 이상</span>";
   })();
 
   // ---------- 통계: 동네별·용도별은 고른 기간, 해마다와 걸린 기간은 2023년부터 전체
@@ -1865,7 +1873,8 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     };
   })();
 
-  document.getElementById("foot").textContent = "자료 출처: " + (meta.source || "국토교통부 건축HUB 건축인허가정보 서비스") + " (공공데이터포털). 지도: 카카오맵. 동네레이더는 개인이 만든 비공식 서비스입니다.";
+  document.getElementById("foot").textContent = "자료 출처: " + (meta.source || "국토교통부 건축HUB 건축인허가정보 서비스") + " (공공데이터포털)" +
+    (meta.parcels ? ", 필지 위치·개별공시지가: 국토교통부 2D데이터 API 연속지적도 (공공누리 제1유형)" : "") + ". 지도: 카카오맵. 동네레이더는 개인이 만든 비공식 서비스입니다.";
 
   drawPlace(); drawPeriods(); filterSummary();
   route();
