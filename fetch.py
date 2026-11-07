@@ -548,7 +548,9 @@ def build(store=None, codes=None):
     rows.sort(key=lambda r: (r.get("pms", ""), r.get("pk", "")), reverse=True)
     keep = {r["pk"] for r in rows}
     # 필지 중심 좌표와 개별공시지가는 parcels.json에서 붙인다 (원장에는 넣지 않음)
-    have = load(PARCELS, {}).get("parcels", {})
+    # 청주시 밖으로 찍히는 좌표(브이월드 도형 오류)는 버리고, 사이트가 주소로 위치를 찾게 둔다
+    have = {k: v for k, v in load(PARCELS, {}).get("parcels", {}).items()
+            if v and 36.4 < float(v[0] or 0) < 36.95 and 127.2 < float(v[1] or 0) < 127.8}
 
     def cell(r, f):
         if f in PARCEL_FIELDS:

@@ -1336,7 +1336,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   });
 
   // ---------- 지도 (카카오맵, 화면에서 바로 주소를 위치로 바꿈. 위치는 이 기기 브라우저에만 저장)
-  var GEO_LIMIT = 150; // 필지 좌표가 없는 기록만 브라우저에서 주소로 찾는다. 그 상한
+  var GEO_LIMIT = 300; // 필지 좌표가 없는 기록만 브라우저에서 주소로 찾는다 (지금 약 230건). 그 상한
   var M = { sdk: "idle", wait: [], geo: null, map: null, mini: null, overlays: [], miniOv: [], token: 0, miniToken: 0, dirty: true, focus: null, pins: {}, sel: null };
   function msg(id, t) { var el = document.getElementById(id); el.hidden = !t; el.textContent = t || ""; }
   function geoAddr(r) { return "충청북도 청주시 청원구 " + r.addr.replace(/\s*\d+블록.*$/, ""); }
