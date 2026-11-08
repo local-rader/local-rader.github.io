@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>동네레이더</title>
-<meta name="description" content="청주시 청원구에서 새로 허가된 건축과 공사 진행 상황을 공공데이터로 모아 보여줍니다.">
+<meta name="description" content="청주에서 새로 허가된 건축과 공사 진행 상황을 공공데이터로 모아 지도로 보여줍니다.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -310,6 +310,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   border: 1px solid var(--rule); border-radius: var(--r-card); background: var(--surface-2); overflow: hidden;
 }
 #map { position: absolute; inset: 0; }
+.dots { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 2; }
 .mapmsg {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   padding: 24px; text-align: center; color: var(--ink-2); font-size: 14px; background: var(--surface-2);
@@ -526,7 +527,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     <div class="wrap">
       <div class="page-head">
         <div>
-          <p class="eyebrow">청주시 청원구 · 건축 인허가 공공데이터</p>
+          <p class="eyebrow"><span id="region-name">청주시</span> · 건축 인허가 공공데이터</p>
           <h1 id="home-h">지역 개발 현황</h1>
           <p class="lede">새로 허가되고, 착공하고, 사용승인을 받은 건축물을 지도와 통계로 확인합니다.</p>
           <span class="asof" id="asof"></span>
@@ -544,7 +545,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 
       <article class="card" aria-labelledby="sum-h">
         <div class="kpi-top">
-          <h2 id="sum-h"><span id="sum-title">청원구 개발 현황</span><span class="meta" id="sum-range"></span></h2>
+          <h2 id="sum-h"><span id="sum-title">개발 현황</span><span class="meta" id="sum-range"></span></h2>
           <div class="period" data-period></div>
         </div>
         <div class="kpis" id="kpis"></div>
@@ -585,7 +586,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
           <li>신규 허가는 건축허가일, 착공은 실제 착공일, 사용승인은 사용승인일 기준입니다. 착공이나 사용승인이 늦게 등록되거나 빠진 경우가 있어 실제 현장과 다를 수 있습니다.</li>
           <li>기간을 고르면 그 안에 허가·착공·사용승인 중 하나라도 있었던 기록을 보여줍니다. ‘최근 1달·3달·1년’은 오늘이 아니라 데이터 기준일에서 셉니다.</li>
           <li>용도와 공사 종류가 비어 있는 소규모 기록은 기본으로 빼고, 필터에서 체크하면 함께 보여줍니다.</li>
-          <li>‘공급 예고’는 청원구에서 비슷한 규모의 건물이 착공부터 사용승인까지 걸린 기간으로 완공 시기를 추정한 것이고, ‘장기 미진행’은 착공이나 사용승인 기록이 오래 없는 곳을 기계적으로 추린 것입니다. 둘 다 기록에 근거한 추정입니다.</li>
+          <li>‘공급 예고’는 청주에서 비슷한 규모의 건물이 착공부터 사용승인까지 걸린 기간으로 완공 시기를 추정한 것이고, ‘장기 미진행’은 착공이나 사용승인 기록이 오래 없는 곳을 기계적으로 추린 것입니다. 둘 다 기록에 근거한 추정입니다.</li>
           <li>지도 위치는 연속지적도에서 계산한 필지의 가운데 점입니다. 필지 정보가 없는 일부 기록(블록 주소 등)은 지번 주소로 찾은 대략의 위치이거나 지도에 나오지 않습니다.</li>
           <li>개별공시지가는 매년 1월 1일 기준으로 시군구가 정해 5월 말에 공시하는 1㎡당 가격이며, 시세가 아닙니다.</li>
           <li>정확한 내용은 <a href="https://www.eais.go.kr" target="_blank" rel="noopener">세움터</a>에서 대지위치로 다시 확인하세요. 이 사이트는 투자 판단이나 법적 판단의 근거가 아닙니다.</li>
@@ -644,7 +645,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   <section class="screen" id="scr-supply" aria-labelledby="sup-h" hidden>
     <div class="wrap narrow screen-pad">
       <div class="sec-head"><h2 class="sec" id="sup-h">공급 예고</h2><span id="sup-asof"></span></div>
-      <p class="panel-note">지금 착공 기록이 있는 새 건물이 언제쯤 사용승인을 받을지, 청원구에서 비슷한 규모의 건물이 걸린 기간으로 <b>추정</b>했습니다. 확인된 사실은 착공 기록뿐이고, 완공 시기는 추정입니다.</p>
+      <p class="panel-note">지금 착공 기록이 있는 새 건물이 언제쯤 사용승인을 받을지, 청주에서 비슷한 규모의 건물이 걸린 기간으로 <b>추정</b>했습니다. 확인된 사실은 착공 기록뿐이고, 완공 시기는 추정입니다.</p>
       <article class="card" aria-labelledby="sup-chart-h">
         <div class="card-head"><h3 id="sup-chart-h">분기별 사용승인 예상 건수</h3><span class="badge est">추정</span></div>
         <p class="card-desc">진한 막대는 가운데 값 기준으로 그 분기에 끝날 것으로 보이는 곳, 빗금은 그 분기에 끝날 수도 있는 곳(예상 범위가 걸침)입니다. 예상 시점이 이미 지난 곳은 빗금에만 들어갑니다.</p>
@@ -664,7 +665,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
         <div class="card-head"><h3>산출 기준</h3></div>
         <div id="sup-method"></div>
       </article>
-      <p class="disclaimer">예상 완공 시기는 착공일에 청원구의 비슷한 건물(규모)이 착공부터 사용승인까지 걸린 기간을 더해 계산한 통계적 추정 범위이며, 건축주의 공식 일정이 아닙니다. 공사비·자금 사정, 설계 변경 등으로 크게 달라질 수 있고, 아파트 입주 물량은 한국부동산원 발표와 다를 수 있습니다.</p>
+      <p class="disclaimer">예상 완공 시기는 착공일에 청주의 비슷한 건물(규모)이 착공부터 사용승인까지 걸린 기간을 더해 계산한 통계적 추정 범위이며, 건축주의 공식 일정이 아닙니다. 공사비·자금 사정, 설계 변경 등으로 크게 달라질 수 있고, 아파트 입주 물량은 한국부동산원 발표와 다를 수 있습니다.</p>
     </div>
   </section>
 
@@ -724,7 +725,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
         <div class="disclaimer">
           <p>이 목록은 국토교통부 건축HUB 인허가 공개자료에 착공일이나 사용승인일이 <b>기록되지 않은</b> 건을 기계적으로 추린 것입니다. 실제로는 착공·완공했지만 입력이 늦거나 빠진 경우, 허가가 취소됐거나 착공 기간이 연장된 경우가 섞여 있을 수 있습니다.</p>
           <p>건축법은 허가받은 날부터 2년(공장 승인을 받은 공장은 3년) 안에 공사를 시작하지 않으면 허가를 취소하도록 하고, 정당한 사유가 있으면 1년까지 연장할 수 있게 합니다. 자료에 기록된 착공 기한이 있으면 그 날짜를 썼고, 없으면 주용도로 공장 여부를 짐작했습니다.</p>
-          <p>이 목록은 법에서 말하는 ‘공사중단 장기방치 건축물’(국토교통부 실태조사로 확인된 건축물)이 아닙니다. 정확한 상태는 청주시 청원구청 건축 부서에서 확인하세요.</p>
+          <p>이 목록은 법에서 말하는 ‘공사중단 장기방치 건축물’(국토교통부 실태조사로 확인된 건축물)이 아닙니다. 정확한 상태는 해당 구청 건축 부서에서 확인하세요.</p>
         </div>
       </div>
     </div>
@@ -869,11 +870,22 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   document.getElementById("asof").textContent = asof ? "데이터 기준일 " + dot(asof) : "데이터 준비 중";
   document.getElementById("stamp").textContent = (meta.checked ? "마지막 확인 " + dot(meta.checked.slice(0, 10)) + " " + meta.checked.slice(11, 16) + " · " : "") + "매일 자동 갱신, 공공데이터는 한 달가량 늦게 들어옵니다.";
   var places = P.places || [];
-  var areas = [];
-  places.forEach(function (p) { var a = p.split(" ")[0]; if (areas.indexOf(a) < 0) areas.push(a); });
-  areas.sort(function (a, b) { var ta = /동$/.test(a) ? 0 : 1, tb = /동$/.test(b) ? 0 : 1; return ta - tb || a.localeCompare(b, "ko"); });
+  // 동네(동·…가 또는 읍·면)를 구별로 묶는다. 구가 여럿이면 지역 이름은 '청주시'
+  var areas = [], areasOf = {}, GU_LIST = [];
+  function isTown(a) { return /[읍면]$/.test(a); }
+  function areaSort(a, b) { return (isTown(a) ? 1 : 0) - (isTown(b) ? 1 : 0) || a.localeCompare(b, "ko"); }
+  rows.forEach(function (r) {
+    var a = r.place.split(" ")[0];
+    if (!areasOf[r.gu]) { areasOf[r.gu] = []; GU_LIST.push(r.gu); }
+    if (areasOf[r.gu].indexOf(a) < 0) areasOf[r.gu].push(a);
+    if (areas.indexOf(a) < 0) areas.push(a);
+  });
+  GU_LIST.sort(function (a, b) { return a.localeCompare(b, "ko"); });
+  areas.sort(areaSort); GU_LIST.forEach(function (g) { areasOf[g].sort(areaSort); });
+  var REGION = GU_LIST.length > 1 ? "청주시" : (GU_LIST[0] || "청주시");
+  document.getElementById("region-name").textContent = REGION;
   var notes = [];
-  if (meta.seed || areas.length <= 2) notes.push("지금은 " + areas.join("·") + " 자료만 들어 있어요. 자동 수집이 시작되면 청원구 전체가 채워집니다.");
+  if (meta.seed || areas.length <= 2) notes.push("지금은 " + areas.join("·") + " 자료만 들어 있어요. 자동 수집이 시작되면 " + REGION + " 전체가 채워집니다.");
   if (meta.failed && meta.failed.length) notes.push("최근 갱신에서 " + meta.failed.length + "개 마을 자료를 받지 못해 일부가 빠졌을 수 있습니다. 다음 갱신 때 다시 받습니다.");
   if (notes.length) { var cv = document.getElementById("coverage"); cv.hidden = false; cv.textContent = notes.join(" "); }
 
@@ -912,7 +924,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   if (!PERIODS.some(function (p) { return p.v === state.period; })) state.period = "3m";
   if (!EVS.some(function (e) { return e.v === state.ev; })) state.ev = "all";
   if (["new", "old", "stage", "big"].indexOf(state.sort) < 0) state.sort = "new";
-  if (state.place !== "all" && areas.indexOf(state.place) < 0) state.place = "all";
+  if (state.place !== "all" && areas.indexOf(state.place) < 0 && (GU_LIST.length < 2 || GU_LIST.indexOf(state.place) < 0)) state.place = "all";
   if (state.cat !== "all" && !CATS.some(function (c) { return c.id === state.cat; })) state.cat = "all";
   if (MONTHS.indexOf(state.from) < 0) state.from = MONTHS[0];
   if (MONTHS.indexOf(state.to) < 0) state.to = MONTHS[MONTHS.length - 1];
@@ -935,7 +947,12 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   var R = range();
   function inR(d) { return !!d && d >= R.from && d <= R.to; }
   function latestIn(r) { var x = ""; if (inR(r.pms)) x = r.pms; if (inR(r.stcns) && r.stcns > x) x = r.stcns; if (inR(r.apr) && r.apr > x) x = r.apr; return x; }
-  function placeOk(r) { return state.place === "all" || r.place === state.place || r.place.indexOf(state.place + " ") === 0; }
+  function placeOk(r) { return state.place === "all" || r.gu === state.place || r.place === state.place || r.place.indexOf(state.place + " ") === 0; }
+  // 고른 범위에 따라 막대그래프를 묶는 단위: 전체 → 구별(구가 여럿일 때), 구 → 동네별, 동네 → 마을별
+  function placeLevel() { return state.place === "all" ? (GU_LIST.length > 1 ? 0 : 1) : GU_LIST.indexOf(state.place) >= 0 ? 1 : 2; }
+  function groupKey(r, lv) { return lv === 0 ? r.gu : lv === 1 ? r.place.split(" ")[0] : r.place; }
+  function placeLabel() { return state.place === "all" ? REGION : state.place; }
+  function groupTitle(lv) { return lv === 0 ? "구별" : lv === 1 ? (state.place === "all" ? "동네별" : state.place + " 동네별") : state.place + " 마을별"; }
   function moved(r, ev) { return ev === "all" ? !!(inR(r.pms) || inR(r.stcns) || inR(r.apr)) : inR(r[ev]); }
   function scopeOk(r, ev) { return (state.blank || r.known) && placeOk(r) && moved(r, ev) && (!state.favOnly || !!state.fav[r.pk]); }
   function dateFor(r) { return state.ev === "all" ? latestIn(r) : r[state.ev]; }
@@ -1074,16 +1091,23 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   // ---------- 동네 고르기 (위 고정 바)
   function drawPlace() {
     var sel = document.getElementById("f-place");
-    var cnt = {}, total = 0;
+    var cnt = {}, gcnt = {}, total = 0;
     rows.forEach(function (r) {
       if ((!state.blank && !r.known) || !moved(r, "all")) return;
-      var a = r.place.split(" ")[0]; cnt[a] = (cnt[a] || 0) + 1; total++;
+      var a = r.place.split(" ")[0]; cnt[a] = (cnt[a] || 0) + 1; gcnt[r.gu] = (gcnt[r.gu] || 0) + 1; total++;
     });
-    var dong = areas.filter(function (a) { return /동$/.test(a); }), town = areas.filter(function (a) { return !/동$/.test(a); });
-    function opt(a) { return '<option value="' + esc(a) + '">' + esc(a) + " (" + nf(cnt[a]) + ")</option>"; }
-    var h = '<option value="all">청원구 전체 (' + nf(total) + ")</option>";
-    if (dong.length) h += '<optgroup label="동">' + dong.map(opt).join("") + "</optgroup>";
-    if (town.length) h += '<optgroup label="읍·면">' + town.map(opt).join("") + "</optgroup>";
+    function opt(v, t, n) { return '<option value="' + esc(v) + '">' + esc(t) + " (" + nf(n || 0) + ")</option>"; }
+    var h = opt("all", REGION + " 전체", total);
+    if (GU_LIST.length > 1) {
+      GU_LIST.forEach(function (g) {
+        h += '<optgroup label="' + esc(g) + '">' + opt(g, g + " 전체", gcnt[g]) +
+          areasOf[g].map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
+      });
+    } else {
+      var dong = areas.filter(function (a) { return !isTown(a); }), town = areas.filter(isTown);
+      if (dong.length) h += '<optgroup label="동">' + dong.map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
+      if (town.length) h += '<optgroup label="읍·면">' + town.map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
+    }
     sel.innerHTML = h; sel.value = state.place;
   }
   document.getElementById("f-place").onchange = function () { state.place = this.value; changed(); };
@@ -1097,7 +1121,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
       .filter(function (r) { if (seen[r.addr]) return false; seen[r.addr] = 1; return true; }).slice(0, n);
   }
   function drawHome() {
-    var pl = state.place === "all" ? "청원구" : state.place;
+    var pl = placeLabel();
     document.getElementById("sum-title").textContent = pl + " 개발 현황";
     document.getElementById("sum-range").textContent = periodName() + " · " + dot(R.show) + " ~ " + dot(R.to);
     var el = document.getElementById("kpis"); el.innerHTML = "";
@@ -1135,7 +1159,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     });
     var qk = Object.keys(bq).sort();
     document.getElementById("home-sup").textContent = qk.length ? qLabel(qk[0]) + " 사용승인 예상 " + nf(bq[qk[0]]) + "곳" : "예상되는 곳 없음";
-    document.getElementById("home-sup-why").textContent = qk.length ? "착공 기록이 있는 새 건물 기준, 청원구 실적으로 추정" : "착공 기록이 있는 새 건물이 없습니다";
+    document.getElementById("home-sup-why").textContent = qk.length ? "착공 기록이 있는 새 건물 기준, 청주 실적으로 추정" : "착공 기록이 있는 새 건물이 없습니다";
 
     var ac = {};
     rows.forEach(function (r) {
@@ -1411,12 +1435,17 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     if (state.fav[r.pk]) delete state.fav[r.pk]; else state.fav[r.pk] = true;
     try { localStorage.setItem("dr:fav", JSON.stringify(state.fav)); } catch (e) {}
     btn.textContent = state.fav[r.pk] ? "관심 필지 해제" : "관심 필지로 등록";
-    if (M.pins[r.pk]) M.pins[r.pk].classList.toggle("fav", !!state.fav[r.pk]);
+    dotsLater();
     if (state.favOnly) return changed();
     if (screen === "map") drawList();
     filterSummary();
   }
-  function setSize(v) { state.size = v; remember(); drawSizeRow(); M.dirty = true; if (screen === "map") drawMap(); }
+  function setSize(v) {
+    state.size = v; remember(); drawSizeRow(); drawLegend();
+    // 지도는 다시 받지 않고 점 크기만 다시 계산한다 (보고 있던 위치 유지)
+    DOTS.pts.forEach(function (p) { p.rk = sizeRank(p.r); });
+    dotsSort(); dotsLater();
+  }
   function drawSizeRow() {
     document.querySelectorAll("[data-size]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-size") === state.size)); });
     document.getElementById("size-hint").textContent = (state.size === "jiga" ? "㎡당 공시지가가 높을수록 큰 원" : "연면적이 클수록 큰 원") + " · 값이 없으면 흐리게";
@@ -1434,11 +1463,105 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     return { ov: ov, el: el };
   }
 
-  function addPin(ov) { ov.setMap(M.map); }
+  // ---------- 개발지도 점: 수만 개도 가볍게 그리도록 지도 위에 캔버스 한 장을 겹친다.
+  // 점을 누르면 가장 가까운 점을 찾아 연다. (홈의 작은 지도는 몇 개뿐이라 HTML 점을 그대로 쓴다)
+  var DOTS = { pts: [], idx: {}, order: [], vis: [], cv: null, ctx: null, xs: null, ys: null, raf: 0 };
+  var DOT_R = [3.5, 4.5, 6, 8];
+  function dotsInit() {
+    if (DOTS.cv) return;
+    var cv = document.createElement("canvas"), box = document.getElementById("map");
+    cv.className = "dots"; cv.setAttribute("aria-hidden", "true");
+    box.parentNode.insertBefore(cv, box.nextSibling);
+    DOTS.cv = cv; DOTS.ctx = cv.getContext("2d");
+    var ev = kakao.maps.event;
+    ev.addListener(M.map, "bounds_changed", dotsLater);
+    ev.addListener(M.map, "zoom_start", function () { cv.style.visibility = "hidden"; });
+    ev.addListener(M.map, "idle", function () { cv.style.visibility = ""; dotsLater(); });
+    ev.addListener(M.map, "click", dotsHit);
+    window.addEventListener("resize", dotsLater);
+  }
+  function dotsAdd(r, ll) {
+    if (DOTS.idx[r.pk] !== undefined) return;
+    DOTS.idx[r.pk] = DOTS.pts.length;
+    DOTS.pts.push({ r: r, lat: ll[0], lng: ll[1], rk: sizeRank(r) });
+  }
+  // 작은 점을 먼저, 큰 점을 나중에 그려 큰 점이 위로 오게 한다
+  function dotsSort() {
+    DOTS.order = DOTS.pts.map(function (p, i) { return i; }).sort(function (a, b) { return DOTS.pts[a].rk - DOTS.pts[b].rk; });
+  }
+  function dotsLater() { if (!DOTS.raf) DOTS.raf = requestAnimationFrame(function () { DOTS.raf = 0; dotsDraw(); }); }
+  function dotsDraw() {
+    var cv = DOTS.cv; if (!cv || !M.map) return;
+    var box = document.getElementById("map"), w = box.clientWidth, h = box.clientHeight, dpr = window.devicePixelRatio || 1;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); cv.style.width = w + "px"; cv.style.height = h + "px";
+    }
+    var ctx = DOTS.ctx; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+    DOTS.vis = [];
+    var n = DOTS.pts.length; if (!n || !w || !h) return;
+    // 화면 세 모서리의 좌표로 위경도 → 화면 위치 변환식을 만든다 (도시 크기에서는 오차가 거의 없다)
+    var pr = M.map.getProjection(), b = M.map.getBounds(), sw = b.getSouthWest(), ne = b.getNorthEast();
+    var lat0 = sw.getLat(), lng0 = sw.getLng(), dLat = ne.getLat() - lat0, dLng = ne.getLng() - lng0;
+    if (!dLat || !dLng) return;
+    var A = pr.containerPointFromCoords(sw), B = pr.containerPointFromCoords(new kakao.maps.LatLng(lat0, ne.getLng())), C = pr.containerPointFromCoords(new kakao.maps.LatLng(ne.getLat(), lng0));
+    var xg = (B.x - A.x) / dLng, yg = (B.y - A.y) / dLng, xt = (C.x - A.x) / dLat, yt = (C.y - A.y) / dLat;
+    if (!DOTS.xs || DOTS.xs.length < n) { DOTS.xs = new Float32Array(n + 256); DOTS.ys = new Float32Array(n + 256); }
+    var xs = DOTS.xs, ys = DOTS.ys, css = getComputedStyle(document.documentElement), col = {};
+    function colorOf(cat) { return col[cat] || (col[cat] = (css.getPropertyValue("--c-" + cat) || css.getPropertyValue("--c-etc") || "#888").trim()); }
+    // 같은 크기·색의 점을 한 번에 칠한다
+    var groups = {}, keys = [], fav = [], sel = -1;
+    DOTS.order.forEach(function (i) {
+      var p = DOTS.pts[i], x = A.x + (p.lng - lng0) * xg + (p.lat - lat0) * xt, y = A.y + (p.lng - lng0) * yg + (p.lat - lat0) * yt;
+      xs[i] = x; ys[i] = y;
+      if (x < -12 || y < -12 || x > w + 12 || y > h + 12) return;
+      DOTS.vis.push(i);
+      if (p.r.pk === M.sel) { sel = i; return; }
+      var k = Math.max(p.rk, 0) + "|" + (p.rk < 0 ? 1 : 0) + "|" + p.r.cat;
+      if (!groups[k]) { groups[k] = []; keys.push(k); }
+      groups[k].push(i);
+      if (state.fav[p.r.pk]) fav.push(i);
+    });
+    keys.sort(function (a, b) { return a.split("|")[0] - b.split("|")[0]; });
+    function path(list, r) {
+      ctx.beginPath();
+      list.forEach(function (i) { ctx.moveTo(xs[i] + r, ys[i]); ctx.arc(xs[i], ys[i], r, 0, 6.2832); });
+    }
+    keys.forEach(function (k) {
+      var bits = k.split("|"), r = DOT_R[+bits[0]];
+      path(groups[k], r);
+      ctx.globalAlpha = bits[1] === "1" ? 0.45 : 1;
+      ctx.lineWidth = 2.6; ctx.strokeStyle = "rgba(15,30,51,.55)"; ctx.stroke();
+      ctx.fillStyle = colorOf(bits[2]); ctx.fill();
+      ctx.lineWidth = 1.5; ctx.strokeStyle = "#FFFFFF"; ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+    // 관심 필지: 바깥에 주황 테두리
+    fav.forEach(function (i) {
+      var r = DOT_R[Math.max(DOTS.pts[i].rk, 0)] + 3;
+      ctx.beginPath(); ctx.arc(xs[i], ys[i], r, 0, 6.2832); ctx.lineWidth = 2.5; ctx.strokeStyle = "#B7791F"; ctx.stroke();
+    });
+    // 고른 점: 크게, 진한 테두리
+    if (sel >= 0) {
+      var p = DOTS.pts[sel];
+      ctx.beginPath(); ctx.arc(xs[sel], ys[sel], 9, 0, 6.2832);
+      ctx.fillStyle = colorOf(p.r.cat); ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = "#FFFFFF"; ctx.stroke();
+      ctx.beginPath(); ctx.arc(xs[sel], ys[sel], 11.5, 0, 6.2832); ctx.lineWidth = 3; ctx.strokeStyle = css.getPropertyValue("--brand").trim() || "#16325C"; ctx.stroke();
+    }
+  }
+  // 누른 곳에서 가장 가까운 점 (점 반지름 + 손가락 여유 안에서)
+  function dotsHit(e) {
+    if (!DOTS.vis.length) return;
+    var pt = M.map.getProjection().containerPointFromCoords(e.latLng), best = -1, bd = Infinity;
+    DOTS.vis.forEach(function (i) {
+      var dx = DOTS.xs[i] - pt.x, dy = DOTS.ys[i] - pt.y, d = dx * dx + dy * dy, lim = DOT_R[Math.max(DOTS.pts[i].rk, 0)] + 10;
+      if (d <= lim * lim && (d < bd || (d === bd && DOTS.pts[i].rk > DOTS.pts[best].rk))) { bd = d; best = i; }
+    });
+    if (best >= 0) selectPin(DOTS.pts[best].r);
+  }
   function highlight(pk) {
-    if (M.sel && M.pins[M.sel]) M.pins[M.sel].classList.remove("on");
     M.sel = pk;
-    if (pk && M.pins[pk]) M.pins[pk].classList.add("on");
+    dotsLater();
   }
   function selectPin(r) { sheetReturn = null; highlight(r.pk); openDetail(r); }
   function scrollToMap() {
@@ -1451,7 +1574,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     if (M.sdk !== "ready" || !M.map || M.dirty) { M.focus = r; return; }
     geocode(r, function (ll) {
       if (!ll) { document.getElementById("mapstat").textContent = r.addr + "의 위치를 지도에서 찾지 못했습니다."; return; }
-      if (!M.pins[r.pk]) { var p = pinOverlay(M.map, r, ll, selectPin); M.overlays.push(p.ov); M.pins[r.pk] = p.el; }
+      if (DOTS.idx[r.pk] === undefined) { dotsAdd(r, ll); dotsSort(); }
       M.map.setLevel(4); M.map.setCenter(new kakao.maps.LatLng(ll[0], ll[1]));
       highlight(r.pk);
     });
@@ -1463,11 +1586,12 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     if (!M.map) {
       M.map = new kakao.maps.Map(document.getElementById("map"), { center: new kakao.maps.LatLng(36.685, 127.475), level: 9 });
       M.map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+      dotsInit();
     }
     msg("mapmsg", "");
     M.dirty = false;
     var token = ++M.token;
-    M.overlays.forEach(function (o) { o.setMap(null); }); M.overlays = []; M.pins = {}; M.sel = null;
+    DOTS.pts = []; DOTS.idx = {}; DOTS.order = []; M.sel = null;
     M.map.relayout();
     var all = filtered(), known = [], unknown = [];
     all.forEach(function (r) { (r.lat ? known : unknown).push(r); });
@@ -1478,8 +1602,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     var stat = document.getElementById("mapstat");
     var shown = 0, miss = 0, i = 0, j = 0, bounds = new kakao.maps.LatLngBounds();
     function put(r, ll) {
-      var p = pinOverlay(M.map, r, ll, selectPin, true); addPin(p.ov);
-      M.overlays.push(p.ov); M.pins[r.pk] = p.el; bounds.extend(new kakao.maps.LatLng(ll[0], ll[1])); shown++;
+      dotsAdd(r, ll); bounds.extend(new kakao.maps.LatLng(ll[0], ll[1])); shown++;
     }
     function line(done) {
       var t = "조건에 맞는 " + nf(all.length) + "건 중 " + nf(shown) + "건을 지도에 표시했습니다.";
@@ -1489,16 +1612,18 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     }
     function finish() {
       line(true);
+      dotsSort(); dotsLater();
       if (focus) focusOnMap(focus);
       else if (shown) M.map.setBounds(bounds, 40, 40, 40, 40);
     }
-    // 1단계: 저장된 좌표가 있는 기록을 한 번에 400개씩 그린다 (화면이 멈추지 않게)
+    // 1단계: 저장된 좌표가 있는 기록을 한꺼번에 올린다 (캔버스라 수만 개도 가볍다)
     function drawKnown() {
       if (token !== M.token) return;
-      var end = Math.min(i + 400, known.length);
-      for (; i < end; i++) put(known[i], [known[i].lat, known[i].lng]);
-      line(false);
-      if (i < known.length) setTimeout(drawKnown, 0); else geoStep();
+      for (; i < known.length; i++) put(known[i], [known[i].lat, known[i].lng]);
+      dotsSort(); line(false);
+      if (shown && geoList.length) M.map.setBounds(bounds, 40, 40, 40, 40);
+      dotsLater();
+      geoStep();
     }
     // 2단계: 좌표가 없는 기록만 주소로 찾는다
     function geoStep() {
@@ -1508,7 +1633,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
       geocode(r, function (ll) {
         if (token !== M.token) return;
         if (ll) put(r, ll); else miss++;
-        if (j % 10 === 0) line(false);
+        if (j % 10 === 0) { line(false); dotsSort(); dotsLater(); }
         setTimeout(geoStep, 0);
       });
     }
@@ -1541,11 +1666,12 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     }
     step();
   }
-  (function legend() {
+  function drawLegend() {
     document.getElementById("maplegend").innerHTML = CATS.filter(function (c) { return c.id !== "none"; }).map(function (c) {
       return '<span><i style="background:' + color(c.id) + '"></i>' + c.name.split("·")[0] + "</span>";
-    }).join("") + "<span>큰 점 1,000㎡ 이상</span>";
-  })();
+    }).join("") + "<span>큰 점: " + (state.size === "jiga" ? "공시지가 높음" : "연면적 큼") + "</span>";
+  }
+  drawLegend();
 
   // ---------- 통계: 동네별·용도별은 고른 기간, 해마다와 걸린 기간은 2023년부터 전체
   function bars(el, list, max) {
@@ -1556,17 +1682,17 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     }).join("");
   }
   function drawStats() {
-    var pl = state.place === "all" ? "청원구" : state.place;
+    var pl = placeLabel();
     var span = periodName() + ", " + dot(R.show) + " ~ " + dot(R.to);
     var base = rows.filter(placeOk);
     var fresh = base.filter(function (r) { return r.known && inR(r.pms); });
-    var townLevel = state.place !== "all";
-    document.getElementById("h-area").textContent = (townLevel ? pl + " 마을별" : "동네별") + " 신규 허가 (" + span + ")";
+    var lv = placeLevel();
+    document.getElementById("h-area").textContent = groupTitle(lv) + " 신규 허가 (" + span + ")";
     document.getElementById("h-cat").textContent = "용도별 신규 허가 (" + span + ")";
     document.getElementById("h-year").textContent = "해마다 허가된 건수 (" + pl + ", 2023년부터)";
     document.getElementById("h-facts").textContent = "걸린 기간과 늘어난 집 (" + pl + ", 2023년부터)";
 
-    var ac = {}; fresh.forEach(function (r) { var a = townLevel ? r.place : r.place.split(" ")[0]; ac[a] = (ac[a] || 0) + 1; });
+    var ac = {}; fresh.forEach(function (r) { var a = groupKey(r, lv); ac[a] = (ac[a] || 0) + 1; });
     var al = Object.keys(ac).sort(function (a, b) { return ac[b] - ac[a]; });
     var ca = document.getElementById("c-area");
     if (!al.length) ca.innerHTML = '<p class="empty">이 기간에는 신규 허가가 없습니다.</p>';
@@ -1661,7 +1787,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     });
   }
   function drawStall() {
-    var pl = state.place === "all" ? "청원구 전체" : state.place;
+    var pl = state.place === "all" ? REGION + " 전체" : state.place;
     document.getElementById("st-h").textContent = "장기 미진행 · " + pl;
     document.getElementById("st-asof").textContent = dot(END) + " 기준";
     var base = rows.filter(function (r) { return r.stall && placeOk(r) && r.area >= state.stSize; });
@@ -1689,9 +1815,9 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
       var more = document.getElementById("st-more");
       if (more) more.onclick = function () { state.shownS += 40; drawStall(); };
     }
-    var townLevel = state.place !== "all";
-    document.getElementById("st-bars-h").textContent = (townLevel ? pl + " 마을별" : "동네별") + " 건수 (위에서 고른 조건)";
-    var ac = {}; data.forEach(function (r) { var a = townLevel ? r.place : r.place.split(" ")[0]; ac[a] = (ac[a] || 0) + 1; });
+    var lv = placeLevel();
+    document.getElementById("st-bars-h").textContent = groupTitle(lv) + " 건수 (위에서 고른 조건)";
+    var ac = {}; data.forEach(function (r) { var a = groupKey(r, lv); ac[a] = (ac[a] || 0) + 1; });
     var al = Object.keys(ac).sort(function (a, b) { return ac[b] - ac[a]; });
     var bEl = document.getElementById("st-bars");
     if (!al.length) bEl.innerHTML = "";
@@ -1778,7 +1904,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     }).join("");
   }
   function drawSupply() {
-    var pl = state.place === "all" ? "청원구 전체" : state.place;
+    var pl = state.place === "all" ? REGION + " 전체" : state.place;
     document.getElementById("sup-h").textContent = "공급 예고 · " + pl;
     document.getElementById("sup-asof").textContent = dot(END) + " 기준";
     var data = rows.filter(function (r) { return NEW[r.gb] && r.known && r.stcns && !r.apr && !r.stall && placeOk(r); });
@@ -1838,7 +1964,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
       : "허가받은 지 1년이 안 됐고 아직 착공 기록이 없는 곳은 없습니다.";
     var rowsM = Object.keys(SUPG).map(function (g) {
       var L = LAG[g];
-      var src = L.ref ? L.ref : "청원구 " + nf(L.n) + "건" + (L.few ? " (표본이 적어 참고용)" : "");
+      var src = L.ref ? L.ref : "청주 " + nf(L.n) + "건" + (L.few ? " (표본이 적어 참고용)" : "");
       return "<tr><td>" + SUPG[g].t + "<br><small>" + src + "</small></td><td>" + months(L.p25) + "</td><td>" + months(L.med) + "</td><td>" + months(L.p75) + "</td></tr>";
     }).join("");
     document.getElementById("sup-method").innerHTML = '<p class="panel-note">' + esc(dot(LAG_FROM) + "부터 " + dot(LAG_TO) + "까지 착공한 건을 2년 동안 지켜본 결과입니다. 예상 시기는 착공일에 가운데 값을 더하고, 범위는 4곳 중 1곳이 끝난 때부터 4곳 중 3곳이 끝난 때까지입니다.") + "</p>" +
