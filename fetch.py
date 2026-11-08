@@ -1,11 +1,12 @@
 """
 동네레이더 데이터 수집기
 
-건축HUB 건축인허가정보(국토교통부) API에서 청주시 청원구의 인허가 기록을 받아
+건축HUB 건축인허가정보(국토교통부) API에서 청주시 4개 구(상당·서원·흥덕·청원)의 인허가 기록을 받아
 permits.json(원장)에 합치고, 웹사이트가 읽는 data.js를 만든다.
+새 구를 AREAS에 넣으면 다음 실행 때 그 구의 동·읍·면·리 코드를 찾고 2023년 이후 자료를 받는다.
 
 사용법
-  python fetch.py discover            청원구 법정동·리 코드를 자동으로 찾아 codes.json에 저장
+  python fetch.py discover            아직 코드를 찾지 않은 구의 법정동·리 코드를 찾아 codes.json에 저장
   python fetch.py update              최근 14일 사이 바뀐 기록을 받아 합치기 (매일 자동 실행용)
   python fetch.py update --since 20230101   그 날짜 이후 바뀐 기록을 모두 받기 (처음 한 번)
   python fetch.py build               permits.json으로 data.js만 다시 만들기
@@ -38,6 +39,10 @@ VWORLD = "https://api.vworld.kr/req/data"
 KST = timezone(timedelta(hours=9))
 PAUSE = 0.25  # 호출 사이 간격(초). 서버에 부담을 주지 않기 위함
 MAX_EVENTS = 800
+# 수집 지역 (시군구 코드, 이름). 순서대로 받는다.
+AREAS = [("43114", "청원구"), ("43111", "상당구"), ("43112", "서원구"), ("43113", "흥덕구")]
+BACKFILL_FROM = "20230101"  # 새로 넣은 구는 이 날짜 이후 바뀐 기록을 모두 받는다
+BUDGET = 50 * 60  # 한 번 실행에서 쓸 시간(초). GitHub 실행 한도(60분) 안에서 저장하고 다음 실행 때 이어 받는다
 
 
 # ---------------------------------------------------------------- 공통 도구
@@ -119,12 +124,12 @@ def fetch_all(key, sigungu, bjdong, since=None, until=None):
 # ---------------------------------------------------------------- 코드 찾기
 
 def place_name(item):
-    """대지위치에서 동 또는 '읍면 리' 이름을 뽑는다."""
+    """대지위치에서 동(…동, …가) 또는 '읍면 리' 이름을 뽑는다."""
     plc = re.sub(r"\s+", " ", item.get("platPlc") or "")
-    m = re.search(r"청원구 ?(\S+[읍면]) ?(\S+리)", plc)
+    m = re.search(r"구 ?(\S+[읍면]) ?(\S+리)", plc)
     if m:
         return f"{m.group(1)} {m.group(2)}"
-    m = re.search(r"청원구 ?(\S+동)", plc)
+    m = re.search(r"구 ?([가-힣]+\d*가|[가-힣]+동)(?=[\s\d-]|$)", plc)
     return m.group(1) if m else ""
 
 
@@ -152,19 +157,35 @@ def name_towns(found):
     return found
 
 
-def discover(key):
-    codes = load(CODES, {"sigungu": "43114", "codes": {}})
-    sg = codes["sigungu"]
-    found = dict(codes.get("codes", {}))
+def load_codes():
+    """codes.json을 읽는다. 예전 형식(청원구 하나)이면 구별 형식으로 바꾼다."""
+    c = load(CODES, {})
+    if "areas" not in c:
+        old, c = c, {"areas": {}}
+        if old.get("codes"):
+            c["areas"][old.get("sigungu", "43114")] = {
+                "gu": "청원구", "codes": old["codes"],
+                "discovered": old.get("discovered", ""), "backfilled": old.get("discovered", "")}
+    for sg, gu in AREAS:
+        a = c["areas"].setdefault(sg, {"codes": {}})
+        a["gu"] = gu
+    c["note"] = ("구마다 discovered 값이 없으면 다음 실행 때 그 구의 동·읍·면·리 코드를 찾고, "
+                 "backfilled 값이 없으면 2023년 이후 자료를 받습니다.")
+    return c
+
+
+def discover(key, sg, area):
+    """한 구의 법정동·리 코드를 찾는다. 동은 10100~16000, 읍·면은 250~399 범위를 확인한다."""
+    found = dict(area.get("codes", {}))
     failed = []
-    print("동 지역 확인 중 (10100~12000)")
-    for n in range(10100, 12001, 100):
+    print(f"[{area['gu']}] 동 지역 확인 중", flush=True)
+    for n in range(10100, 16001, 100):
         b = f"{n:05d}"
         total, name = probe(key, sg, b, failed)
         if total:
             found[b] = name or found.get(b, b)
-            print(f"  {b} {found[b]} {total}건")
-    print("읍·면 지역 확인 중 (250~399)")
+            print(f"  {b} {found[b]} {total}건", flush=True)
+    print(f"[{area['gu']}] 읍·면 지역 확인 중", flush=True)
     for p in range(250, 400):
         hit = False
         for r in (0, 21):
@@ -174,26 +195,23 @@ def discover(key):
                 break
         if not hit:
             continue
-        print(f"  {p}00 읍·면 발견, 리 확인 중")
+        print(f"  {p}00 읍·면 발견, 리 확인 중", flush=True)
         for r in range(0, 70):
             b = f"{p}{r:02d}"
             total, name = probe(key, sg, b, failed)
             if total:
                 found[b] = name or found.get(b, b)
-                print(f"    {b} {found[b]} {total}건")
+                print(f"    {b} {found[b]} {total}건", flush=True)
     if failed:
-        print(f"확인 실패 {len(failed)}곳 다시 확인")
+        print(f"확인 실패 {len(failed)}곳 다시 확인", flush=True)
         time.sleep(30)
         for b in failed:
             total, name = probe(key, sg, b)
             if total:
                 found[b] = name or found.get(b, b)
-                print(f"  {b} {found[b]} {total}건")
-    codes["codes"] = name_towns(dict(sorted(found.items())))
-    codes["discovered"] = now_kst().strftime("%Y-%m-%d")
-    save(CODES, codes)
-    print(f"코드 {len(found)}개 저장: {CODES}")
-    return codes
+    area["codes"] = name_towns(dict(sorted(found.items())))
+    area["discovered"] = now_kst().strftime("%Y-%m-%d")
+    print(f"[{area['gu']}] 코드 {len(found)}개", flush=True)
 
 
 # ---------------------------------------------------------------- 정리
@@ -232,7 +250,7 @@ def public_name(name, purp, place):
     if not n or "주택" in (purp or "") or "씨" in n or (place and n.startswith(place)):
         return ""
     # 이름 칸에 주소를 적은 경우(예: '충청북도 청주시 … 필지 공장')는 이름으로 보지 않는다
-    if "청원구 " in n or re.search(r"(번지|필지)", n):
+    if re.search(r"(청주시|[가-힣]+구) ", n) or re.search(r"(번지|필지)", n):
         return ""
     return n if PUBLIC_NAME.search(n) else ""
 
@@ -250,6 +268,7 @@ def normalize(item, names):
         addr = f"{place} {blk} {lot}".strip() if clean(item.get("block")) else place
     return {
         "pk": str(item.get("mgmPmsrgstPk") or ""),
+        "sg": re.sub(r"\D", "", str(item.get("sigunguCd") or "")),
         "b": b,
         "place": place,
         "addr": addr,
@@ -314,9 +333,8 @@ def merge(store, items, names, today, quiet=False):
 
 
 def update(key, since=None):
-    codes = load(CODES, {"sigungu": "43114", "codes": {}})
-    if not codes.get("discovered"):
-        codes = discover(key)
+    t0 = time.time()
+    codes = load_codes()
     store = load(STORE, {"records": {}, "events": []})
     today = now_kst().strftime("%Y-%m-%d")
     quiet = bool(since)  # 날짜를 직접 준 경우 = 과거 자료 일괄 받기
@@ -329,57 +347,98 @@ def update(key, since=None):
             start = min(start, datetime.strptime(latest, "%Y-%m-%d").replace(tzinfo=KST) - timedelta(days=7))
         start = max(start, now_kst() - timedelta(days=150))
         since = start.strftime("%Y%m%d")
-    names = codes["codes"]
-    pending = store.setdefault("pending", {})  # {코드: 다시 받을 시작 날짜}
-    tot_new = tot_changed = 0
-    failed = []
+    pending = store.setdefault("pending", {})  # {"시군구-코드": 다시 받을 시작 날짜}
+    for k in list(pending):  # 예전 형식(청원구 코드만)
+        if "-" not in k:
+            pending["43114-" + k] = pending.pop(k)
+    totals = {"new": 0, "changed": 0}
+    failed, unfinished = [], []
 
-    if pending:
-        print(f"지난번에 못 받은 {len(pending)}곳 다시 받기")
-    for b, p_since in sorted(pending.items()):
-        try:
-            total, items = fetch_all(key, codes["sigungu"], b, since=p_since)
-        except RuntimeError as e:
-            print("  아직 실패:", b, e)
-            continue
+    def late():
+        return time.time() - t0 > BUDGET
+
+    def get(sg, b, start, q):
+        area = codes["areas"][sg]
+        names = area["codes"]
+        total, items = fetch_all(key, sg, b, since=start)
         if items and b not in names:
             names[b] = place_name(items[0]) or b
-            codes["codes"] = name_towns(dict(sorted(names.items())))
-            names = codes["codes"]
+            area["codes"] = name_towns(dict(sorted(names.items())))
+            names = area["codes"]
             save(CODES, codes)
-        n, c = merge(store, items, names, today, quiet=True)
-        tot_new += n
-        tot_changed += c
-        del pending[b]
-        print(f"  {b} {names.get(b, b)}: 받은 기록 {len(items)}건 (새 기록 {n})")
+        n, c = merge(store, items, names, today, quiet=q)
+        totals["new"] += n
+        totals["changed"] += c
+        print(f"{area['gu']} {b} {names.get(b, b)}: 받은 기록 {len(items)}건 (새 기록 {n}, 바뀐 기록 {c})", flush=True)
         time.sleep(PAUSE)
 
-    for b, name in names.items():
-        try:
-            total, items = fetch_all(key, codes["sigungu"], b, since=since)
-        except RuntimeError as e:
-            print("실패:", b, name, e)
-            failed.append(b)
-            if quiet:  # 과거 자료 받기였다면 그 날짜부터, 아니면 최근 14일부터 다음에 다시
-                pending[b] = min(pending.get(b, since), since)
-            else:
-                pending.setdefault(b, since)
+    if pending:
+        print(f"지난번에 못 받은 {len(pending)}곳 다시 받기", flush=True)
+    for k, p_since in sorted(pending.items()):
+        sg, b = k.split("-", 1)
+        if sg not in codes["areas"] or late():
             continue
-        n, c = merge(store, items, names, today, quiet=quiet)
-        tot_new += n
-        tot_changed += c
-        print(f"{b} {name}: 받은 기록 {len(items)}건 (새 기록 {n}, 바뀐 기록 {c})")
-        time.sleep(PAUSE)
+        try:
+            get(sg, b, p_since, True)
+            del pending[k]
+        except RuntimeError as e:
+            print("  아직 실패:", k, e, flush=True)
+
+    for sg, gu in AREAS:
+        area = codes["areas"][sg]
+        if not area.get("discovered"):
+            if late():
+                unfinished.append(gu)
+                continue
+            discover(key, sg, area)
+            save(CODES, codes)
+        if not area.get("backfilled"):
+            # 새로 넣은 구: 2023년 이후 자료를 모두 받는다. 시간이 모자라면 다음 실행 때 이어서
+            done = set(area.get("filled", []))
+            for b in area["codes"]:
+                if b in done:
+                    continue
+                if late():
+                    break
+                try:
+                    get(sg, b, BACKFILL_FROM, True)
+                    done.add(b)
+                except RuntimeError as e:
+                    print("실패:", gu, b, e, flush=True)
+                    failed.append(f"{sg}-{b}")
+            area["filled"] = sorted(done)
+            if done >= set(area["codes"]):
+                area["backfilled"] = today
+                area.pop("filled", None)
+            else:
+                unfinished.append(gu)
+            save(CODES, codes)
+            continue
+        for b in list(area["codes"]):
+            if late():
+                pending.setdefault(f"{sg}-{b}", since)
+                continue
+            try:
+                get(sg, b, since, quiet)
+            except RuntimeError as e:
+                print("실패:", gu, b, e, flush=True)
+                failed.append(f"{sg}-{b}")
+                k = f"{sg}-{b}"
+                pending[k] = min(pending.get(k, since), since) if quiet else pending.get(k, since)
     store["meta"] = {
         "checked": now_kst().strftime("%Y-%m-%d %H:%M"),
         "since": since,
         "failed": failed,
+        "unfinished": unfinished,
         "source": "국토교통부 건축HUB 건축인허가정보 서비스",
     }
+    save(CODES, codes)
     build(store, codes)  # 이름 정리가 원장에도 반영되도록 저장보다 먼저
     save(STORE, store)
-    print(f"완료: 새 기록 {tot_new}, 바뀐 기록 {tot_changed}, 실패 {len(failed)}")
-    if failed and len(failed) == len(names):
+    print(f"완료: 새 기록 {totals['new']}, 바뀐 기록 {totals['changed']}, 실패 {len(failed)}, "
+          f"다음 실행에 이어 받을 구 {unfinished or '없음'} ({round((time.time() - t0) / 60)}분)", flush=True)
+    n_codes = sum(len(codes["areas"][sg]["codes"]) for sg, _ in AREAS)
+    if failed and len(failed) >= n_codes:
         sys.exit("모든 지역에서 실패했습니다. 인증키와 접속 상태를 확인하세요.")
 
 
@@ -527,7 +586,7 @@ def parcels(limit=9000, workers=4, budget=35 * 60):
 
 # ---------------------------------------------------------------- 사이트용 데이터
 
-FIELDS = ["pk", "place", "addr", "name", "gb", "purp", "area", "plat", "fmly", "hhld",
+FIELDS = ["pk", "sg", "place", "addr", "name", "gb", "purp", "area", "plat", "fmly", "hhld",
           "jiyuk", "jimok", "pms", "sched", "stcns", "delay", "apr", "crtn", "seen",
           "lat", "lng", "jiga", "jy"]
 PARCEL_FIELDS = ("lat", "lng", "jiga", "jy")
@@ -535,9 +594,12 @@ PARCEL_FIELDS = ("lat", "lng", "jiga", "jy")
 
 def build(store=None, codes=None):
     store = store or load(STORE, {"records": {}, "events": []})
-    codes = codes or load(CODES, {"codes": {}})
-    names = codes.get("codes", {})
+    codes = codes or load_codes()
+    gus = {sg: a["gu"] for sg, a in codes["areas"].items()}
     for r in store.get("records", {}).values():  # 예전에 저장된 기록도 같은 기준으로 정리
+        if not r.get("sg"):
+            r["sg"] = (r.get("pnu") or "")[:5] or "43114"
+        names = codes["areas"].get(r["sg"], {}).get("codes", {})
         r["name"] = public_name(r.get("name"), r.get("purp"), r.get("place"))
         r["addr"] = re.sub(r"\s(로트|롯트)$", "", re.sub(r"(블[럭록])블록", r"\1", re.sub(r"(로트|롯트)롯트", r"\1", r.get("addr", ""))))
         good = names.get(r.get("b", ""), "")
@@ -559,7 +621,8 @@ def build(store=None, codes=None):
         return r.get(f, "")
     out = {
         "meta": dict(store.get("meta", {}), asof=max((r.get("crtn", "") for r in rows), default=""),
-                     parcels=sum(1 for r in rows if have.get(r.get("pnu") or ""))),
+                     parcels=sum(1 for r in rows if have.get(r.get("pnu") or "")),
+                     gus={sg: gus[sg] for sg in sorted({r["sg"] for r in rows}) if sg in gus}),
         "places": sorted({r["place"] for r in rows}),
         "fields": FIELDS,
         "rows": [[cell(r, f) for f in FIELDS] for r in rows],
@@ -583,7 +646,11 @@ def main(argv):
     if "--since" in argv:
         since = re.sub(r"\D", "", argv[argv.index("--since") + 1])
     if cmd == "discover":
-        discover(api_key())
+        key, codes = api_key(), load_codes()
+        for sg, _ in AREAS:
+            if not codes["areas"][sg].get("discovered"):
+                discover(key, sg, codes["areas"][sg])
+                save(CODES, codes)
     elif cmd == "update":
         update(api_key(), since)
     elif cmd == "parcels":

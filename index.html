@@ -831,6 +831,9 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
     r.pms = r.pms || ""; r.stcns = r.stcns || ""; r.apr = r.apr || "";
     r.lat = +r.lat || 0; r.lng = +r.lng || 0; r.jiga = +r.jiga || 0;
   });
+  var GUS = meta.gus || { "43114": "청원구" };
+  function guOf(r) { return GUS[r.sg] || "청원구"; }
+  rows.forEach(function (r) { r.sg = r.sg || "43114"; r.gu = guOf(r); });
   var byPk = {}; rows.forEach(function (r) { byPk[r.pk] = r; });
 
   // ---------- 도구
@@ -1359,7 +1362,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   var GEO_LIMIT = 300; // 필지 좌표가 없는 기록만 브라우저에서 주소로 찾는다 (지금 약 230건). 그 상한
   var M = { sdk: "idle", wait: [], geo: null, map: null, mini: null, overlays: [], miniOv: [], token: 0, miniToken: 0, dirty: true, focus: null, pins: {}, sel: null };
   function msg(id, t) { var el = document.getElementById(id); el.hidden = !t; el.textContent = t || ""; }
-  function geoAddr(r) { return "충청북도 청주시 청원구 " + r.addr.replace(/\s*\d+블록.*$/, ""); }
+  function geoAddr(r) { return "충청북도 청주시 " + guOf(r) + " " + r.addr.replace(/\s*\d+블록.*$/, ""); }
   function cacheGet(k) { try { var v = localStorage.getItem("g1:" + k); return v === null ? undefined : JSON.parse(v); } catch (e) { return undefined; } }
   function cacheSet(k, v) { try { localStorage.setItem("g1:" + k, JSON.stringify(v)); } catch (e) {} }
   function geocode(r, cb) {
