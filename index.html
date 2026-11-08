@@ -309,7 +309,8 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   position: relative; margin: 12px 0 0; height: 420px; min-height: 320px;
   border: 1px solid var(--rule); border-radius: var(--r-card); background: var(--surface-2); overflow: hidden;
 }
-#map { position: absolute; inset: 0; }
+#map { position: absolute; inset: 0; touch-action: none; }
+#minimap { touch-action: none; }
 .dots { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 2; }
 .mapmsg {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
