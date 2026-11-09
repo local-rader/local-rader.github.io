@@ -449,7 +449,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 .mtable-wrap { overflow-x: auto; }
 
 /* 휴대폰·태블릿: 지도와 목록을 전환 버튼으로 오간다 */
-@media (max-width: 959px) {
+@media (max-width: 959px), (pointer: coarse) {
   .mapwrap[data-view="map"] .listpane { display: none; }
   .mapwrap[data-view="list"] .mapcol { display: none; }
   .mapcol { padding: 0 max(16px, env(safe-area-inset-left, 0px)); }
@@ -476,7 +476,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   .page-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); align-items: end; gap: 16px 32px; }
   .page-head .searchbox { margin: 0; }
 }
-@media (min-width: 960px) {
+@media (min-width: 960px) and (pointer: fine) {
   body { padding-bottom: 32px; }
   .bottomnav { display: none; }
   .topnav { display: flex; }
@@ -1276,7 +1276,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   document.getElementById("open-filter").addEventListener("click", openFilter);
   // 휴대폰·태블릿: 지도와 목록을 전환한다 (PC는 둘 다 보인다)
   var mapView = "map";
-  function isWide() { return !!(window.matchMedia && matchMedia("(min-width: 960px)").matches); }
+  function isWide() { return !!(window.matchMedia && matchMedia("(min-width: 960px) and (pointer: fine)").matches); }
   function setView(v) {
     mapView = v;
     document.getElementById("mapwrap").setAttribute("data-view", v);
