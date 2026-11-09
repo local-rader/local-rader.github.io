@@ -449,13 +449,21 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 .mtable-wrap { overflow-x: auto; }
 
 /* 휴대폰·태블릿: 지도와 목록을 전환 버튼으로 오간다 */
-@media (max-width: 959px), (pointer: coarse) {
+@media (max-width: 959px) {
   .mapwrap[data-view="map"] .listpane { display: none; }
   .mapwrap[data-view="list"] .mapcol { display: none; }
   .mapcol { padding: 0 max(16px, env(safe-area-inset-left, 0px)); }
   .side { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .mapbox { height: calc(100vh - var(--bar-h) - var(--nav-h) - 236px); }
   @supports (height: 100dvh) { .mapbox { height: calc(100dvh - var(--bar-h) - var(--nav-h) - 236px); } }
+}
+/* 터치 기기(패드)는 데스크톱 모드여도 같은 모바일 배치 */
+html.touch {
+  .mapwrap[data-view="map"] .listpane { display: none; }
+  .mapwrap[data-view="list"] .mapcol { display: none; }
+  .mapcol { padding: 0 max(16px, env(safe-area-inset-left, 0px)); }
+  .side { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .mapbox { height: calc(100dvh - var(--bar-h) - var(--nav-h) - 236px); }
 }
 
 /* ---------- 작은 화면 */
@@ -476,7 +484,8 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   .page-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); align-items: end; gap: 16px 32px; }
   .page-head .searchbox { margin: 0; }
 }
-@media (min-width: 960px) and (pointer: fine) {
+@media (min-width: 960px) {
+html:not(.touch) {
   body { padding-bottom: 32px; }
   .bottomnav { display: none; }
   .topnav { display: flex; }
@@ -497,7 +506,9 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   .sheet .grip { display: none; }
   body[data-screen="map"] .sheet { left: 0; right: auto; width: var(--side-w); border-left: 0; border-right: 1px solid var(--rule-2); box-shadow: 4px 0 16px rgba(15, 30, 51, .10); }
 }
+}
 </style>
+<script>if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("touch");</script>
 </head>
 <body data-screen="home">
 
@@ -1276,7 +1287,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
   document.getElementById("open-filter").addEventListener("click", openFilter);
   // 휴대폰·태블릿: 지도와 목록을 전환한다 (PC는 둘 다 보인다)
   var mapView = "map";
-  function isWide() { return !!(window.matchMedia && matchMedia("(min-width: 960px) and (pointer: fine)").matches); }
+  function isWide() { return !!(window.matchMedia && matchMedia("(min-width: 960px)").matches && !document.documentElement.classList.contains("touch")); }
   function setView(v) {
     mapView = v;
     document.getElementById("mapwrap").setAttribute("data-view", v);
