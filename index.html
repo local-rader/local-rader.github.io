@@ -1043,6 +1043,19 @@ html:not(.touch) {
   document.getElementById("sheet-x").onclick = closeSheet;
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
 
+  // 같은 지번의 다른 허가 기록을 모아 보여준다. 자료에 사업 고유번호가 없어서 '추정 묶음'으로만 표시한다.
+  function groupHTML(r) {
+    var others = rows.filter(function (x) { return x.pk !== r.pk && x.sg === r.sg && x.addr === r.addr; })
+      .sort(function (a, b) { return (b.pms || "").localeCompare(a.pms || ""); });
+    if (!others.length) return "";
+    var shown = others.slice(0, 10);
+    return "<h3>같은 지번의 다른 기록 " + others.length + "건 <small>(추정 묶음)</small></h3>" +
+      '<p class="item-note">자료에 사업 고유번호가 없어, 같은 지번의 기록을 같은 사업일 수 있는 것으로 모아 보여줍니다. 실제로 같은 사업인지는 세움터에서 확인하세요.</p>' +
+      '<ul class="grp-list">' + shown.map(function (x) {
+        return "<li>" + esc(x.pms || "날짜 없음") + " · " + esc(x.purp ? officialUse(x.purp) : "용도 기록 없음") + " · " + esc(STAGE[x.stage] || "") + "</li>";
+      }).join("") + "</ul>" + (others.length > 10 ? "<p class=\"item-note\">나머지 " + (others.length - 10) + "건은 세움터에서 확인하세요.</p>" : "");
+  }
+
   function openDetail(r) {
     var house = r.cat === "house" && r.fmly;
     var key = [["주용도", r.use], ["공사 종류", r.gb ? plainGb(r.gb) : "기록 없음"], ["연면적", area(r.area)],
@@ -1065,6 +1078,7 @@ html:not(.touch) {
       track(r) + (gap ? "<p>" + gap + "</p>" : "") +
       (r.stall ? '<p class="item-note">' + r.stall.note + "</p>" : est ? '<p class="item-note">' + est.note + "</p>" : "") +
       '<div class="acts"><button type="button" class="btn solid" id="sh-map">' + (screen === "map" ? "지도에서 위치 보기" : "개발지도에서 보기") + '</button><button type="button" class="btn" id="sh-share">링크 공유</button><button type="button" class="btn" id="sh-fav">' + (state.fav[r.pk] ? "관심 필지 해제" : "관심 필지로 등록") + '</button></div>' +
+      groupHTML(r) +
       '<h3>자세한 내용</h3><dl class="more-facts">' + more.map(function (x) { return "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>" +
       "<p>원문은 세움터에서 대지위치로 확인할 수 있습니다.</p>";
     openSheet("detail", r.addr, html);
@@ -1399,8 +1413,12 @@ html:not(.touch) {
   var M = { sdk: "idle", wait: [], geo: null, map: null, mini: null, overlays: [], miniOv: [], token: 0, miniToken: 0, dirty: true, focus: null, pins: {}, sel: null };
   function msg(id, t) { var el = document.getElementById(id); el.hidden = !t; el.textContent = t || ""; }
   function geoAddr(r) { return "충청북도 청주시 " + guOf(r) + " " + r.addr.replace(/\s*\d+블록.*$/, ""); }
-  function cacheGet(k) { try { var v = localStorage.getItem("g1:" + k); return v === null ? undefined : JSON.parse(v); } catch (e) { return undefined; } }
-  function cacheSet(k, v) { try { localStorage.setItem("g1:" + k, JSON.stringify(v)); } catch (e) {} }
+  // 카카오 약관상 주소·좌표 결과를 오래 저장할 수 없어서, 화면이 열려 있는 동안만 메모리에 둔다 (브라우저 저장소에 남기지 않음)
+  var GEO_MEM = {};
+  // 예전에 남아 있던 주소·좌표 저장분을 지운다
+  try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf("g1:") === 0) localStorage.removeItem(k); }); } catch (e) {}
+  function cacheGet(k) { return Object.prototype.hasOwnProperty.call(GEO_MEM, k) ? GEO_MEM[k] : undefined; }
+  function cacheSet(k, v) { GEO_MEM[k] = v; }
   function geocode(r, cb) {
     if (r.lat && r.lng) return cb([r.lat, r.lng]);
     var k = geoAddr(r), c = cacheGet(k);
@@ -2063,7 +2081,8 @@ html:not(.touch) {
   })();
 
   document.getElementById("foot").textContent = "자료 출처: " + (meta.source || "국토교통부 건축HUB 건축인허가정보 서비스") + " (공공데이터포털)" +
-    (meta.parcels ? ", 필지 위치·개별공시지가: 국토교통부 2D데이터 API 연속지적도 (공공누리 제1유형)" : "") + ". 지도: 카카오맵. 동네레이더는 개인이 만든 비공식 서비스입니다.";
+    (meta.parcels ? ", 필지 위치·개별공시지가: 국토교통부 2D데이터 API 연속지적도 (공공누리 제1유형)" : "") + ". 지도: 카카오맵. 동네레이더는 개인이 만든 비공식 서비스입니다. ";
+  var pl = document.createElement("a"); pl.href = "privacy.html"; pl.textContent = "개인정보처리방침·면책 안내"; document.getElementById("foot").appendChild(pl);
 
   drawPlace(); drawPeriods(); filterSummary();
   route();
