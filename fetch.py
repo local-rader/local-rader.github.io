@@ -653,6 +653,15 @@ def main(argv):
                 save(CODES, codes)
     elif cmd == "update":
         update(api_key(), since)
+    elif cmd == "keys":
+        # 점검용: 응답 항목 이름만 출력한다 (값·이름은 출력하지 않음)
+        key, codes = api_key(), load_codes()
+        sg, area = next(iter(AREAS))
+        bj = next(iter(codes["areas"][sg]["codes"].keys()))  # 법정동 코드 하나
+        total, items = call(key, sg, bj, rows=3, since=since or "20260901")
+        print("총건수", total, "표본", len(items))
+        names = sorted({k for it in items for k in it.keys()})
+        print("응답 항목:", ", ".join(names))
     elif cmd == "parcels":
         parcels()
     elif cmd == "build":
