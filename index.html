@@ -46,7 +46,7 @@
   --r-ctl: 8px;
   --r-pill: 999px;
   --bar-h: 56px;
-  --nav-h: 62px;
+  --nav-h: 0px;
   --side-w: 400px;
   --font: "IBM Plex Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   color-scheme: light;
@@ -88,11 +88,12 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* ---------- 공통: 위 바, 메뉴 */
 .appbar { position: sticky; top: 0; z-index: 30; background: var(--surface); border-bottom: 1px solid var(--rule); }
-.appbar-in { display: flex; align-items: center; gap: 16px; height: var(--bar-h); }
+.appbar-in { display: flex; align-items: center; gap: 6px 16px; flex-wrap: wrap; min-height: var(--bar-h); padding-top: 6px; padding-bottom: 6px; }
 .brand { display: flex; align-items: center; gap: 8px; border: 0; background: none; padding: 6px 0; cursor: pointer; min-width: 0; color: var(--brand); }
 .brand svg { flex: none; }
-.brand span { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
-.topnav { display: none; gap: 4px; margin-left: 12px; height: 100%; }
+.brand .logo-mark { width: 40px; height: 40px; }
+.brand span { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+.topnav { display: flex; order: 3; width: 100%; gap: 2px; overflow-x: auto; scrollbar-width: none; border-top: 1px solid var(--rule); }
 .topnav a {
   display: flex; align-items: center; padding: 0 14px; text-decoration: none; color: var(--ink-2); font-weight: 500;
   border-bottom: 3px solid transparent; margin-bottom: -1px;
@@ -100,6 +101,7 @@ h1, h2, h3 { text-wrap: balance; }
 .topnav a[aria-current="page"] { color: var(--brand); border-bottom-color: var(--brand); font-weight: 700; }
 .place { margin-left: auto; flex: 0 1 200px; max-width: 55%; }
 .bottomnav {
+  display: none;
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--surface); border-top: 1px solid var(--rule);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -310,7 +312,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 .list-head h2 { margin: 0; font-size: 16px; font-weight: 700; }
 .list-head .acts2 { display: flex; gap: 14px; }
 .mapcol { position: relative; }
-.mapfull { position: absolute; left: 10px; top: 10px; z-index: 6; border: 1px solid var(--rule-2); background: var(--surface); color: var(--ink); border-radius: var(--r-ctl); padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; min-height: 36px; }
+.mapfull { position: absolute; right: 10px; bottom: 10px; z-index: 6; border: 1px solid var(--rule-2); background: var(--surface); color: var(--ink-2); border-radius: var(--r-ctl); padding: 4px 9px; font-size: 12px; font-weight: 600; cursor: pointer; opacity: .92; }
 body.map-full .appbar, body.map-full .bottomnav, body.map-full .side, body.map-full .topnav, body.map-full .mapcol > p, body.map-full .maplegend { display: none !important; }
 body.map-full .mapwrap { display: block !important; height: auto !important; padding: 0 !important; max-width: none; }
 body.map-full .mapcol { padding: 0 !important; position: fixed; inset: 0; z-index: 40; background: var(--surface-2); }
@@ -482,7 +484,7 @@ html.touch {
   .item > button { grid-template-columns: 46px minmax(0, 1fr) auto; }
   .kpi .kv { font-size: 25px; }
   .seg button { padding-inline: 11px; }
-  .brand span { font-size: 20px; }
+  .brand span { font-size: 24px; }
 }
 
 /* ---------- 넓은 화면: 위 메뉴, 지도·목록 좌우 배치, 상세는 옆 패널 */
@@ -497,8 +499,8 @@ html.touch {
 @media (min-width: 960px) {
 html:not(.touch) {
   body { padding-bottom: 32px; }
-  .bottomnav { display: none; }
-  .topnav { display: flex; }
+  .topnav { display: flex; order: 0; width: auto; margin-left: 12px; height: 100%; overflow: visible; border-top: 0; }
+  .appbar-in { flex-wrap: nowrap; height: var(--bar-h); padding: 0; }
   .totop { bottom: 20px; }
   .grid-2 { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
   .grid-2.even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
