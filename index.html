@@ -180,6 +180,10 @@ h1, h2, h3 { text-wrap: balance; }
 .page-head .eyebrow { margin: 0 0 4px; color: var(--accent); font-size: 13px; font-weight: 500; }
 .page-head h1 { margin: 0; font-size: 22px; line-height: 1.35; font-weight: 700; letter-spacing: -0.01em; }
 .page-head .lede { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; }
+.side-brand, .sheet-brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 14px; }
+.side-brand { margin: 0 0 10px; }
+.side-brand b, .sheet-brand b { font-weight: 700; color: var(--ink); }
+.sheet-brand { margin-right: 8px; }
 .asof { display: inline-flex; align-items: center; gap: 6px; margin: 10px 0 0; padding: 3px 10px; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 500; }
 .asof::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .stamp { margin: 6px 0 0; color: var(--ink-3); font-size: 13px; }
@@ -610,6 +614,7 @@ html:not(.touch) {
   <section class="screen" id="scr-map" aria-label="개발지도" hidden>
     <div class="mapwrap" id="mapwrap" data-view="map">
       <aside class="side" aria-label="검색과 목록">
+        <span class="side-brand" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 48 48"><path d="M8 25 L24 12 L40 25" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><rect x="20.6" y="17.8" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="24.6" y="17.8" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="20.6" y="21" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="24.6" y="21" width="2.8" height="2.8" rx=".6" fill="currentColor"/><path d="M5 32 L24 24 L43 32 L24 40 Z" fill="#4DA8FF"/></svg><b>터놓고</b></span>
         <div class="side-tools">
           <form class="searchbox" id="map-search" role="search">
             <div class="field">
@@ -746,7 +751,7 @@ html:not(.touch) {
 <section class="sheet" id="sheet" role="dialog" aria-labelledby="sheet-h" hidden>
   <div class="wrap">
     <div class="grip" aria-hidden="true"></div>
-    <div class="sheet-bar"><h2 id="sheet-h"></h2><button type="button" class="x" id="sheet-x" aria-label="닫기">✕</button></div>
+    <div class="sheet-bar"><span class="sheet-brand" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 48 48"><path d="M8 25 L24 12 L40 25" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><rect x="20.6" y="17.8" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="24.6" y="17.8" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="20.6" y="21" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="24.6" y="21" width="2.8" height="2.8" rx=".6" fill="currentColor"/><path d="M5 32 L24 24 L43 32 L24 40 Z" fill="#4DA8FF"/></svg><b>터놓고</b></span><h2 id="sheet-h"></h2><button type="button" class="x" id="sheet-x" aria-label="닫기">✕</button></div>
     <div id="sheet-body"></div>
   </div>
 </section>
