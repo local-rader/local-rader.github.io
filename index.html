@@ -225,6 +225,21 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 .k-stall { --k: var(--s-stall); }
 .k-stall .kv { color: var(--s-stall-ink); }
 .hint { margin: 12px 0 0; font-size: 13px; color: var(--ink-3); }
+/* 월간 브리핑 */
+.brief-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.bk { position: relative; border: 1px solid var(--rule); background: var(--surface-2); border-radius: var(--r-ctl); padding: 10px 10px 10px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bk::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 2px; background: var(--k, var(--brand)); }
+.bk .kl { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.bk .kv { font-size: 24px; line-height: 1.2; font-weight: 700; color: var(--ink); }
+.bk .kv small { font-size: 13px; font-weight: 500; color: var(--ink-3); margin-left: 2px; }
+.bk .dl { font-size: 12px; color: var(--ink-3); line-height: 1.45; }
+.bk .dl b { font-weight: 600; color: var(--ink-2); }
+.brief-facts { margin: 14px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--ink-2); }
+.brief-facts li { padding: 6px 0 6px 14px; position: relative; }
+.brief-facts li::before { content: ""; position: absolute; left: 2px; top: 14px; width: 5px; height: 5px; border-radius: 50%; background: var(--rule-2); }
+.brief-facts b { color: var(--ink); font-weight: 600; }
+.brief-sub { margin: 14px 0 2px; font-size: 14px; font-weight: 700; color: var(--ink-2); }
+.brief-acts { margin: 12px 0 0; }
 .minimap { position: relative; height: 260px; border-radius: var(--r-ctl); overflow: hidden; background: var(--surface-2); border: 1px solid var(--rule); }
 #minimap { position: absolute; inset: 0; }
 .entry { display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; }
@@ -317,6 +332,13 @@ body.map-full .appbar, body.map-full .bottomnav, body.map-full .side, body.map-f
 body.map-full .mapwrap { display: block !important; height: auto !important; padding: 0 !important; max-width: none; }
 body.map-full .mapcol { padding: 0 !important; position: fixed; inset: 0; z-index: 40; background: var(--surface-2); }
 body.map-full .mapbox { position: fixed !important; inset: 0 !important; height: 100dvh !important; margin: 0 !important; border: 0 !important; border-radius: 0 !important; }
+/* 전체 화면에서 점을 누르면: 넓은 화면은 오른쪽 패널(지도는 그만큼 좁아짐), 좁은 화면은 아래 시트 */
+body.map-full .sheet { z-index: 50; }
+@media (min-width: 900px) {
+  :root body.map-full[data-screen="map"] .sheet { left: auto; right: 0; top: 0; bottom: 0; width: 420px; max-height: none; border-radius: 0; border-top: 0; border-right: 0; border-left: 1px solid var(--rule-2); box-shadow: -4px 0 16px rgba(15, 30, 51, .12); }
+  :root body.map-full .sheet .grip { display: none; }
+  body.map-full.sheet-open .mapbox { right: 420px !important; }
+}
 .mapbox {
   position: relative; margin: 12px 0 0; height: 420px; min-height: 320px;
   border: 1px solid var(--rule); border-radius: var(--r-card); background: var(--surface-2); overflow: hidden;
@@ -404,12 +426,19 @@ body.map-full .mapbox { position: fixed !important; inset: 0 !important; height:
 .bars .v { text-align: right; min-width: 3.5em; font-weight: 500; }
 .bars .track2 { height: 12px; background: var(--surface-2); border-radius: 2px; display: flex; overflow: hidden; }
 .bars .seg2 { height: 100%; }
+.fbars { display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; }
+.fbars .fh { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.fbars .k { color: var(--ink-2); }
+.fbars .v { font-weight: 500; white-space: nowrap; }
+.fbars .track2 { display: flex; height: 10px; margin-top: 5px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
+.fbars .seg2 { height: 100%; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 12px 0 0; font-size: 12.5px; color: var(--ink-2); }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .facts { margin: 0; padding: 0; list-style: none; }
 .facts li { padding: 12px 0; border-top: 1px solid var(--rule); font-size: 14px; color: var(--ink-2); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .facts li:first-child { border-top: 0; padding-top: 0; }
 .facts b { color: var(--ink); font-size: 20px; }
+.facts li.small { font-size: 13px; color: var(--ink-3); }
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .tile {
   position: relative; border: 1px solid var(--rule); background: var(--surface); border-radius: var(--r-ctl); padding: 10px 10px 10px 14px;
@@ -573,6 +602,16 @@ html:not(.touch) {
         <p class="hint">지표를 누르면 해당 기록을 개발지도에서 볼 수 있습니다. 장기 미진행은 기간과 상관없이 데이터 기준일 현재 값입니다.</p>
       </article>
 
+      <article class="card brief" aria-labelledby="brief-h">
+        <div class="card-head"><h2 id="brief-h">월간 브리핑</h2><span class="meta" id="brief-meta"></span></div>
+        <div class="brief-kpis" id="brief-kpis"></div>
+        <ul class="brief-facts" id="brief-facts"></ul>
+        <h3 class="brief-sub" id="brief-top-h" hidden>이 달 새로 허가된 큰 건물</h3>
+        <div class="group" id="brief-top"></div>
+        <div class="brief-acts"><button type="button" class="btn" id="brief-map">이 달 기록을 개발지도에서 보기</button></div>
+        <p class="hint" id="brief-note"></p>
+      </article>
+
       <div class="grid-2">
         <article class="card" aria-labelledby="minimap-h" style="display:flex;flex-direction:column">
           <div class="card-head"><h2 id="minimap-h">주요 개발 위치</h2><a href="#map" class="linkbtn" id="go-map">개발지도 열기 →</a></div>
@@ -595,7 +634,7 @@ html:not(.touch) {
         <a class="card entry" href="#analysis">
           <div class="card-head"><h2>지역 분석</h2></div>
           <b id="home-ana"></b>
-          <span class="why">동네별·용도별 신규 허가, 연도별 추이, 허가부터 착공까지 걸린 기간</span>
+          <span class="why">동네별·용도별 신규 허가, 연도별 추이, 허가받은 곳이 실제로 착공·완공까지 간 비율</span>
           <span class="go">지역 분석 보기 →</span>
         </a>
       </div>
@@ -697,6 +736,7 @@ html:not(.touch) {
     <div class="wrap narrow screen-pad">
       <div class="subtabs" role="tablist" aria-label="분석 종류">
         <button type="button" role="tab" id="sub-stats" aria-controls="pane-stats" data-sub="stats">지역 통계</button>
+        <button type="button" role="tab" id="sub-flow" aria-controls="pane-flow" data-sub="flow">진행 흐름</button>
         <button type="button" role="tab" id="sub-stall" aria-controls="pane-stall" data-sub="stall">장기 미진행</button>
       </div>
 
@@ -729,6 +769,41 @@ html:not(.touch) {
           </article>
         </div>
         <p class="panel-note" id="s-sub" style="margin-top:14px"></p>
+      </div>
+
+      <div class="pane" id="pane-flow" role="tabpanel" aria-labelledby="sub-flow" hidden>
+        <div class="sec-head"><h2 class="sec" id="fl-h">허가 이후 진행 흐름</h2><span id="fl-asof"></span></div>
+        <p class="panel-note">허가를 받은 건물이 실제로 착공하고 사용승인까지 갔는지 비율로 봅니다. 착공 신고를 하는 공사(신축·증축·개축·재축·이전)만 세고, 기간 선택과 상관없이 2023년부터 전체 자료로 계산합니다. 위에서 고른 동네는 반영됩니다.</p>
+        <article class="card">
+          <div class="card-head"><h3 id="fl-sum-h">허가 후 2년이 지난 곳</h3></div>
+          <ul class="facts" id="fl-sum"></ul>
+        </article>
+        <article class="card">
+          <div class="card-head"><h3>허가 시기별 진행 비율</h3></div>
+          <p class="card-desc">기준일 현재 착공·사용승인 기록이 있는 비율입니다. 최근에 허가된 곳일수록 공사할 시간이 짧아 비율이 낮게 나옵니다.</p>
+          <div class="fbars" id="fl-cohort"></div>
+          <div class="legend"><span><i style="background:var(--s-done)"></i>사용승인까지</span><span><i style="background:var(--s-work)"></i>착공만</span><span><i style="background:var(--rule-2)"></i>착공 기록 없음</span><span>숫자: 착공 비율 / 사용승인 비율</span></div>
+        </article>
+        <article class="card">
+          <div class="card-head"><h3>허가 후 1년 안에 착공한 비율</h3></div>
+          <p class="card-desc">모든 시기를 똑같이 ‘허가 후 1년’으로 잘라 비교합니다. 착공이 빨라지는지 느려지는지 볼 수 있고, 1년이 다 지난 시기만 보여줍니다.</p>
+          <div class="fbars" id="fl-year1"></div>
+        </article>
+        <div class="grid-2 even" style="margin-top:16px">
+          <article class="card">
+            <div class="card-head"><h3>용도별 (허가 후 2년 지난 곳)</h3></div>
+            <div class="fbars" id="fl-cat"></div>
+          </article>
+          <article class="card">
+            <div class="card-head"><h3 id="fl-area-h"></h3></div>
+            <p class="card-desc" id="fl-area-desc"></p>
+            <div class="fbars" id="fl-area"></div>
+          </article>
+        </div>
+        <div class="disclaimer">
+          <p>착공일과 사용승인일이 늦게 입력되거나 빠진 기록이 있어 실제보다 비율이 낮게 나올 수 있습니다. 허가가 취소됐는지는 공개자료에 없어서, ‘착공 기록 없음’에는 취소된 곳과 아직 준비 중인 곳이 섞여 있습니다.</p>
+          <p>증축은 기존 건물에 덧붙이는 공사라 신축과 진행 방식이 다를 수 있습니다. 건수가 적은 동네의 비율은 몇 건만 바뀌어도 크게 달라지니 참고로만 보세요.</p>
+        </div>
       </div>
 
       <div class="pane" id="pane-stall" role="tabpanel" aria-labelledby="sub-stall" hidden>
@@ -1045,16 +1120,23 @@ html:not(.touch) {
     var s = document.getElementById("sheet");
     s.classList.toggle("short", kind === "detail" && screen === "map");
     s.hidden = false; s.scrollTop = 0;
+    var was = document.body.classList.contains("sheet-open");
+    document.body.classList.add("sheet-open");
+    if (!was) mapResized();
   }
   function closeSheet() {
     var s = document.getElementById("sheet");
     if (s.hidden) return;
     s.hidden = true; sheetKind = ""; markCurrent(null); highlight(null);
+    document.body.classList.remove("sheet-open"); mapResized();
     if (sheetReturn && document.body.contains(sheetReturn)) sheetReturn.focus();
     sheetReturn = null;
   }
   document.getElementById("sheet-x").onclick = closeSheet;
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeSheet(); });
+  // Esc: 열린 상세를 먼저 닫고, 그다음 Esc에 전체 화면을 나간다
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !document.getElementById("sheet").hidden) { closeSheet(); e.preventDefault(); }
+  });
 
   // 같은 지번의 다른 허가 기록을 모아 보여준다. 자료에 사업 고유번호가 없어서 '추정 묶음'으로만 표시한다.
   function groupHTML(r) {
@@ -1207,8 +1289,64 @@ html:not(.touch) {
     });
     var top = Object.keys(ac).sort(function (a, b) { return ac[b] - ac[a]; })[0];
     document.getElementById("home-ana").textContent = top ? "신규 허가 최다 " + top + " " + nf(ac[top]) + "건" : periodName() + " 신규 허가 없음";
+    drawBrief();
     drawMini();
   }
+
+  // ---------- 월간 브리핑: 자료에 다 들어온 가장 최근 한 달을 전달·작년 같은 달과 비교한다
+  // 기준일이 달의 마지막 날이면 그 달, 아니면(달 중간이면) 그 전 달을 쓴다.
+  var BM = lastDay(END.slice(0, 7)) === END ? END.slice(0, 7) : addMonths(END.slice(0, 7), -1);
+  function monthName(ym) { return (+ym.slice(5, 7)) + "월"; }
+  function drawBrief() {
+    var pl = placeLabel(), prev = addMonths(BM, -1), ly = addMonths(BM, -12), hasLy = ly >= MONTHS[0];
+    document.getElementById("brief-h").textContent = ymLabel(BM) + " 브리핑";
+    document.getElementById("brief-meta").textContent = pl + " · 전달, 작년 같은 달과 비교";
+    var base = rows.filter(function (r) { return (state.blank || r.known) && placeOk(r); });
+    function count(ev, ym) { var n = 0; base.forEach(function (r) { if (r[ev] && r[ev].slice(0, 7) === ym) n++; }); return n; }
+    function diff(a, b) { var d = a - b; return d > 0 ? "+" + nf(d) : d < 0 ? "−" + nf(-d) : "같음"; }
+    var K = [{ v: "pms", t: "신규 허가", cls: "k-permit" }, { v: "stcns", t: "착공", cls: "k-work" }, { v: "apr", t: "사용승인", cls: "k-done" }];
+    document.getElementById("brief-kpis").innerHTML = K.map(function (k) {
+      var n = count(k.v, BM), p = count(k.v, prev), y = hasLy ? count(k.v, ly) : null;
+      return '<div class="bk ' + k.cls + '"><span class="kl">' + k.t + '</span><span class="kv">' + nf(n) + "<small>건</small></span>" +
+        '<span class="dl">' + monthName(prev) + "보다 <b>" + diff(n, p) + "</b>" + (y != null ? '<br><span title="작년 ' + monthName(ly) + '">작년보다</span> <b>' + diff(n, y) + "</b>" : "") + "</span></div>";
+    }).join("");
+
+    // 신규 허가가 가장 많은 동네, 늘어난 집
+    var lv = placeLevel(), ac = {}, fam = 0, hh = 0;
+    base.forEach(function (r) {
+      if (!r.pms || r.pms.slice(0, 7) !== BM) return;
+      var a = lv === 0 ? r.place.split(" ")[0] : groupKey(r, lv); ac[a] = (ac[a] || 0) + 1;
+      if (NEW[r.gb]) { if (r.cat === "house") fam += +r.fmly || 0; hh += +r.hhld || 0; }
+    });
+    var al = Object.keys(ac).sort(function (a, b) { return ac[b] - ac[a] || a.localeCompare(b, "ko"); });
+    var facts = [];
+    if (al.length > 1) facts.push("신규 허가가 가장 많은 곳은 <b>" + esc(al[0]) + " " + nf(ac[al[0]]) + "건</b>" +
+      (al.length > 2 ? ", 그다음 " + al.slice(1, 3).map(function (a) { return esc(a) + " " + nf(ac[a]) + "건"; }).join(", ") : "") + "입니다.");
+    if (fam) facts.push("새로 허가된 단독·다가구주택은 <b>" + nf(fam) + "가구</b>입니다.");
+    if (hh) facts.push("세대수가 기록된 새 건물은 모두 <b>" + nf(hh) + "세대</b>입니다.");
+    var pn = count("pms", BM), pp = count("pms", prev);
+    if (!pn) facts.push(monthName(BM) + "에는 신규 허가 기록이 없습니다.");
+    else if (pp) {
+      var chg = Math.round(Math.abs(pn - pp) / pp * 100);
+      facts.push("신규 허가는 " + monthName(prev) + "보다 " + (chg === 0 ? "<b>비슷합니다</b>." : "<b>" + nf(chg) + "% " + (pn > pp ? "많습니다" : "적습니다") + "</b>."));
+    }
+    document.getElementById("brief-facts").innerHTML = facts.map(function (f) { return "<li>" + f + "</li>"; }).join("");
+
+    // 이 달 새로 허가된 큰 건물 (새로 짓는 공사만, 같은 지번은 한 번)
+    var seen = {};
+    var big = base.filter(function (r) { return NEW[r.gb] && r.area > 0 && r.pms.slice(0, 7) === BM; })
+      .sort(function (a, b) { return b.area - a.area; })
+      .filter(function (r) { if (seen[r.addr]) return false; seen[r.addr] = 1; return true; }).slice(0, 3);
+    var tb = document.getElementById("brief-top");
+    document.getElementById("brief-top-h").hidden = !big.length;
+    tb.innerHTML = big.map(function (r) { return itemHtml(r, md(r.pms)); }).join("");
+    bindItems(tb);
+    document.getElementById("brief-note").textContent = "국토교통부 자료는 한 달가량 늦게 채워져서, 다음 반영 때 " + monthName(BM) + " 숫자가 조금 늘 수 있습니다. 증축·용도변경은 큰 건물 목록에서 뺐습니다.";
+  }
+  document.getElementById("brief-map").addEventListener("click", function () {
+    state.period = "custom"; state.from = BM; state.to = BM; state.ev = "all"; state.openM = null;
+    changed(); location.hash = "#map";
+  });
   document.getElementById("go-big").addEventListener("click", function () { state.sort = "big"; state.ev = "all"; state.openM = null; remember(); M.dirty = true; });
   document.getElementById("home-search").addEventListener("submit", function (e) {
     e.preventDefault();
@@ -2021,11 +2159,97 @@ html:not(.touch) {
   // ---------- 지역 분석: 지역 통계와 멈춘 기록
   var sub = "stats";
   function drawAnalysis() {
-    ["stats", "stall"].forEach(function (k) {
+    ["stats", "flow", "stall"].forEach(function (k) {
       document.getElementById("pane-" + k).hidden = k !== sub;
       document.getElementById("sub-" + k).setAttribute("aria-selected", String(k === sub));
     });
-    if (sub === "stats") drawStats(); else drawStall();
+    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else drawStall();
+  }
+
+  // ---------- 진행 흐름: 허가받은 곳이 실제로 착공·사용승인까지 갔는지
+  function pct(a, n) { return n ? Math.round(a / n * 100) : 0; }
+  function tally(list) {
+    var t = { n: list.length, s: 0, a: 0 };
+    list.forEach(function (r) { if (r.stcns) t.s++; if (r.apr) t.a++; });
+    return t;
+  }
+  // 100% 막대: 사용승인까지 / 착공만 / 착공 기록 없음
+  function flowBar(k, t) {
+    return { k: k, label: pct(t.s, t.n) + "% / " + pct(t.a, t.n) + "% · " + nf(t.n) + "건",
+      segs: [[t.a / t.n * 100, "var(--s-done)"], [(t.s - t.a) / t.n * 100, "var(--s-work)"], [(t.n - t.s) / t.n * 100, "var(--rule-2)"]] };
+  }
+  // 휴대폰에서도 막대가 보이도록 이름·숫자 줄 아래에 막대를 둔다 (segs는 백분율)
+  function fbars(el, list) {
+    el.innerHTML = list.map(function (x) {
+      return '<div class="fb"><div class="fh"><span class="k">' + esc(x.k) + '</span><span class="v">' + x.label + '</span></div>' +
+        '<span class="track2" role="img" aria-label="' + esc(x.k + " " + x.label) + '">' +
+        x.segs.map(function (s) { return '<span class="seg2" style="width:' + s[0] + "%;background:" + s[1] + '"></span>'; }).join("") + "</span></div>";
+    }).join("");
+  }
+  function halfOf(d) { return d.slice(0, 4) + (+d.slice(5, 7) <= 6 ? "-1" : "-2"); }
+  function halfLabel(h) { return h.slice(0, 4) + " " + (h.slice(5) === "1" ? "상반기" : "하반기"); }
+  function halfEnd(h) { return h.slice(0, 4) + (h.slice(5) === "1" ? "-06-30" : "-12-31"); }
+  function drawFlow() {
+    var pl = state.place === "all" ? REGION + " 전체" : state.place;
+    document.getElementById("fl-h").textContent = "허가 이후 진행 흐름 · " + pl;
+    document.getElementById("fl-asof").textContent = dot(END) + " 기준";
+    var base = rows.filter(function (r) { return BUILD[r.gb] && r.known && r.pms && placeOk(r); });
+    var cut2 = shift(END, -2), cut1 = shift(END, -1);
+    var mature = base.filter(function (r) { return r.pms <= cut2; });
+
+    // 요약: 허가 후 2년이 지난 곳
+    var mt = tally(mature);
+    document.getElementById("fl-sum-h").textContent = "허가 후 2년이 지난 곳 (" + dot(cut2) + " 이전 허가 " + nf(mt.n) + "건)";
+    var g = []; mature.forEach(function (r) { if (r.stcns) { var d = days(r.pms, r.stcns); if (d >= 0) g.push(d); } });
+    var m = median(g);
+    document.getElementById("fl-sum").innerHTML = mt.n ?
+      "<li><b>" + pct(mt.s, mt.n) + "%</b>착공 기록이 있는 곳</li>" +
+      "<li><b>" + pct(mt.a, mt.n) + "%</b>사용승인까지 간 곳</li>" +
+      "<li><b>" + pct(mt.n - mt.s, mt.n) + "%</b>2년이 넘도록 착공 기록이 없는 곳 (" + nf(mt.n - mt.s) + "건)</li>" +
+      (m != null ? "<li><b>약 " + nf(m) + "일</b>착공한 곳이 허가부터 착공까지 걸린 기간의 중앙값</li>" : "") +
+      (mt.n < 30 ? '<li class="small">건수가 적어 비율이 크게 흔들릴 수 있습니다.</li>' : "")
+      : '<li>이 동네는 허가 후 2년이 지난 기록이 아직 없습니다.</li>';
+
+    // 허가 시기(반기)별
+    var hs = {}; base.forEach(function (r) { var h = halfOf(r.pms); (hs[h] = hs[h] || []).push(r); });
+    var hk = Object.keys(hs).sort();
+    var lastH = halfOf(END);
+    var co = document.getElementById("fl-cohort");
+    if (!hk.length) co.innerHTML = '<p class="empty">기록이 없습니다.</p>';
+    else fbars(co, hk.map(function (h) {
+      var k = halfLabel(h) + (h === lastH && halfEnd(h) > END ? " (" + (+END.slice(5, 7)) + "월까지)" : "") + (halfEnd(h) > cut2 ? " · 진행 중" : "");
+      return flowBar(k, tally(hs[h]));
+    }), 100);
+
+    // 허가 후 1년 안 착공: 반기가 끝나고 1년이 다 지난 시기만
+    var y1 = hk.filter(function (h) { return halfEnd(h) <= cut1; });
+    var ye = document.getElementById("fl-year1");
+    if (!y1.length) ye.innerHTML = '<p class="empty">아직 1년이 다 지난 시기가 없습니다.</p>';
+    else fbars(ye, y1.map(function (h) {
+      var list = hs[h], ok = 0;
+      list.forEach(function (r) { if (r.stcns && days(r.pms, r.stcns) <= 365) ok++; });
+      return { k: halfLabel(h), label: pct(ok, list.length) + "% · " + nf(list.length) + "건", segs: [[pct(ok, list.length), "var(--s-work)"]] };
+    }), 100);
+
+    // 용도별 (2년 지난 곳, 10건 이상)
+    var cl = CATS.filter(function (c) { return c.id !== "none"; }).map(function (c) {
+      return { c: c, t: tally(mature.filter(function (r) { return r.cat === c.id; })) };
+    }).filter(function (x) { return x.t.n >= 10; }).sort(function (a, b) { return b.t.n - a.t.n; });
+    var ce = document.getElementById("fl-cat");
+    if (!cl.length) ce.innerHTML = '<p class="empty">10건 이상인 용도가 없습니다.</p>';
+    else fbars(ce, cl.map(function (x) { return flowBar(x.c.name, x.t); }), 100);
+
+    // 동네별 (2년 지난 곳, 착공 비율 높은 순)
+    var lv = placeLevel(), min = lv === 2 ? 5 : 15, ga = {};
+    mature.forEach(function (r) { var a = groupKey(r, lv); (ga[a] = ga[a] || []).push(r); });
+    var al = Object.keys(ga).map(function (a) { return { a: a, t: tally(ga[a]) }; })
+      .filter(function (x) { return x.t.n >= min; })
+      .sort(function (a, b) { return b.t.s / b.t.n - a.t.s / a.t.n || b.t.n - a.t.n; });
+    document.getElementById("fl-area-h").textContent = groupTitle(lv) + " 진행 비율 (허가 후 2년 지난 곳)";
+    document.getElementById("fl-area-desc").textContent = "착공 비율이 높은 순서. " + min + "건 이상인 곳만 보여줍니다.";
+    var ae = document.getElementById("fl-area");
+    if (!al.length) ae.innerHTML = '<p class="empty">' + min + "건 이상인 곳이 없습니다.</p>";
+    else fbars(ae, al.map(function (x) { return flowBar(x.a, x.t); }), 100);
   }
   document.querySelectorAll(".subtabs [data-sub]").forEach(function (b) {
     b.onclick = function () { location.hash = "#" + b.getAttribute("data-sub"); };
@@ -2038,7 +2262,7 @@ html:not(.touch) {
     var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h), target = h, sharedItem = null;
     if (m) { sharedItem = byPk[decodeURIComponent(m[1])] || null; target = "map"; }
     if (target === "list") target = "map";
-    if (target === "stats" || target === "stall") { sub = target; target = "analysis"; }
+    if (target === "stats" || target === "flow" || target === "stall") { sub = target; target = "analysis"; }
     else if (target === "analysis") sub = "stats";
     if (!TITLES[target]) target = "home";
     var moved = target !== screen;
@@ -2071,10 +2295,22 @@ html:not(.touch) {
   function setMapFull(on) {
     document.body.classList.toggle("map-full", on);
     var b = document.getElementById("map-full"); b.textContent = on ? "나가기" : "전체 화면"; b.setAttribute("aria-pressed", on ? "true" : "false");
-    if (M.map) setTimeout(function () { M.map.relayout(); dotsLater(); }, 50);
+    if (M.map) setTimeout(function () { M.map.relayout(); dotsLater(); keepSelected(); }, 50);
+  }
+  // 전체 화면에서 오른쪽 패널이 열리고 닫히면 지도 크기가 바뀐다. 고른 점이 패널 밖으로 밀려나면 다시 보이게 옮긴다.
+  function mapResized() {
+    if (!M.map || screen !== "map" || !document.body.classList.contains("map-full")) return;
+    setTimeout(function () { M.map.relayout(); dotsLater(); keepSelected(); }, 30);
+  }
+  function keepSelected() {
+    var i = M.sel ? DOTS.idx[M.sel] : undefined; if (i === undefined) return;
+    try {
+      var p = DOTS.pts[i], ll = new kakao.maps.LatLng(p.lat, p.lng);
+      if (!M.map.getBounds().contain(ll)) M.map.panTo(ll);
+    } catch (e) {}
   }
   document.getElementById("map-full").addEventListener("click", function () { setMapFull(!document.body.classList.contains("map-full")); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && document.body.classList.contains("map-full")) setMapFull(false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !e.defaultPrevented && document.body.classList.contains("map-full")) setMapFull(false); });
   function setTitle() { document.getElementById("appbar-title").textContent = "터놓고"; }
   var rsz; window.addEventListener("resize", function () { clearTimeout(rsz); rsz = setTimeout(function () { setTitle(); if (screen === "map" && M.map) M.map.relayout(); }, 150); });
   document.getElementById("brand").onclick = function () { if (location.hash !== "#home") location.hash = "#home"; else window.scrollTo(0, 0); };
