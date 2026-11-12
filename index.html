@@ -91,7 +91,7 @@ h1, h2, h3 { text-wrap: balance; }
 .appbar-in { display: flex; align-items: center; gap: 16px; height: var(--bar-h); }
 .brand { display: flex; align-items: center; gap: 8px; border: 0; background: none; padding: 6px 0; cursor: pointer; min-width: 0; color: var(--brand); }
 .brand svg { flex: none; }
-.brand span { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+.brand span { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
 .topnav { display: none; gap: 4px; margin-left: 12px; height: 100%; }
 .topnav a {
   display: flex; align-items: center; padding: 0 14px; text-decoration: none; color: var(--ink-2); font-weight: 500;
@@ -310,6 +310,11 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 .list-head h2 { margin: 0; font-size: 16px; font-weight: 700; }
 .list-head .acts2 { display: flex; gap: 14px; }
 .mapcol { position: relative; }
+.mapfull { position: absolute; left: 10px; top: 10px; z-index: 6; border: 1px solid var(--rule-2); background: var(--surface); color: var(--ink); border-radius: var(--r-ctl); padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; min-height: 36px; }
+body.map-full .appbar, body.map-full .bottomnav, body.map-full .side, body.map-full .topnav, body.map-full .mapcol > p, body.map-full .maplegend { display: none !important; }
+body.map-full .mapwrap { display: block !important; height: auto !important; padding: 0 !important; max-width: none; }
+body.map-full .mapcol { padding: 0 !important; position: fixed; inset: 0; z-index: 40; background: var(--surface-2); }
+body.map-full .mapbox { position: fixed !important; inset: 0 !important; height: 100dvh !important; margin: 0 !important; border: 0 !important; border-radius: 0 !important; }
 .mapbox {
   position: relative; margin: 12px 0 0; height: 420px; min-height: 320px;
   border: 1px solid var(--rule); border-radius: var(--r-card); background: var(--surface-2); overflow: hidden;
@@ -477,7 +482,7 @@ html.touch {
   .item > button { grid-template-columns: 46px minmax(0, 1fr) auto; }
   .kpi .kv { font-size: 25px; }
   .seg button { padding-inline: 11px; }
-  .brand span { font-size: 17px; }
+  .brand span { font-size: 20px; }
 }
 
 /* ---------- 넓은 화면: 위 메뉴, 지도·목록 좌우 배치, 상세는 옆 패널 */
@@ -520,7 +525,7 @@ html:not(.touch) {
 <header class="appbar">
   <div class="wrap appbar-in">
     <button type="button" class="brand" id="brand" aria-label="터놓고 홈으로">
-      <svg class="logo-mark" width="32" height="32" viewBox="0 0 48 48" aria-hidden="true">
+      <svg class="logo-mark" width="40" height="40" viewBox="0 0 48 48" aria-hidden="true">
         <path d="M8 25 L24 12 L40 25" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><rect x="20.6" y="17.8" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="24.6" y="17.8" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="20.6" y="21" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="24.6" y="21" width="2.8" height="2.8" rx=".6" fill="currentColor"/><path d="M5 32 L24 24 L43 32 L24 40 Z" fill="#4DA8FF"/>
       </svg>
       <span id="appbar-title">터놓고</span>
@@ -648,6 +653,7 @@ html:not(.touch) {
       <div class="mapcol">
         <div class="mapbox">
           <div id="map"></div>
+          <button type="button" class="mapfull" id="map-full" aria-pressed="false">전체 화면</button>
           <div class="mapmsg" id="mapmsg">지도를 불러오는 중입니다.</div>
           <div class="maplegend" id="maplegend"></div>
         </div>
@@ -2059,7 +2065,15 @@ html:not(.touch) {
   }
   window.addEventListener("hashchange", route);
   // PC는 위 메뉴가 화면 이름을 보여주므로 서비스 이름을, 휴대폰은 화면 이름을 위 바에 쓴다
-  function setTitle() { document.getElementById("appbar-title").textContent = isWide() ? "터놓고" : TITLES[screen]; }
+  // 개발지도 전체 화면: 머리말·목록을 숨기고 지도만 화면에 채운다
+  function setMapFull(on) {
+    document.body.classList.toggle("map-full", on);
+    var b = document.getElementById("map-full"); b.textContent = on ? "나가기" : "전체 화면"; b.setAttribute("aria-pressed", on ? "true" : "false");
+    if (M.map) setTimeout(function () { M.map.relayout(); dotsLater(); }, 50);
+  }
+  document.getElementById("map-full").addEventListener("click", function () { setMapFull(!document.body.classList.contains("map-full")); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && document.body.classList.contains("map-full")) setMapFull(false); });
+  function setTitle() { document.getElementById("appbar-title").textContent = "터놓고"; }
   var rsz; window.addEventListener("resize", function () { clearTimeout(rsz); rsz = setTimeout(function () { setTitle(); if (screen === "map" && M.map) M.map.relayout(); }, 150); });
   document.getElementById("brand").onclick = function () { if (location.hash !== "#home") location.hash = "#home"; else window.scrollTo(0, 0); };
 
