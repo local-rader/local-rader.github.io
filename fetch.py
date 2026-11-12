@@ -638,6 +638,173 @@ def build(store=None, codes=None):
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
         f.write(";\n")
     print(f"data.js 저장: 2023년 이후 허가 {len(rows)}건")
+    ai_context(out)
+
+
+# ---------------------------------------------------------------- AI 질문용 요약
+
+AI_CONTEXT = os.path.join(HERE, "ai-context.json")
+# 사이트(index.html)의 용도 분류와 같은 기준
+USE_CATS = [("주택", r"주택|기숙사"), ("가게·음식점·사무실", r"근린|근생"),
+            ("학교·업무·공공", r"교육|연구|업무|노유자|공공"),
+            ("병원·종교·문화", r"의료|종교|문화|집회|운동|관광|장례|숙박|판매"),
+            ("공장·창고·축사", r"공장|창고|위험물|자동차|분뇨|자원|동물|식물")]
+BUILD_GB = {"신축", "증축", "개축", "재축", "이전"}  # 착공 신고를 하는 공사
+NEW_GB = {"신축", "개축", "재축", "이전"}  # 새로 짓는 공사
+
+
+def use_cat(r):
+    p = r.get("purp") or ""
+    if not p:
+        return "기타" if r.get("gb") else ""
+    for name, pat in USE_CATS:
+        if re.search(pat, p):
+            return name
+    return "기타"
+
+
+def _month_add(ym, k):
+    y, m = int(ym[:4]), int(ym[5:7]) - 1 + k
+    y += m // 12
+    return f"{y:04d}-{m % 12 + 1:02d}"
+
+
+def _month_end(ym):
+    nxt = _month_add(ym, 1)
+    return (datetime(int(nxt[:4]), int(nxt[5:7]), 1) - timedelta(days=1)).strftime("%Y-%m-%d")
+
+
+def _back(d, months):
+    """사이트의 '최근 n달'과 같은 시작일: 기준일이 달 마지막 날이면 달력 달 단위."""
+    if _month_end(d[:7]) == d:
+        return _month_add(d[:7], -(months - 1)) + "-01"
+    y, m = int(d[:4]), int(d[5:7]) - months
+    y += (m - 1) // 12
+    m = (m - 1) % 12 + 1
+    day = min(int(d[8:10]), int(_month_end(f"{y:04d}-{m:02d}")[8:10]))
+    return (datetime(y, m, day) + timedelta(days=1)).strftime("%Y-%m-%d")
+
+
+def _median(xs):
+    if not xs:
+        return None
+    xs = sorted(xs)
+    n = len(xs) // 2
+    return xs[n] if len(xs) % 2 else round((xs[n - 1] + xs[n]) / 2)
+
+
+def _days(a, b):
+    return (datetime.strptime(b, "%Y-%m-%d") - datetime.strptime(a, "%Y-%m-%d")).days
+
+
+def ai_context(out):
+    """AI 질문 기능이 읽는 작은 요약. 구·동네(동·읍·면)마다 핵심 숫자만 담는다."""
+    F = out["fields"]
+    rows = [dict(zip(F, r)) for r in out["rows"]]
+    gus = out["meta"].get("gus", {})
+    asof = out["meta"].get("asof") or ""
+    if not asof:
+        return
+    bm = asof[:7] if _month_end(asof[:7]) == asof else _month_add(asof[:7], -1)
+    f3, f12 = _back(asof, 3), _back(asof, 12)
+    cut2 = f"{int(asof[:4]) - 2}{asof[4:]}"
+    for r in rows:
+        for k in ("pms", "stcns", "apr", "addr", "place"):
+            r[k] = r.get(k) or ""
+        r["gu"] = gus.get(r.get("sg") or "", "청원구")
+        r["area1"] = (r.get("place") or "").split(" ")[0]
+        r["cat"] = use_cat(r)
+        r["area"] = float(r.get("area") or 0)
+
+    def inr(d, a, b=asof):
+        return bool(d) and a <= d <= b
+
+    def summary(rs):
+        kn = [r for r in rs if r["cat"]]
+        s = {"records": len(kn)}
+        for key, a in (("last3m", f3), ("last12m", f12)):
+            s[key] = {"신규허가": sum(inr(r["pms"], a) for r in kn), "착공": sum(inr(r["stcns"], a) for r in kn),
+                      "사용승인": sum(inr(r["apr"], a) for r in kn)}
+        mo = {}
+        for label, ym in (("이번달", bm), ("전달", _month_add(bm, -1)), ("작년같은달", _month_add(bm, -12))):
+            mo[label] = {"month": ym, "신규허가": sum((r["pms"] or "")[:7] == ym for r in kn),
+                         "착공": sum((r["stcns"] or "")[:7] == ym for r in kn),
+                         "사용승인": sum((r["apr"] or "")[:7] == ym for r in kn)}
+        s["month"] = mo
+        years = {}
+        for r in kn:
+            if r["pms"]:
+                years[r["pms"][:4]] = years.get(r["pms"][:4], 0) + 1
+        s["permitsByYear"] = dict(sorted(years.items()))
+        uses = {}
+        for r in kn:
+            if inr(r["pms"], f12):
+                uses[r["cat"]] = uses.get(r["cat"], 0) + 1
+        s["usesLast12m"] = dict(sorted(uses.items(), key=lambda x: -x[1]))
+        new12 = [r for r in kn if r.get("gb") in NEW_GB and inr(r["pms"], f12)]
+        s["newHomesLast12m"] = {"단독다가구가구": sum(int(float(r.get("fmly") or 0)) for r in new12 if r["cat"] == "주택"),
+                                "세대": sum(int(float(r.get("hhld") or 0)) for r in new12)}
+        mat = [r for r in kn if r.get("gb") in BUILD_GB and r["pms"] and r["pms"] <= cut2]
+        gaps = [_days(r["pms"], r["stcns"]) for r in kn if r.get("gb") in BUILD_GB and r["pms"] and r["stcns"] and r["stcns"] >= r["pms"]]
+        s["progress"] = {"허가후2년지난곳": len(mat),
+                         "착공비율": round(100 * sum(1 for r in mat if r["stcns"]) / len(mat)) if mat else None,
+                         "사용승인비율": round(100 * sum(1 for r in mat if r["apr"]) / len(mat)) if mat else None,
+                         "2년넘게착공기록없음": sum(1 for r in mat if not r["stcns"]),
+                         "허가에서착공까지중앙값일": _median(gaps)}
+        work = [r for r in kn if r.get("gb") in NEW_GB and r["stcns"] and not r["apr"]]
+        by_year = {}
+        for r in work:
+            by_year[r["stcns"][:4]] = by_year.get(r["stcns"][:4], 0) + 1
+        s["underConstruction"] = {"새건물공사중": len(work), "착공연도별": dict(sorted(by_year.items()))}
+        seen, big = set(), []
+        for r in sorted(new12, key=lambda r: -r["area"]):
+            if r["area"] <= 0 or r["addr"] in seen:
+                continue
+            seen.add(r["addr"])
+            stage = "사용승인" if r["apr"] else "착공" if r["stcns"] else "허가"
+            big.append({"주소": r["addr"], "이름": r.get("name") or "", "용도": r.get("purp") or "", "공사": r.get("gb") or "",
+                        "연면적㎡": round(r["area"]), "세대": int(float(r.get("hhld") or 0)), "허가일": r["pms"], "단계": stage})
+            if len(big) >= 5:
+                break
+        s["biggestNewLast12m"] = big
+        once, jg = set(), []
+        for r in rs:
+            k = (r.get("sg"), r.get("addr"))
+            if r.get("jiga") and k not in once:
+                once.add(k)
+                jg.append(float(r["jiga"]))
+        s["permitParcelLandPriceMedianWonPerM2"] = _median(jg)
+        return s
+
+    places = {"청주시 전체": dict(level="시", **summary(rows))}
+    for g in sorted({r["gu"] for r in rows}):
+        places[g] = dict(level="구", **summary([r for r in rows if r["gu"] == g]))
+    for a in sorted({r["area1"] for r in rows if r["area1"]}):
+        rs = [r for r in rows if r["area1"] == a]
+        places[a] = dict(level="읍면" if re.search(r"[읍면]$", a) else "동", gu=rs[0]["gu"], **summary(rs))
+
+    def rank(a):
+        c = {}
+        for r in rows:
+            if r["cat"] and r["area1"] and inr(r["pms"], a):
+                c[r["area1"]] = c.get(r["area1"], 0) + 1
+        return [{"동네": k, "신규허가": v} for k, v in sorted(c.items(), key=lambda x: -x[1])[:10]]
+
+    ctx = {
+        "asof": asof, "briefMonth": bm, "periods": {"last3m": [f3, asof], "last12m": [f12, asof]},
+        "definitions": {
+            "신규허가/착공/사용승인": "그 기간에 건축허가일·실제 착공일·사용승인일이 있는 기록 수 (용도나 공사 종류가 기록된 것만)",
+            "progress": f"신축·증축·개축·재축·이전 중 {cut2} 이전에 허가된 곳(허가 후 2년 지남)이 기준일 현재 착공·사용승인 기록이 있는 비율",
+            "underConstruction": "새로 짓는 공사(신축·개축·재축·이전) 중 착공 기록이 있고 사용승인 기록이 아직 없는 곳",
+            "permitParcelLandPriceMedianWonPerM2": "인허가가 있었던 필지만 모은 개별공시지가 중앙값(원/㎡). 지역 전체 땅값이나 시세가 아님",
+            "자료": "국토교통부 건축HUB 건축인허가정보, 2023년 1월 이후 허가된 기록. 공공데이터는 한 달가량 늦게 채워짐",
+        },
+        "rankings": {"신규허가_최근3달": rank(f3), "신규허가_최근1년": rank(f12)},
+        "places": places,
+    }
+    with open(AI_CONTEXT, "w", encoding="utf-8") as f:
+        json.dump(ctx, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"ai-context.json 저장: 지역 {len(places)}곳")
 
 
 def main(argv):

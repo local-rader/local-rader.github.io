@@ -10,7 +10,9 @@
 | `index.html` | 웹사이트 화면 |
 | `privacy.html` | 개인정보처리방침·면책 안내 |
 | `data.js` | 화면이 읽는 자료 (자동 생성, 직접 고치지 않음) |
-| `config.js` | 카카오 지도 JavaScript 키 (등록한 도메인에서만 동작하므로 공개돼도 됨) |
+| `config.js` | 카카오 지도 JavaScript 키 (등록한 도메인에서만 동작하므로 공개돼도 됨), AI 질문 중계 서버 주소 |
+| `ai-context.json` | AI 질문이 읽는 구·동네별 요약 (자동 생성) |
+| `ai-worker/` | AI 질문 중계 서버 코드와 설정 안내 (Cloudflare Workers, Claude API 키는 여기 설정에만) |
 | `fetch.py` | 자료 수집기 (설치할 패키지 없음) |
 | `permits.json` | 모든 인허가 기록 원장 (자동 갱신) |
 | `codes.json` | 구별 법정동·리 코드 (새 구는 다음 실행 때 자동으로 채워짐) |
