@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>동네레이더</title>
+<title>터놓고</title>
 <meta name="description" content="청주에서 새로 허가된 건축과 공사 진행 상황을 공공데이터로 모아 지도로 보여줍니다.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-/* 동네레이더 디자인 기준
+/* 터놓고 디자인 기준
    - 바탕은 밝은 회색, 카드는 흰색, 포인트는 네이비와 블루
    - 상태 색은 어디서나 같다: 허가=블루, 착공=앰버, 사용승인=그린, 장기 미진행=오렌지레드
    - 용도 색은 도시계획 용도지역 지도의 관례(주거=노랑, 상업=분홍, 공업=보라)를 따른다
@@ -514,14 +514,14 @@ html:not(.touch) {
 
 <header class="appbar">
   <div class="wrap appbar-in">
-    <button type="button" class="brand" id="brand" aria-label="동네레이더 홈으로">
+    <button type="button" class="brand" id="brand" aria-label="터놓고 홈으로">
       <svg width="28" height="28" viewBox="0 0 30 30" aria-hidden="true">
         <circle cx="15" cy="15" r="13" fill="none" stroke="currentColor" stroke-width="2"/>
         <circle cx="15" cy="15" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".5"/>
         <path d="M15 15 L25.5 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         <circle cx="21" cy="11" r="2.4" fill="#E3A21A"/>
       </svg>
-      <span id="appbar-title">동네레이더</span>
+      <span id="appbar-title">터놓고</span>
     </button>
     <nav class="topnav" aria-label="메뉴">
       <a href="#home" data-nav="home">홈</a>
@@ -879,8 +879,10 @@ html:not(.touch) {
   function kday(d) { return d ? (+d.slice(0, 4)) + "년 " + (+d.slice(5, 7)) + "월 " + (+d.slice(8, 10)) + "일" : ""; }
   // 자료 기준일: 공공데이터에 들어온 가장 최근 날짜. 건축HUB는 한 달가량 늦게 채워진다.
   var asof = meta.asof || rows.reduce(function (m, r) { return [r.pms, r.stcns, r.apr, r.crtn].reduce(function (a, d) { return d && d > a ? d : a; }, m); }, "");
-  document.getElementById("asof").textContent = asof ? "데이터 기준일 " + dot(asof) : "데이터 준비 중";
-  document.getElementById("stamp").textContent = (meta.checked ? "마지막 확인 " + dot(meta.checked.slice(0, 10)) + " " + meta.checked.slice(11, 16) + " · " : "") + "매일 자동 갱신, 공공데이터는 한 달가량 늦게 들어옵니다.";
+  // 마지막 반영일: 자료에 새 기록이 처음 들어온 가장 최근 날 (월 1회 안팎으로 공개되는 자료가 실제로 들어온 날)
+  var lastIn = rows.reduce(function (m, r) { return r.seen && r.seen > m ? r.seen : m; }, "");
+  document.getElementById("asof").textContent = asof ? "자료 기준일 " + dot(asof) : "자료 준비 중";
+  document.getElementById("stamp").textContent = (lastIn ? "마지막 반영 " + dot(lastIn) + " · " : "") + "국토교통부는 건축 인허가 자료를 월 단위로 공개해요. 사이트는 매일 새벽 확인하고, 새 자료가 있을 때만 반영합니다.";
   var places = P.places || [];
   // 동네(동·…가 또는 읍·면)를 구별로 묶는다. 구가 여럿이면 지역 이름은 '청주시'
   var areas = [], areasOf = {}, GU_LIST = [];
@@ -982,7 +984,7 @@ html:not(.touch) {
       note('<input class="urlbox" readonly aria-label="공유 링크" value="' + esc(url) + '">');
       var inp = box.parentNode.querySelector(".urlbox"); inp.focus(); inp.select();
     }
-    if (navigator.share) { navigator.share({ title: "동네레이더", text: text, url: url }).catch(function () {}); return; }
+    if (navigator.share) { navigator.share({ title: "터놓고", text: text, url: url }).catch(function () {}); return; }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(function () { note('<p class="copied" role="status">링크를 복사했어요. 카톡이나 문자에 붙여넣으면 이 건이 바로 열립니다.</p>'); }, fallback);
     } else fallback();
@@ -1907,6 +1909,10 @@ html:not(.touch) {
     if (bucket === "late") note += "비슷한 건물보다 늦어지는 중 (" + elapsed(r.stcns, END) + "째)";
     else if (bucket === "soon") note += "예상 시점이 지나 곧 사용승인 예상 (추정)";
     else note += "예상 " + range + " (추정)";
+    // 신뢰도: 비슷한 건물 표본 수를 함께 적는다. 표본이 적거나 전국 참고값이면 그렇다고 표시
+    if (L.ref) note += " · 전국 평균 기준 참고값";
+    else if (L.n < 30) note += " · 비슷한 건물 " + L.n + "곳 기준, 참고만";
+    else note += " · 비슷한 건물 " + L.n + "곳 기준";
     return { bucket: bucket, note: esc(note) };
   }
   function nextQ(q) { var y = +q.slice(0, 4), k = +q.slice(5); return k < 4 ? y + "-" + (k + 1) : (y + 1) + "-1"; }
@@ -2016,7 +2022,7 @@ html:not(.touch) {
 
   // ---------- 화면 전환: 주소(#home #map #supply #analysis #stall #p=번호)가 화면을 정한다. 뒤로 가기도 그대로 된다.
   var screen = "";
-  var TITLES = { home: "동네레이더", map: "개발지도", supply: "공급 예고", analysis: "지역 분석" };
+  var TITLES = { home: "터놓고", map: "개발지도", supply: "공급 예고", analysis: "지역 분석" };
   function route() {
     var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h), target = h, sharedItem = null;
     if (m) { sharedItem = byPk[decodeURIComponent(m[1])] || null; target = "map"; }
@@ -2035,7 +2041,7 @@ html:not(.touch) {
       });
     });
     setTitle();
-    document.title = screen === "home" ? "동네레이더" : TITLES[screen] + " · 동네레이더";
+    document.title = screen === "home" ? "터놓고" : TITLES[screen] + " · 터놓고";
     if (moved) window.scrollTo(0, 0);
     if (screen === "home") drawHome();
     if (screen === "map") {
@@ -2050,7 +2056,7 @@ html:not(.touch) {
   }
   window.addEventListener("hashchange", route);
   // PC는 위 메뉴가 화면 이름을 보여주므로 서비스 이름을, 휴대폰은 화면 이름을 위 바에 쓴다
-  function setTitle() { document.getElementById("appbar-title").textContent = isWide() ? "동네레이더" : TITLES[screen]; }
+  function setTitle() { document.getElementById("appbar-title").textContent = isWide() ? "터놓고" : TITLES[screen]; }
   var rsz; window.addEventListener("resize", function () { clearTimeout(rsz); rsz = setTimeout(function () { setTitle(); if (screen === "map" && M.map) M.map.relayout(); }, 150); });
   document.getElementById("brand").onclick = function () { if (location.hash !== "#home") location.hash = "#home"; else window.scrollTo(0, 0); };
 
@@ -2081,8 +2087,11 @@ html:not(.touch) {
   })();
 
   document.getElementById("foot").textContent = "자료 출처: " + (meta.source || "국토교통부 건축HUB 건축인허가정보 서비스") + " (공공데이터포털)" +
-    (meta.parcels ? ", 필지 위치·개별공시지가: 국토교통부 2D데이터 API 연속지적도 (공공누리 제1유형)" : "") + ". 지도: 카카오맵. 동네레이더는 개인이 만든 비공식 서비스입니다. ";
-  var pl = document.createElement("a"); pl.href = "privacy.html"; pl.textContent = "개인정보처리방침·면책 안내"; document.getElementById("foot").appendChild(pl);
+    (meta.parcels ? ", 필지 위치·개별공시지가: 국토교통부 2D데이터 API 연속지적도 (공공누리 제1유형)" : "") + ". 지도: 카카오맵. 터놓고는 개인이 만든 비공식 서비스입니다. ";
+  // 데이터 품질: 지도에 위치가 없는 기록과 주소가 없는 기록 수
+  var noPlace = rows.filter(function (r) { return !r.lat || !r.lng; }).length, noAddr = rows.filter(function (r) { return !r.addr; }).length;
+  document.getElementById("foot").textContent += "자료 점검: 지도 위치가 없는 기록 " + nf(noPlace) + "건, 주소가 없는 기록 " + nf(noAddr) + "건 (전체 " + nf(rows.length) + "건).";
+  var pl =document.createElement("a"); pl.href = "privacy.html"; pl.textContent = "개인정보처리방침·면책 안내"; document.getElementById("foot").appendChild(pl);
 
   drawPlace(); drawPeriods(); filterSummary();
   route();
