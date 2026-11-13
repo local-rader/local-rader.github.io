@@ -23,15 +23,16 @@
 <body>
 <main>
   <a class="back" href="index.html">← 터놓고로 돌아가기</a>
-  <h1 style="display:flex;align-items:center;gap:10px"><svg width="32" height="32" viewBox="0 0 48 48" aria-hidden="true"><path d="M8 25 L24 12 L40 25" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><rect x="20.6" y="17.8" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="24.6" y="17.8" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="20.6" y="21" width="2.8" height="2.8" rx=".6" fill="currentColor"/><rect x="24.6" y="21" width="2.8" height="2.8" rx=".6" fill="currentColor"/><path d="M5 32 L24 24 L43 32 L24 40 Z" fill="#4DA8FF"/></svg>개인정보처리방침 · 면책 안내</h1>
+  <h1 style="display:flex;align-items:center;gap:10px"><svg width="32" height="32" viewBox="0 0 48 48" aria-hidden="true"><path d="M7 28 L7 21 L24 9 L41 21 L41 28" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><rect x="32" y="5" width="4" height="12" fill="currentColor"/><rect x="20.5" y="18.5" width="3" height="3" rx=".6" fill="currentColor"/><rect x="24.5" y="18.5" width="3" height="3" rx=".6" fill="currentColor"/><rect x="20.5" y="22.5" width="3" height="3" rx=".6" fill="currentColor"/><rect x="24.5" y="22.5" width="3" height="3" rx=".6" fill="currentColor"/><path d="M4 32 L24 27 L44 32 L24 39 Z" fill="#4DA8FF"/></svg>개인정보처리방침 · 면책 안내</h1>
   <p>터놓고(https://local-rader.github.io)는 공공데이터로 청주시 건축 인허가 정보를 보여주는 비공식 서비스입니다. 회원가입이 없고, 이름·연락처·주민등록번호 같은 개인정보를 받지 않습니다.</p>
 
   <h2>1. 사이트가 저장하는 정보</h2>
-  <p>이 사이트는 방문자의 기기(브라우저)에만 다음 설정을 저장합니다. 서버에는 아무것도 보내지 않습니다.</p>
+  <p>이 사이트는 방문자의 기기(브라우저)에만 다음 설정을 저장합니다. 이 설정은 서버로 보내지 않습니다. (AI 질문을 쓸 때 전달되는 내용은 아래 2번을 보세요.)</p>
   <table>
     <tr><th>항목</th><th>내용</th><th>보관 위치</th></tr>
     <tr><td>관심 필지</td><td>표시해 둔 필지 번호</td><td>브라우저 저장소 (직접 지우기 전까지)</td></tr>
-    <tr><td>화면 설정</td><td>기간, 동네, 정렬, 원 크기 등</td><td>브라우저 저장소</td></tr>
+    <tr><td>화면 설정</td><td>기간, 동네, 정렬, 원 크기, 비교할 지역 등</td><td>브라우저 저장소</td></tr>
+    <tr><td>AI 질문 기기 번호</td><td>AI 질문 횟수를 세기 위한 무작위 번호 (이름·연락처와 연결되지 않음)</td><td>브라우저 저장소</td></tr>
   </table>
   <p>주소를 지도 위치로 바꾼 결과는 화면이 열려 있는 동안만 기기 메모리에 두며, 브라우저에 오래 저장하지 않습니다.</p>
 
@@ -39,7 +40,9 @@
   <ul>
     <li><b>카카오맵</b>: 지도를 불러오기 위해 카카오 서버에 접속합니다. 이때 접속 기기의 IP 주소 등 기본 접속 정보가 카카오에 전달될 수 있습니다. 카카오의 개인정보 처리는 카카오 정책을 따릅니다.</li>
     <li><b>GitHub Pages</b>: 이 사이트를 호스팅합니다. 접속 기록은 GitHub 정책을 따릅니다.</li>
+    <li><b>AI 질문 (Cloudflare, Anthropic)</b>: 'AI 질문' 화면에서 직접 쓴 질문을 보내면, 질문 내용과 고른 동네가 중계 서버(Cloudflare Workers)를 거쳐 Anthropic의 Claude로 전달되어 답을 만듭니다. 터놓고는 질문과 답을 저장하지 않습니다. 질문 횟수를 세기 위해 기기 번호와 접속 IP 주소를 한 방향 암호(해시)로 바꾼 값과 횟수만 최대 8일 보관합니다. 전달된 내용의 처리는 Cloudflare와 Anthropic의 정책을 따릅니다. 질문 버튼은 기기 안에서 계산하므로 외부로 보내지 않습니다.</li>
   </ul>
+  <p>AI 질문창에는 이름, 연락처, 주민등록번호 같은 개인정보를 적지 마세요.</p>
   <p>이 사이트는 방문 분석 도구나 광고 쿠키를 사용하지 않습니다.</p>
 
   <h2>3. 개인정보 보호 요청</h2>
@@ -59,10 +62,11 @@
     <li>자료는 공공데이터의 반영 시차가 있어 실제 상황과 다를 수 있습니다.</li>
     <li>투자, 거래, 법적 판단의 근거로 쓰지 마세요. 정확한 내용은 <a href="https://www.eais.go.kr" target="_blank" rel="noopener">세움터</a>에서 대지위치로 다시 확인하세요.</li>
     <li>개별공시지가는 시세가 아닙니다.</li>
+    <li>AI 답변은 틀릴 수 있으며, 투자·거래·법적 판단의 근거가 아닙니다.</li>
   </ul>
 
   <h2>6. 시행일</h2>
-  <p>2026년 11월 10일부터 적용합니다. 내용이 바뀌면 이 페이지에서 알립니다.</p>
+  <p>2026년 11월 10일부터 적용합니다. AI 질문 관련 내용은 이 기능을 여는 날부터 적용합니다. 내용이 바뀌면 이 페이지에서 알립니다.</p>
 </main>
 </body>
 </html>
