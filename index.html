@@ -2471,6 +2471,26 @@ html:not(.touch) {
 
   // ---------- AI 질문: 질문 버튼은 사이트 자료로 바로 답하고(횟수 없음), 직접 쓴 질문은 중계 서버를 거쳐 Claude가 답한다
   var AI = { url: String(CFG.aiEndpoint || "").replace(/\/+$/, ""), busy: false, hist: [], quota: null, started: false };
+
+  // ---------- 방문 통계: 브라우저마다 하루 한 번, 들어온 사이트 이름(예: instagram.com)만 보낸다
+  // 주소에 ?me=1을 붙여 한 번 열면 그 브라우저는 집계에서 빠진다 (?me=0으로 되돌림)
+  (function countVisit() {
+    try {
+      if (!AI.url) return;
+      var q = location.search;
+      if (/[?&]me=1(&|$)/.test(q)) localStorage.setItem("dr:notrack", "1");
+      if (/[?&]me=0(&|$)/.test(q)) localStorage.removeItem("dr:notrack");
+      if (localStorage.getItem("dr:notrack")) return;
+      var today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+      if (localStorage.getItem("dr:seen") === today) return;
+      localStorage.setItem("dr:seen", today);
+      var ref = "";
+      try { ref = document.referrer ? new URL(document.referrer).hostname : ""; } catch (e) {}
+      var body = JSON.stringify({ r: ref });
+      if (navigator.sendBeacon) navigator.sendBeacon(AI.url + "/hit", new Blob([body], { type: "text/plain" }));
+      else fetch(AI.url + "/hit", { method: "POST", body: body, keepalive: true });
+    } catch (e) {}
+  })();
   // '최근 n달' 시작일 (사이트의 기간 버튼과 같은 계산)
   function fromN(n) {
     if (lastDay(END.slice(0, 7)) === END) return addMonths(END.slice(0, 7), -(n - 1)) + "-01";
