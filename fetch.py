@@ -34,6 +34,7 @@ CODES = os.path.join(HERE, "codes.json")
 STORE = os.path.join(HERE, "permits.json")
 SITE = os.path.join(HERE, "data.js")
 PARCELS = os.path.join(HERE, "parcels.json")
+TRADE_SUMMARY = os.path.join(HERE, "trades-summary.json")
 PNUS = os.path.join(HERE, "pnus.json")  # 관리자 페이지(parcels-tool.html)가 받을 필지번호 목록
 VWORLD = "https://api.vworld.kr/req/data"
 KST = timezone(timedelta(hours=9))
@@ -632,6 +633,9 @@ def build(store=None, codes=None):
     # 그 페이지가 읽을 필지번호 목록을 함께 만든다.
     with open(PNUS, "w", encoding="utf-8") as f:
         json.dump(sorted({r.get("pnu") for r in rows if r.get("pnu")}), f, separators=(",", ":"))
+    ts = load(TRADE_SUMMARY, None)  # trades.py가 만든 실거래 요약 (없으면 건너뜀)
+    if ts and ts.get("brief"):
+        out["tradeBrief"] = ts["brief"]
     with open(SITE, "w", encoding="utf-8") as f:
         f.write("// 자동 생성 파일입니다. 직접 고치지 마세요 (fetch.py build).\n")
         f.write("window.PERMITS = ")
@@ -802,6 +806,15 @@ def ai_context(out):
         "rankings": {"신규허가_최근3달": rank(f3), "신규허가_최근1년": rank(f12)},
         "places": places,
     }
+    ts = load(TRADE_SUMMARY, None)
+    if ts:
+        for key, val in ts.get("places", {}).items():
+            name = "청주시 전체" if key == "all" else key
+            if name in places:
+                places[name]["실거래"] = val
+        ctx["tradesComplete"] = ts.get("complete")
+        ctx["definitions"]["실거래"] = (ts.get("기준", "") + " 출처: 국토교통부 실거래가 공개 자료(매매). "
+                                     "종류별(아파트·토지 등) 거래 건수와 ㎡당 가격 중앙값(근사). 시세 전망이나 투자 판단 근거가 아님")
     with open(AI_CONTEXT, "w", encoding="utf-8") as f:
         json.dump(ctx, f, ensure_ascii=False, separators=(",", ":"))
     print(f"ai-context.json 저장: 지역 {len(places)}곳")

@@ -13,6 +13,11 @@
 | `config.js` | 카카오 지도 JavaScript 키 (등록한 도메인에서만 동작하므로 공개돼도 됨), AI 질문 중계 서버 주소 |
 | `ai-context.json` | AI 질문이 읽는 구·동네별 요약 (자동 생성) |
 | `ai-worker/` | AI 질문 중계 서버 코드와 설정 안내 (Cloudflare Workers, Claude API 키는 여기 설정에만) |
+| `admin-worker/` | 관리자 화면 서버 (방문자·AI 질문·데이터 상태, 비밀번호 잠금) |
+| `trades.py` | 실거래가 수집기 (국토교통부 실거래가 7종, 청주 4개 구, 최근 36개월) |
+| `trades.json` | 실거래가 원자료 (자동 생성, 해제 거래 제외) |
+| `trades.js` | 사이트 '실거래' 탭이 여는 자료 (자동 생성, 탭을 열 때만 받음) |
+| `trades-summary.json` | 홈 브리핑·AI 질문용 실거래 요약 (자동 생성) |
 | `fetch.py` | 자료 수집기 (설치할 패키지 없음) |
 | `permits.json` | 모든 인허가 기록 원장 (자동 갱신) |
 | `codes.json` | 구별 법정동·리 코드 (새 구는 다음 실행 때 자동으로 채워짐) |
@@ -36,7 +41,12 @@
 **Settings → Secrets and variables → Actions → New repository secret**
 
 - Name: `DATA_GO_KR_KEY`
-- Secret: 공공데이터포털의 일반 인증키
+- Secret: 공공데이터포털의 일반 인증키 (건축HUB 건축인허가정보 활용신청한 계정)
+
+실거래가도 받으려면 공공데이터포털에서 국토교통부 실거래가 자료(아파트 매매 상세, 연립다세대, 단독다가구, 오피스텔, 토지, 상업업무용, 공장창고)를 활용신청하고, 그 계정의 인증키를 하나 더 넣습니다.
+
+- Name: `RTMS_KEY`
+- Secret: 실거래가를 활용신청한 계정의 일반 인증키 (같은 계정이면 같은 값)
 
 인증키는 여기에만 넣습니다. 파일에 적거나 다른 곳에 올리지 않습니다.
 

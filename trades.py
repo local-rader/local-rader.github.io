@@ -351,7 +351,12 @@ def summary(agg, full, store):
                 "㎡당가격중앙값만원_근사": round(_median(per_all), 1) if per_all else None,
                 "월별거래": {m: mm.get(ymk(m), [0])[0] for m in (month_add(full, -2), month_add(full, -1), full)},
             }
+    brief = {}
+    for kind in ("apt", "land", "sh"):
+        for p, mm in agg.get(kind, {}).items():
+            brief.setdefault(p, {})[kind] = [mm.get(ymk(m), [0])[0] for m in (full, month_add(full, -1), month_add(full, -12))]
     out = {"complete": full, "fetched": store["meta"].get("fetched", ""), "places": places,
+           "brief": {"month": full, "labels": {"apt": "아파트", "land": "토지", "sh": "단독·다가구"}, "places": brief},
            "기준": f"계약일 기준, {full}까지(신고 기한 30일이 지난 달). 해제된 거래 제외. ㎡당 가격은 달별 중앙값을 거래 수로 묶은 근사값."}
     save(SUMMARY, out, compact=True)
 

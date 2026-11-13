@@ -605,6 +605,25 @@ html:not(.touch) {
   body[data-screen="map"] .sheet { left: 0; right: auto; width: var(--side-w); border-left: 0; border-right: 1px solid var(--rule-2); box-shadow: 4px 0 16px rgba(15, 30, 51, .10); }
 }
 }
+
+/* ---------- 실거래 */
+.tkinds { margin: 12px 0 0; }
+.tkpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.tkpis .kpi { cursor: default; min-height: 98px; }
+.tkpis .kpi:hover { border-color: var(--rule); }
+.tkpis .kpi.wide { grid-column: 1 / -1; }
+.tchart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.tchart text { font-size: 11px; fill: var(--ink-3); font-family: inherit; }
+.tkey { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--ink-3); margin-top: 8px; }
+.tkey i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.tlist .ti { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) max-content; gap: 2px 10px; padding: 11px 0; border-top: 1px solid var(--rule); align-items: baseline; }
+.tlist .ti:first-child { border-top: 0; padding-top: 2px; }
+.tlist .td { color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums; }
+.tlist .tn { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tlist .ta { font-weight: 700; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tlist .ts { grid-column: 2 / -1; color: var(--ink-3); font-size: 12.5px; line-height: 1.45; }
+.tlist .tag { display: inline-block; font-size: 11.5px; line-height: 1.5; border: 1px solid var(--rule-2); border-radius: 4px; padding: 0 5px; margin-left: 4px; color: var(--ink-2); vertical-align: 1px; }
+@media (min-width: 720px) { .tkpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .tkpis .kpi.wide { grid-column: auto; } }
 </style>
 <script>if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("touch");</script>
 </head>
@@ -797,6 +816,7 @@ html:not(.touch) {
         <button type="button" role="tab" id="sub-stats" aria-controls="pane-stats" data-sub="stats">지역 통계</button>
         <button type="button" role="tab" id="sub-flow" aria-controls="pane-flow" data-sub="flow">진행 흐름</button>
         <button type="button" role="tab" id="sub-compare" aria-controls="pane-compare" data-sub="compare">지역 비교</button>
+        <button type="button" role="tab" id="sub-trade" aria-controls="pane-trade" data-sub="trade">실거래</button>
         <button type="button" role="tab" id="sub-stall" aria-controls="pane-stall" data-sub="stall">장기 미진행</button>
       </div>
 
@@ -894,6 +914,12 @@ html:not(.touch) {
         </div>
       </div>
 
+      <div class="pane" id="pane-trade" role="tabpanel" aria-labelledby="sub-trade" hidden>
+        <div class="sec-head"><h2 class="sec" id="tr-h">실거래</h2><span id="tr-asof"></span></div>
+        <p class="panel-note">국토교통부 실거래가 공개 자료로 본 매매 거래예요. 계약일 기준이고, 해제(취소)된 거래는 뺐어요. 동네는 맨 위에서 바꿀 수 있어요.</p>
+        <div class="hscroll tkinds" id="tr-kinds" role="group" aria-label="부동산 종류"></div>
+        <div id="tr-body"><p class="result">실거래 자료를 불러오는 중이에요…</p></div>
+      </div>
       <div class="pane" id="pane-stall" role="tabpanel" aria-labelledby="sub-stall" hidden>
         <div class="sec-head"><h2 class="sec" id="st-h">장기 미진행</h2><span id="st-asof"></span></div>
         <p class="panel-note">허가를 받고 오랫동안 착공 기록이 없거나, 착공하고 오랫동안 사용승인 기록이 없는 곳입니다. 신축·증축처럼 착공 신고를 하는 공사만 셉니다. 기간 선택과 상관없이 데이터 기준일 현재 상태입니다.</p>
@@ -1439,6 +1465,12 @@ html:not(.touch) {
     else if (pp) {
       var chg = Math.round(Math.abs(pn - pp) / pp * 100);
       facts.push("신규 허가는 " + monthName(prev) + "보다 " + (chg === 0 ? "<b>비슷합니다</b>." : "<b>" + nf(chg) + "% " + (pn > pp ? "많습니다" : "적습니다") + "</b>."));
+    }
+    var TB = P.tradeBrief, tb = TB && TB.places && TB.places[state.place === "all" ? "all" : state.place];
+    if (tb && tb.apt && tb.apt[0]) {
+      var a0 = tb.apt[0], a1 = tb.apt[1], a12 = tb.apt[2], tm = TB.month;
+      facts.push(monthName(tm) + " 아파트 매매는 <b>" + nf(a0) + "건</b>" + (a1 ? "으로 " + monthName(addMonths(tm, -1)) + "보다 " + (a0 === a1 ? "같아요" : nf(Math.abs(a0 - a1)) + "건 " + (a0 > a1 ? "많아요" : "적어요")) : "이에요") +
+        (a12 ? " (작년 " + monthName(tm) + " " + nf(a12) + "건)." : ".") + ' <a href="#trade">실거래 보기</a>');
     }
     document.getElementById("brief-facts").innerHTML = facts.map(function (f) { return "<li>" + f + "</li>"; }).join("");
 
@@ -2266,14 +2298,157 @@ html:not(.touch) {
       '<div class="mtable-wrap"><table class="mtable"><thead><tr><th>규모</th><th>빠른 편(25%)</th><th>가운데</th><th>늦은 편(75%)</th></tr></thead><tbody>' + rowsM + "</tbody></table></div>";
   }
 
+
+  // ---------- 실거래: 국토교통부 실거래가 (trades.js는 이 탭을 열 때만 받는다)
+  var TR = { loading: false, failed: false, kind: null, shown: 20 };
+  try { TR.kind = localStorage.getItem("dr:tk") || null; } catch (e) {}
+  function loadTrades(cb) {
+    if (window.TRADES) return cb();
+    if (TR.loading) return;
+    TR.loading = true; TR.failed = false;
+    var s = document.createElement("script");
+    s.src = "trades.js";
+    s.onload = function () { TR.loading = false; cb(); };
+    s.onerror = function () { TR.loading = false; TR.failed = true; cb(); };
+    document.head.appendChild(s);
+  }
+  function won(m) { // 만원 → '3억 4,000만'
+    m = Math.round(+m || 0);
+    var e = Math.floor(m / 10000), r = m % 10000;
+    return e ? e + "억" + (r ? " " + nf(r) + "만" : "") : nf(r) + "만";
+  }
+  function ymOf(yymm) { return "20" + yymm.slice(0, 2) + "-" + yymm.slice(2, 4); }
+  function yymmOf(ym) { return ym.slice(2, 4) + ym.slice(5, 7); }
+  function tMonths(a, b) { var out = [], m = a; while (m <= b && out.length < 120) { out.push(m); m = addMonths(m, 1); } return out; }
+  function tMedian(xs) { if (!xs.length) return null; xs = xs.slice().sort(function (a, b) { return a - b; }); var h = xs.length >> 1; return xs.length % 2 ? xs[h] : (xs[h - 1] + xs[h]) / 2; }
+  function tPlaceOk(key, p) { // key = '구|동네'
+    if (p === "all") return true;
+    var i = key.indexOf("|"), gu = key.slice(0, i), pl = key.slice(i + 1);
+    return gu === p || pl === p || pl.indexOf(p + " ") === 0;
+  }
+  // 막대(거래 수)·선(㎡당 중앙값) 그림. 다 들어오지 않은 달은 빗금
+  function tChart(months, vals, full, kind, unit, W) {
+    W = W || 640; var H = W < 480 ? 170 : 150, L = 6, R = 6, T = 14, B = 22, n = months.length, bw = (W - L - R) / n;
+    var nums = vals.filter(function (v) { return v != null; });
+    if (!nums.length) return '<p class="result">이 기간에는 거래 기록이 없어요.</p>';
+    var mx = Math.max.apply(null, nums), mn = kind === "line" ? Math.min.apply(null, nums) : 0;
+    if (kind === "line") { var pad = (mx - mn) * 0.15 || mx * 0.1 || 1; mx += pad; mn = Math.max(0, mn - pad); } else mx = mx || 1;
+    function y(v) { return T + (H - T - B) * (1 - (v - mn) / (mx - mn || 1)); }
+    var h = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + (kind === "line" ? "월별 ㎡당 가격 중앙값" : "월별 거래 수") + '">';
+    h += '<defs><pattern id="tp-' + kind + '" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3" height="6" fill="var(--rule-2)"></rect></pattern></defs>';
+    h += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + (H - B) + '" y2="' + (H - B) + '" stroke="var(--rule-2)"></line>';
+    if (kind === "bar") {
+      months.forEach(function (m, i) {
+        var v = vals[i] || 0; if (!v) return;
+        var x = L + i * bw + bw * 0.14, w = bw * 0.72, yy = y(v);
+        h += '<rect x="' + x.toFixed(1) + '" y="' + yy.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + (H - B - yy).toFixed(1) + '" rx="1.5" fill="' + (m > full ? "url(#tp-bar)" : "var(--brand)") + '"><title>' + ymLabel(m) + " · " + nf(v) + unit + (m > full ? " (집계 중)" : "") + "</title></rect>";
+      });
+      h += '<text x="' + L + '" y="10">최대 ' + nf(Math.max.apply(null, nums)) + unit + "</text>";
+    } else {
+      var seg = "", pts = "";
+      months.forEach(function (m, i) {
+        var v = vals[i]; if (v == null) { seg += " "; return; }
+        var x = (L + i * bw + bw / 2).toFixed(1), yy = y(v).toFixed(1);
+        seg += (seg && seg.slice(-1) !== " " ? " L" : " M") + x + " " + yy;
+        pts += '<circle cx="' + x + '" cy="' + yy + '" r="2.4" fill="var(--accent)"><title>' + ymLabel(m) + " · ㎡당 " + nf(Math.round(v * 10) / 10) + "만 원</title></circle>";
+      });
+      h += '<path d="' + seg.replace(/\s+/g, " ").trim() + '" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round"></path>' + pts;
+      h += '<text x="' + L + '" y="10">㎡당 ' + nf(Math.round(Math.max.apply(null, nums))) + "만 원까지</text>";
+    }
+    months.forEach(function (m, i) { // 해마다 1월에 연도 표시
+      if (m.slice(5) === "01" || (i === 0 && +m.slice(5) <= 10)) h += '<text x="' + (L + i * bw).toFixed(1) + '" y="' + (H - 6) + '">' + m.slice(0, 4) + (i === 0 && m.slice(5) !== "01" ? "." + m.slice(5) : "") + "</text>";
+    });
+    return h + "</svg>";
+  }
+  function drawTrade() {
+    var body = document.getElementById("tr-body");
+    if (!window.TRADES) {
+      body.innerHTML = '<p class="result">' + (TR.failed ? "실거래 자료를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요." : "실거래 자료를 불러오는 중이에요…") + "</p>";
+      if (!TR.failed) loadTrades(function () { if (screen === "analysis" && sub === "trade") drawTrade(); });
+      return;
+    }
+    var T = window.TRADES, meta = T.meta || {}, kinds = meta.kinds || [];
+    if (!kinds.length) { body.innerHTML = '<p class="result">실거래 자료가 아직 없어요.</p>'; return; }
+    if (!TR.kind || !kinds.some(function (k) { return k[0] === TR.kind; })) TR.kind = kinds[0][0];
+    var K = kinds.filter(function (k) { return k[0] === TR.kind; })[0], kIdx;
+    var ALL = ["apt", "rh", "sh", "offi", "land", "nrg", "indu"]; kIdx = ALL.indexOf(TR.kind);
+    document.getElementById("tr-kinds").innerHTML = kinds.map(function (k) {
+      return '<button type="button" class="chip" data-tk="' + k[0] + '" aria-pressed="' + (k[0] === TR.kind) + '">' + esc(k[1]) + "</button>";
+    }).join("");
+    document.querySelectorAll("#tr-kinds [data-tk]").forEach(function (b) {
+      b.onclick = function () { TR.kind = b.getAttribute("data-tk"); TR.shown = 20; try { localStorage.setItem("dr:tk", TR.kind); } catch (e) {} drawTrade(); };
+    });
+    var pl = state.place, plName = pl === "all" ? REGION + " 전체" : pl, full = meta.complete || "";
+    document.getElementById("tr-asof").textContent = meta.asof ? "계약일 " + dot(meta.asof) + "까지" : "";
+    var housing = TR.kind === "apt" || TR.kind === "rh" || TR.kind === "offi";
+
+    // 이 동네·종류의 최근 12달 거래
+    var places = T.places, names = T.names, extras = T.extras;
+    var okp = places.map(function (k) { return tPlaceOk(k, pl); });
+    var list = T.rows.filter(function (r) { return r[0] === kIdx && okp[r[1]]; });
+    var per = list.filter(function (r) { return r[4] > 0 && !r[11]; }).map(function (r) { return r[3] / r[4]; });
+    var amts = list.map(function (r) { return r[3]; });
+    var mPer = tMedian(per), mAmt = tMedian(amts);
+
+    // 월별 합계 (36달)
+    var aggP = ((T.agg || {})[TR.kind] || {})[pl === "all" ? "all" : pl] || {};
+    var months = tMonths((meta.window || [])[0] || full, (meta.window || [])[1] || full);
+    var cnt = months.map(function (m) { var v = aggP[yymmOf(m)]; return v ? v[0] : 0; });
+    var med = months.map(function (m) { var v = aggP[yymmOf(m)]; return v && v[0] >= 3 && v[1] != null ? v[1] : null; });
+    var last3 = [addMonths(full, -2), addMonths(full, -1), full], ly3 = last3.map(function (m) { return addMonths(m, -12); });
+    function sumM(ms) { return ms.reduce(function (a, m) { var v = aggP[yymmOf(m)]; return a + (v ? v[0] : 0); }, 0); }
+    var n3 = sumM(last3), y3 = sumM(ly3), hasLy = ly3[0] >= months[0];
+    var range3 = (+last3[0].slice(5)) + "~" + (+full.slice(5)) + "월";
+    var areaLabel = K[2], cw = Math.round(Math.min(640, Math.max(300, (body.clientWidth || 600) - 36)));
+
+    var k1 = '<div class="kpi"><span class="kl">최근 3달 거래 (' + range3 + ')</span><span class="kv">' + nf(n3) + "<small>건</small></span>" +
+      '<span class="kd">' + (hasLy ? "작년 같은 기간 " + nf(y3) + "건" : "신고 기한이 지난 달까지") + "</span></div>";
+    var k2 = '<div class="kpi"><span class="kl">㎡당 가격 (중앙값)</span><span class="kv">' + (mPer != null ? nf(Math.round(mPer * 10) / 10) + "<small>만 원</small>" : "–") + "</span>" +
+      '<span class="kd">' + areaLabel + " 기준" + (mPer != null && housing ? " · 평당 약 " + nf(Math.round(mPer * 3.3058)) + "만 원" : "") + " · 최근 12달</span></div>";
+    var k3 = '<div class="kpi wide"><span class="kl">거래 금액 (중앙값)</span><span class="kv">' + (mAmt != null ? won(mAmt) + "<small>원</small>" : "–") + "</span>" +
+      '<span class="kd">최근 12달 ' + nf(amts.length) + "건 · 직거래 " + nf(list.filter(function (r) { return r[10]; }).length) + "건</span></div>";
+
+    var partial = months.filter(function (m) { return m > full; }).map(function (m) { return (+m.slice(5)) + "월"; });
+    var h = '<div class="tkpis">' + k1 + k2 + k3 + "</div>";
+    h += '<article class="card" style="margin-top:16px"><div class="card-head"><h3>월별 거래 수</h3><span class="meta">' + esc(plName) + " · " + esc(K[1]) + "</span></div>" +
+      '<div class="tchart">' + tChart(months, cnt, full, "bar", "건", cw) + "</div>" +
+      '<div class="tkey"><span><i style="background:var(--brand)"></i>다 들어온 달</span>' + (partial.length ? '<span><i style="background:repeating-linear-gradient(135deg, var(--rule-2) 0 3px, transparent 3px 6px)"></i>집계 중 (' + partial.join("·") + ", 신고 기한 30일)</span>" : "") + "</div></article>";
+    h += '<article class="card"><div class="card-head"><h3>' + areaLabel + " ㎡당 가격 중앙값</h3><span class=\"meta\">달마다, 거래 3건 이상인 달만</span></div>" +
+      '<div class="tchart">' + tChart(months, med, full, "line", "", cw) + "</div>" +
+      '<p class="panel-note" style="margin:8px 0 0">' + (TR.kind === "land" ? "토지는 지목·용도지역에 따라 값 차이가 커서, 달마다 어떤 땅이 거래됐는지에 따라 크게 흔들려요." : "그달에 거래된 집의 크기·연식·위치에 따라 중앙값이 흔들릴 수 있어요.") + " 지분 거래는 ㎡당 가격에서 뺐어요.</p></article>";
+
+    // 최근 거래 목록
+    var rows = list.slice(0, TR.shown);
+    h += '<article class="card"><div class="card-head"><h3>최근 거래</h3><span class="meta">최근 12달 ' + nf(list.length) + "건</span></div>";
+    if (!rows.length) h += '<p class="result">이 동네에는 최근 12달 거래 기록이 없어요.</p>';
+    else {
+      h += '<div class="tlist">' + rows.map(function (r) {
+        var key = places[r[1]], place = key.slice(key.indexOf("|") + 1), nm = names[r[5]], ex = extras[r[8]];
+        var title = nm || ex || place || K[1];
+        var sub = [place, r[4] > 0 ? nf(r[4]) + "㎡" + (housing ? " (" + nf(Math.round(r[4] / 3.3058 * 10) / 10) + "평)" : "") : "",
+          r[6] ? r[6] + "층" : "", r[7] ? r[7] + "년 지음" : "", nm && ex ? ex : "", r[9] && !housing ? "지번 " + r[9] : ""].filter(Boolean).join(" · ");
+        var d = r[2];
+        return '<div class="ti"><span class="td">' + (+d.slice(2, 4)) + "." + d.slice(4, 6) + '</span><span class="tn">' + esc(title) + "</span>" +
+          '<span class="ta">' + won(r[3]) + "</span>" + '<span class="ts">' + esc(sub) + (r[10] ? '<span class="tag">직거래</span>' : "") + (r[11] ? '<span class="tag">지분</span>' : "") + "</span></div>";
+      }).join("") + "</div>";
+      if (list.length > TR.shown) h += '<button type="button" class="more" id="tr-more">' + nf(Math.min(20, list.length - TR.shown)) + "건 더 보기</button>";
+    }
+    h += "</article>";
+    h += '<p class="disclaimer">출처: 국토교통부 실거래가 공개 자료(공공데이터포털), ' + esc(meta.fetched || "") + " 받음. 계약일 기준이며 거래 신고 기한(30일)이 지나지 않은 최근 달은 아직 다 들어오지 않았어요. " +
+      (housing ? "" : "개인정보 보호를 위해 지번 일부가 가려져 나와요. ") + "중앙값은 그 기간 거래를 줄 세웠을 때 가운데 값이고, 시세나 감정가가 아니에요. 투자 판단의 근거로 쓰지 마세요.</p>";
+    body.innerHTML = h;
+    var more = document.getElementById("tr-more");
+    if (more) more.onclick = function () { TR.shown += 20; drawTrade(); };
+  }
+
   // ---------- 지역 분석: 지역 통계와 멈춘 기록
   var sub = "stats";
   function drawAnalysis() {
-    ["stats", "flow", "compare", "stall"].forEach(function (k) {
+    ["stats", "flow", "compare", "trade", "stall"].forEach(function (k) {
       document.getElementById("pane-" + k).hidden = k !== sub;
       document.getElementById("sub-" + k).setAttribute("aria-selected", String(k === sub));
     });
-    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else drawStall();
+    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else drawStall();
   }
 
   // ---------- 진행 흐름: 허가받은 곳이 실제로 착공·사용승인까지 갔는지
@@ -2674,7 +2849,7 @@ html:not(.touch) {
     var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h), target = h, sharedItem = null;
     if (m) { sharedItem = byPk[decodeURIComponent(m[1])] || null; target = "map"; }
     if (target === "list") target = "map";
-    if (target === "stats" || target === "flow" || target === "compare" || target === "stall") { sub = target; target = "analysis"; }
+    if (target === "stats" || target === "flow" || target === "compare" || target === "trade" || target === "stall") { sub = target; target = "analysis"; }
     else if (target === "analysis") sub = "stats";
     if (!TITLES[target]) target = "home";
     var moved = target !== screen;
