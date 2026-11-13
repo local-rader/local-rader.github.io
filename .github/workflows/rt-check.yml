@@ -7,13 +7,14 @@ jobs:
   check:
     runs-on: ubuntu-latest
     env:
-      DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+      RTMS_KEY: ${{ secrets.RTMS_KEY }}
     steps:
       - name: 종류별 응답 확인 (키는 출력하지 않음)
         shell: python
         run: |
           import os, urllib.request, urllib.parse, xml.etree.ElementTree as ET
-          key = os.environ["DATA_GO_KR_KEY"].strip()
+          key = urllib.parse.unquote(os.environ.get("RTMS_KEY", "").strip())  # 인코딩된 키를 넣어도 되게
+          if not key: print("RTMS_KEY Secret이 아직 없습니다"); raise SystemExit(0)
           apis = {
             "아파트 매매(상세)": "RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev",
             "단독다가구 매매": "RTMSDataSvcSHTrade/getRTMSDataSvcSHTrade",
