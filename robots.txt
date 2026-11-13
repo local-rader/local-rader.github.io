@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /parcels-tool.html
+
+Sitemap: https://local-rader.github.io/sitemap.xml

@@ -3,9 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>터놓고</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 48 48%27%3E%3Crect width=%2748%27 height=%2748%27 rx=%2710%27 fill=%27%23FFFFFF%27/%3E%3Cpath d=%27M7 28 L7 21 L24 9 L41 21 L41 28%27 fill=%27none%27 stroke=%27%23222222%27 stroke-width=%275%27 stroke-linejoin=%27round%27/%3E%3Crect x=%2732%27 y=%275%27 width=%274%27 height=%2712%27 fill=%27%23222222%27/%3E%3Crect x=%2720.5%27 y=%2718.5%27 width=%273%27 height=%273%27 rx=%27.6%27 fill=%27%23222222%27/%3E%3Crect x=%2724.5%27 y=%2718.5%27 width=%273%27 height=%273%27 rx=%27.6%27 fill=%27%23222222%27/%3E%3Crect x=%2720.5%27 y=%2722.5%27 width=%273%27 height=%273%27 rx=%27.6%27 fill=%27%23222222%27/%3E%3Crect x=%2724.5%27 y=%2722.5%27 width=%273%27 height=%273%27 rx=%27.6%27 fill=%27%23222222%27/%3E%3Cpath d=%27M4 32 L24 27 L44 32 L24 39 Z%27 fill=%27%234DA8FF%27/%3E%3C/svg%3E">
-<meta name="description" content="청주에서 새로 허가된 건축과 공사 진행 상황을 공공데이터로 모아 지도로 보여줍니다.">
+<title>터놓고 - 청주 건축·개발 정보 지도</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="192x192" href="/brand/icon-192.png">
+<link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
+<meta name="description" content="터놓고는 국토교통부 건축 인허가 공공데이터로 청주시의 건축 허가·착공·사용승인을 지도와 동네별 통계로 보여주는 서비스입니다. 공사 중인 건물의 사용승인 예상 시기, 동네 비교, AI 질문도 제공합니다.">
+<link rel="canonical" href="https://local-rader.github.io/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="터놓고">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="터놓고 - 청주 건축·개발 정보 지도">
+<meta property="og:description" content="지역의 변화를 데이터로 읽다. 청주 건축 허가·착공·사용승인을 지도와 동네별 통계로 확인하세요.">
+<meta property="og:url" content="https://local-rader.github.io/">
+<meta property="og:image" content="https://local-rader.github.io/brand/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="터놓고 로고와 '지역의 변화를 데이터로 읽다' 문구">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F8F9FB">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://local-rader.github.io/#website", "name": "터놓고", "alternateName": ["터놓고 청주", "Turnoko"], "url": "https://local-rader.github.io/", "inLanguage": "ko", "description": "터놓고는 국토교통부 건축 인허가 공공데이터로 청주시의 건축 허가·착공·사용승인을 지도와 동네별 통계로 보여주는 서비스입니다. 공사 중인 건물의 사용승인 예상 시기, 동네 비교, AI 질문도 제공합니다.", "publisher": {"@id": "https://local-rader.github.io/#org"}}, {"@type": "Organization", "@id": "https://local-rader.github.io/#org", "name": "터놓고", "url": "https://local-rader.github.io/", "logo": "https://local-rader.github.io/brand/icon-512.png", "sameAs": ["https://www.instagram.com/turnoko.kr/"]}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -593,6 +609,7 @@ html:not(.touch) {
 <script>if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("touch");</script>
 </head>
 <body data-screen="home">
+<noscript><p style="padding:16px;font-size:15px;line-height:1.6">터놓고는 국토교통부 건축 인허가 공공데이터로 청주시(상당구·서원구·흥덕구·청원구)의 건축 허가·착공·사용승인을 지도와 동네별 통계로 보여주는 서비스입니다. 지도와 통계를 보려면 브라우저에서 자바스크립트를 켜 주세요. <a href="privacy.html">개인정보처리방침</a></p></noscript>
 
 <header class="appbar">
   <div class="wrap appbar-in">
@@ -2671,7 +2688,7 @@ html:not(.touch) {
       });
     });
     setTitle();
-    document.title = screen === "home" ? "터놓고" : TITLES[screen] + " · 터놓고";
+    document.title = screen === "home" ? "터놓고 - 청주 건축·개발 정보 지도" : TITLES[screen] + " · 터놓고";
     if (moved) window.scrollTo(0, 0);
     if (screen === "home") drawHome();
     if (screen === "map") {
