@@ -4,5 +4,5 @@ window.DONGNE_CONFIG = {
   kakaoJsKey: "aa96866b347b104d71bcb5ece9f0070b",
   // AI 질문 중계 서버(Cloudflare Worker) 주소. 비어 있으면 AI 질문창은 '준비 중'으로 나오고 질문 버튼만 동작합니다.
   // Claude API 키는 여기에 넣지 않습니다(누구나 볼 수 있음). 키는 Worker 설정에만 넣습니다.
-  aiEndpoint: ""
+  aiEndpoint: "https://turnoko-ai.turnoko-065f40.workers.dev"
 };
