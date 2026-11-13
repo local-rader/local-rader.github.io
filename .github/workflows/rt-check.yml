@@ -1,0 +1,46 @@
+name: 실거래가 API 점검 (임시)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+    steps:
+      - name: 종류별 응답 확인 (키는 출력하지 않음)
+        shell: python
+        run: |
+          import os, urllib.request, urllib.parse, xml.etree.ElementTree as ET
+          key = os.environ["DATA_GO_KR_KEY"].strip()
+          apis = {
+            "아파트 매매(상세)": "RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev",
+            "아파트 매매": "RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade",
+            "아파트 전월세": "RTMSDataSvcAptRent/getRTMSDataSvcAptRent",
+            "연립다세대 매매": "RTMSDataSvcRHTrade/getRTMSDataSvcRHTrade",
+            "단독다가구 매매": "RTMSDataSvcSHTrade/getRTMSDataSvcSHTrade",
+            "오피스텔 매매": "RTMSDataSvcOffiTrade/getRTMSDataSvcOffiTrade",
+            "토지 매매": "RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade",
+            "분양권 전매": "RTMSDataSvcSilvTrade/getRTMSDataSvcSilvTrade",
+          }
+          for name, path in apis.items():
+              q = urllib.parse.urlencode({"serviceKey": key, "LAWD_CD": "43114", "DEAL_YMD": "202609", "pageNo": 1, "numOfRows": 3})
+              try:
+                  with urllib.request.urlopen(urllib.request.Request("https://apis.data.go.kr/1613000/" + path + "?" + q, headers={"User-Agent": "turnoko"}), timeout=30) as r:
+                      body = r.read().decode("utf-8", "replace")
+              except urllib.error.HTTPError as e:
+                  print(f"{name}: HTTP {e.code} {e.read()[:120]!r}"); continue
+              except Exception as e:
+                  print(f"{name}: 오류 {e}"); continue
+              try:
+                  root = ET.fromstring(body)
+              except Exception:
+                  print(f"{name}: XML 아님 {body[:160]!r}"); continue
+              code = root.findtext(".//resultCode"); msg = root.findtext(".//resultMsg"); total = root.findtext(".//totalCount")
+              item = root.find(".//item")
+              fields = [c.tag for c in item] if item is not None else []
+              sample = {c.tag: (c.text or "").strip() for c in item} if item is not None else {}
+              print(f"{name}: code={code} msg={msg} total={total}")
+              print("   fields:", ",".join(fields))
+              if sample: print("   sample:", {k: sample[k] for k in list(sample)[:30]})
