@@ -916,9 +916,9 @@ html:not(.touch) {
 
       <div class="pane" id="pane-trade" role="tabpanel" aria-labelledby="sub-trade" hidden>
         <div class="sec-head"><h2 class="sec" id="tr-h">실거래</h2><span id="tr-asof"></span></div>
-        <p class="panel-note">국토교통부 실거래가 공개 자료로 본 매매 거래예요. 계약일 기준이고, 해제(취소)된 거래는 뺐어요. 동네는 맨 위에서 바꿀 수 있어요.</p>
+        <p class="panel-note">국토교통부 실거래가 공개 자료로 본 매매 거래입니다. 계약일 기준이고, 해제(취소)된 거래는 뺐습니다. 동네는 맨 위에서 바꿀 수 있습니다.</p>
         <div class="hscroll tkinds" id="tr-kinds" role="group" aria-label="부동산 종류"></div>
-        <div id="tr-body"><p class="result">실거래 자료를 불러오는 중이에요…</p></div>
+        <div id="tr-body"><p class="result">실거래 자료를 불러오는 중입니다…</p></div>
       </div>
       <div class="pane" id="pane-stall" role="tabpanel" aria-labelledby="sub-stall" hidden>
         <div class="sec-head"><h2 class="sec" id="st-h">장기 미진행</h2><span id="st-asof"></span></div>
@@ -1469,7 +1469,7 @@ html:not(.touch) {
     var TB = P.tradeBrief, tb = TB && TB.places && TB.places[state.place === "all" ? "all" : state.place];
     if (tb && tb.apt && tb.apt[0]) {
       var a0 = tb.apt[0], a1 = tb.apt[1], a12 = tb.apt[2], tm = TB.month;
-      facts.push(monthName(tm) + " 아파트 매매는 <b>" + nf(a0) + "건</b>" + (a1 ? "으로 " + monthName(addMonths(tm, -1)) + "보다 " + (a0 === a1 ? "같아요" : nf(Math.abs(a0 - a1)) + "건 " + (a0 > a1 ? "많아요" : "적어요")) : "이에요") +
+      facts.push(monthName(tm) + " 아파트 매매는 <b>" + nf(a0) + "건</b>" + (a1 ? "으로 " + monthName(addMonths(tm, -1)) + "보다 " + (a0 === a1 ? "같습니다" : nf(Math.abs(a0 - a1)) + "건 " + (a0 > a1 ? "많습니다" : "적습니다")) : "입니다") +
         (a12 ? " (작년 " + monthName(tm) + " " + nf(a12) + "건)." : ".") + ' <a href="#trade">실거래 보기</a>');
     }
     document.getElementById("brief-facts").innerHTML = facts.map(function (f) { return "<li>" + f + "</li>"; }).join("");
@@ -2330,7 +2330,7 @@ html:not(.touch) {
   function tChart(months, vals, full, kind, unit, W) {
     W = W || 640; var H = W < 480 ? 170 : 150, L = 6, R = 6, T = 14, B = 22, n = months.length, bw = (W - L - R) / n;
     var nums = vals.filter(function (v) { return v != null; });
-    if (!nums.length) return '<p class="result">이 기간에는 거래 기록이 없어요.</p>';
+    if (!nums.length) return '<p class="result">이 기간에는 거래 기록이 없습니다.</p>';
     var mx = Math.max.apply(null, nums), mn = kind === "line" ? Math.min.apply(null, nums) : 0;
     if (kind === "line") { var pad = (mx - mn) * 0.15 || mx * 0.1 || 1; mx += pad; mn = Math.max(0, mn - pad); } else mx = mx || 1;
     function y(v) { return T + (H - T - B) * (1 - (v - mn) / (mx - mn || 1)); }
@@ -2363,12 +2363,12 @@ html:not(.touch) {
   function drawTrade() {
     var body = document.getElementById("tr-body");
     if (!window.TRADES) {
-      body.innerHTML = '<p class="result">' + (TR.failed ? "실거래 자료를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요." : "실거래 자료를 불러오는 중이에요…") + "</p>";
+      body.innerHTML = '<p class="result">' + (TR.failed ? "실거래 자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요." : "실거래 자료를 불러오는 중입니다…") + "</p>";
       if (!TR.failed) loadTrades(function () { if (screen === "analysis" && sub === "trade") drawTrade(); });
       return;
     }
     var T = window.TRADES, meta = T.meta || {}, kinds = meta.kinds || [];
-    if (!kinds.length) { body.innerHTML = '<p class="result">실거래 자료가 아직 없어요.</p>'; return; }
+    if (!kinds.length) { body.innerHTML = '<p class="result">실거래 자료가 아직 없습니다.</p>'; return; }
     if (!TR.kind || !kinds.some(function (k) { return k[0] === TR.kind; })) TR.kind = kinds[0][0];
     var K = kinds.filter(function (k) { return k[0] === TR.kind; })[0], kIdx;
     var ALL = ["apt", "rh", "sh", "offi", "land", "nrg", "indu"]; kIdx = ALL.indexOf(TR.kind);
@@ -2394,7 +2394,7 @@ html:not(.touch) {
     var aggP = ((T.agg || {})[TR.kind] || {})[pl === "all" ? "all" : pl] || {};
     var months = tMonths((meta.window || [])[0] || full, (meta.window || [])[1] || full);
     var cnt = months.map(function (m) { var v = aggP[yymmOf(m)]; return v ? v[0] : 0; });
-    var med = months.map(function (m) { var v = aggP[yymmOf(m)]; return v && v[0] >= 3 && v[1] != null ? v[1] : null; });
+    var med = months.map(function (m) { var v = aggP[yymmOf(m)]; return m <= full && v && v[0] >= 3 && v[1] != null ? v[1] : null; }); // 집계 중인 달은 일찍 신고된 거래만 있어 치우침
     var last3 = [addMonths(full, -2), addMonths(full, -1), full], ly3 = last3.map(function (m) { return addMonths(m, -12); });
     function sumM(ms) { return ms.reduce(function (a, m) { var v = aggP[yymmOf(m)]; return a + (v ? v[0] : 0); }, 0); }
     var n3 = sumM(last3), y3 = sumM(ly3), hasLy = ly3[0] >= months[0];
@@ -2413,14 +2413,14 @@ html:not(.touch) {
     h += '<article class="card" style="margin-top:16px"><div class="card-head"><h3>월별 거래 수</h3><span class="meta">' + esc(plName) + " · " + esc(K[1]) + "</span></div>" +
       '<div class="tchart">' + tChart(months, cnt, full, "bar", "건", cw) + "</div>" +
       '<div class="tkey"><span><i style="background:var(--brand)"></i>다 들어온 달</span>' + (partial.length ? '<span><i style="background:repeating-linear-gradient(135deg, var(--rule-2) 0 3px, transparent 3px 6px)"></i>집계 중 (' + partial.join("·") + ", 신고 기한 30일)</span>" : "") + "</div></article>";
-    h += '<article class="card"><div class="card-head"><h3>' + areaLabel + " ㎡당 가격 중앙값</h3><span class=\"meta\">달마다, 거래 3건 이상인 달만</span></div>" +
+    h += '<article class="card"><div class="card-head"><h3>' + areaLabel + " ㎡당 가격 중앙값</h3><span class=\"meta\">달마다, 거래 3건 이상이고 다 들어온 달만</span></div>" +
       '<div class="tchart">' + tChart(months, med, full, "line", "", cw) + "</div>" +
-      '<p class="panel-note" style="margin:8px 0 0">' + (TR.kind === "land" ? "토지는 지목·용도지역에 따라 값 차이가 커서, 달마다 어떤 땅이 거래됐는지에 따라 크게 흔들려요." : "그달에 거래된 집의 크기·연식·위치에 따라 중앙값이 흔들릴 수 있어요.") + " 지분 거래는 ㎡당 가격에서 뺐어요.</p></article>";
+      '<p class="panel-note" style="margin:8px 0 0">' + (TR.kind === "land" ? "토지는 지목·용도지역에 따라 값 차이가 커서, 달마다 어떤 땅이 거래됐는지에 따라 크게 흔들립니다." : "그달에 거래된 집의 크기·연식·위치에 따라 중앙값이 흔들릴 수 있습니다.") + " 지분 거래는 ㎡당 가격에서 뺐습니다.</p></article>";
 
     // 최근 거래 목록
     var rows = list.slice(0, TR.shown);
     h += '<article class="card"><div class="card-head"><h3>최근 거래</h3><span class="meta">최근 12달 ' + nf(list.length) + "건</span></div>";
-    if (!rows.length) h += '<p class="result">이 동네에는 최근 12달 거래 기록이 없어요.</p>';
+    if (!rows.length) h += '<p class="result">이 동네에는 최근 12달 거래 기록이 없습니다.</p>';
     else {
       h += '<div class="tlist">' + rows.map(function (r) {
         var key = places[r[1]], place = key.slice(key.indexOf("|") + 1), nm = names[r[5]], ex = extras[r[8]];
@@ -2434,8 +2434,8 @@ html:not(.touch) {
       if (list.length > TR.shown) h += '<button type="button" class="more" id="tr-more">' + nf(Math.min(20, list.length - TR.shown)) + "건 더 보기</button>";
     }
     h += "</article>";
-    h += '<p class="disclaimer">출처: 국토교통부 실거래가 공개 자료(공공데이터포털), ' + esc(meta.fetched || "") + " 받음. 계약일 기준이며 거래 신고 기한(30일)이 지나지 않은 최근 달은 아직 다 들어오지 않았어요. " +
-      (housing ? "" : "개인정보 보호를 위해 지번 일부가 가려져 나와요. ") + "중앙값은 그 기간 거래를 줄 세웠을 때 가운데 값이고, 시세나 감정가가 아니에요. 투자 판단의 근거로 쓰지 마세요.</p>";
+    h += '<p class="disclaimer">출처: 국토교통부 실거래가 공개 자료(공공데이터포털), ' + esc(meta.fetched || "") + " 받음. 계약일 기준이며 거래 신고 기한(30일)이 지나지 않은 최근 달은 아직 다 들어오지 않았습니다. " +
+      (housing ? "" : "개인정보 보호를 위해 지번 일부가 가려져 나옵니다. ") + "중앙값은 그 기간 거래를 줄 세웠을 때 가운데 값이고, 시세나 감정가가 아닙니다. 투자 판단의 근거로 쓰지 마세요.</p>";
     body.innerHTML = h;
     var more = document.getElementById("tr-more");
     if (more) more.onclick = function () { TR.shown += 20; drawTrade(); };
