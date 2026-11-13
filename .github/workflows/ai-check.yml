@@ -1,0 +1,21 @@
+name: AI 서버 점검 (임시)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 분리 확인 (기록은 남기지 않음)
+        run: |
+          A=https://turnoko-ai.turnoko-065f40.workers.dev
+          M=https://turnoko-admin.turnoko-065f40.workers.dev
+          O="Origin: https://local-rader.github.io"
+          echo "ai/admin(no origin): $(curl -s -o /dev/null -w '%{http_code}' $A/admin)"
+          echo "ai/admin(site origin): $(curl -s -o /dev/null -w '%{http_code}' -H "$O" $A/admin)"
+          echo "ai/hit(selftest): $(curl -s -o /dev/null -w '%{http_code}' -X POST -H "$O" -H 'content-type: text/plain' -d '{"t":"selftest"}' $A/hit)"
+          echo "ai/quota: $(curl -s -o /dev/null -w '%{http_code}' -H "$O" $A/quota)"
+          echo "admin/: $(curl -s -o /tmp/m.html -w '%{http_code}' $M/) $(grep -o '<title>[^<]*' /tmp/m.html | head -1)"
+          echo "admin/stats(no key): $(curl -s -o /dev/null -w '%{http_code}' $M/stats)"
+          echo "admin/robots: $(curl -s $M/robots.txt | tr '\n' ' ')"
