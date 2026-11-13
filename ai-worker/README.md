@@ -16,34 +16,32 @@ Cloudflare Workers(무료)에서 돌아가고, Claude API 키는 이 서버에�
 - 답을 받았을 때만 횟수를 셉니다. AI가 실패하면 횟수가 줄지 않습니다.
 - 질문과 답은 저장하지 않습니다. 횟수 세기용으로 기기·IP를 해시한 값과 횟수만 최대 8일 둡니다.
 
-## 설정 순서 (처음 한 번, 30분 정도)
+## 설정 순서 (처음 한 번)
 
-### 1. Claude API 키 만들기 (Anthropic)
-1. https://console.anthropic.com 에 가입합니다.
-2. Billing(결제)에서 결제 수단을 등록하고 크레딧을 조금(예: 5달러) 충전합니다.
-3. Limits(사용 한도)에서 월 사용 한도를 낮게 정해 둡니다. 예상보다 많이 쓰이는 것을 막는 가장 확실한 방법입니다.
-4. API Keys에서 새 키를 만들고 복사해 둡니다. 키는 채팅이나 사이트 파일에 붙여넣지 마세요.
+### 방법 A: GitHub가 대신 배포 (추천, 20분 정도)
+값 세 개만 GitHub Secrets에 넣으면, `AI 서버 배포` 자동 작업(.github/workflows/ai-worker.yml)이
+Worker 만들기, 횟수 저장소(KV) 연결, 키 넣기, 시험까지 합니다. 이후 `ai-worker/`가 바뀌면 자동으로 다시 배포합니다.
 
-### 2. Worker 만들기 (Cloudflare)
-1. https://dash.cloudflare.com 에 가입합니다.
-2. Workers & Pages → Create → Worker를 고르고 이름을 `turnoko-ai`처럼 정한 뒤 Deploy를 누릅니다.
-3. Edit code를 눌러 기본 코드를 모두 지우고, 이 폴더의 `worker.js` 내용을 전부 붙여넣은 뒤 Deploy를 누릅니다.
+1. **Claude API 키** (https://console.anthropic.com)
+   - 가입 → Billing에서 결제 수단 등록, 크레딧 조금(예: 5달러) 충전
+   - Limits에서 월 사용 한도를 낮게(예: 5달러) 정하기
+   - API Keys → Create Key → 키 복사 (채팅에 붙여넣지 않기)
+2. **Cloudflare API 토큰과 계정 ID** (https://dash.cloudflare.com, 무료 가입)
+   - 오른쪽 위 사람 아이콘 → My Profile → API Tokens → Create Token
+   - 'Edit Cloudflare Workers' 템플릿의 Use template → 아래로 내려 Continue to summary → Create Token → 토큰 복사
+   - 대시보드 첫 화면(또는 Workers & Pages 화면) 오른쪽의 Account ID 복사
+3. **GitHub에 넣기**: 저장소 → Settings → Secrets and variables → Actions → New repository secret으로 세 개
+   - `ANTHROPIC_API_KEY` = 1번 키
+   - `CLOUDFLARE_API_TOKEN` = 2번 토큰
+   - `CLOUDFLARE_ACCOUNT_ID` = 2번 계정 ID
+4. 다 넣었다고 알려 주면 `AI 서버 배포`를 실행하고, 나온 주소를 config.js의 `aiEndpoint`에 넣습니다.
 
-### 3. 횟수 저장소(KV) 연결
-1. Storage & Databases → KV → Create로 `turnoko-quota` 같은 이름의 저장소를 만듭니다.
-2. 만든 Worker → Settings → Bindings → Add → KV namespace를 고릅니다.
-3. Variable name에 `QUOTA`(대문자)를 쓰고, 방금 만든 저장소를 고른 뒤 저장합니다.
-
-### 4. 비밀 값 넣기
-Worker → Settings → Variables and Secrets → Add에서 Type을 Secret으로 두고 두 개를 넣습니다.
-- `ANTHROPIC_API_KEY`: 1번에서 만든 키
-- `SALT`: 아무 긴 문자열 (예: 비밀번호 생성기로 만든 30자)
-
-넣은 뒤 Deploy를 한 번 더 누릅니다.
-
-### 5. 사이트에 주소 알려주기
-Worker 화면 위쪽의 주소(`https://turnoko-ai.○○○.workers.dev`)를 복사해서 알려 주세요.
-이 주소는 공개돼도 괜찮습니다. config.js의 `aiEndpoint`에 넣으면 질문창이 열립니다.
+### 방법 B: Cloudflare 화면에서 직접
+1. Claude API 키는 방법 A의 1번과 같습니다.
+2. Workers & Pages → Create → Worker, 이름 `turnoko-ai` → Deploy → Edit code에 `worker.js` 전체 붙여넣기 → Deploy
+3. Storage & Databases → KV → Create로 `turnoko-quota` 만들기 → Worker → Settings → Bindings → Add → KV namespace, 이름 `QUOTA`
+4. Settings → Variables and Secrets → Secret으로 `ANTHROPIC_API_KEY`(키)와 `SALT`(아무 긴 문자열) 넣고 Deploy
+5. Worker 주소(`https://turnoko-ai.○○○.workers.dev`)를 config.js의 `aiEndpoint`에 넣기
 
 ## 바꿀 수 있는 설정 (Variables, 선택)
 

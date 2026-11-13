@@ -1,0 +1,10 @@
+# AI 질문 중계 서버 설정. 배포는 .github/workflows/ai-worker.yml이 한다.
+# __KV_ID__는 배포할 때 횟수 저장소(turnoko-quota)의 번호로 바뀐다.
+name = "turnoko-ai"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[[kv_namespaces]]
+binding = "QUOTA"
+id = "__KV_ID__"

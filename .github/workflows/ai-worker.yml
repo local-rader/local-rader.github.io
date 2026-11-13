@@ -1,0 +1,101 @@
+# AI 질문 중계 서버(Cloudflare Worker)를 배포한다. 손으로 실행하거나, main의 ai-worker/ 폴더가 바뀌면 실행된다.
+# 저장소 Settings → Secrets and variables → Actions 에 세 가지를 넣어 둔다.
+#   ANTHROPIC_API_KEY      Claude API 키
+#   CLOUDFLARE_API_TOKEN   Cloudflare API 토큰 ('Edit Cloudflare Workers' 템플릿)
+#   CLOUDFLARE_ACCOUNT_ID  Cloudflare 계정 ID
+# workers.dev 주소와 횟수 저장소(KV)가 없으면 처음 실행 때 만든다.
+name: AI 서버 배포
+
+on:
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "배포 뒤 실제 질문 1번으로 시험 (yes/no)"
+        required: false
+        default: "yes"
+  push:
+    branches: [main]
+    paths: ["ai-worker/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      WRANGLER: wrangler@3.114.16
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 설정 확인
+        id: cfg
+        run: |
+          missing=""
+          for v in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID ANTHROPIC_API_KEY; do
+            if [ -z "${!v}" ]; then missing="$missing $v"; fi
+          done
+          if [ -n "$missing" ]; then
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then echo "::error::Secret이 없습니다:$missing"; exit 1; fi
+            echo "::notice::Secret이 아직 없어 배포를 건너뜁니다:$missing"
+            echo "ready=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=yes" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: workers.dev 주소와 횟수 저장소 준비
+        if: steps.cfg.outputs.ready == 'yes'
+        run: |
+          API="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          AUTH="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          SUB=$(curl -sS -H "$AUTH" "$API/workers/subdomain" | jq -r '.result.subdomain // empty')
+          if [ -z "$SUB" ]; then
+            SUB="turnoko-$(echo "$CLOUDFLARE_ACCOUNT_ID" | cut -c1-6)"
+            curl -fsS -X PUT -H "$AUTH" -H "content-type: application/json" -d "{\"subdomain\":\"$SUB\"}" "$API/workers/subdomain" > /dev/null
+            echo "workers.dev 주소를 새로 만들었습니다: $SUB"
+          fi
+          echo "SUB=$SUB" >> "$GITHUB_ENV"
+          ID=$(curl -fsS -H "$AUTH" "$API/storage/kv/namespaces?per_page=100" | jq -r '.result[] | select(.title=="turnoko-quota") | .id' | head -1)
+          if [ -z "$ID" ]; then
+            ID=$(curl -fsS -X POST -H "$AUTH" -H "content-type: application/json" -d '{"title":"turnoko-quota"}' "$API/storage/kv/namespaces" | jq -r '.result.id')
+            echo "횟수 저장소를 새로 만들었습니다"
+          fi
+          if [ -z "$ID" ] || [ "$ID" = "null" ]; then echo "::error::횟수 저장소(KV)를 만들지 못했습니다. API 토큰 권한을 확인하세요"; exit 1; fi
+          sed -i "s/__KV_ID__/$ID/" ai-worker/wrangler.toml
+
+      - name: 배포
+        if: steps.cfg.outputs.ready == 'yes'
+        working-directory: ai-worker
+        run: |
+          npx --yes "$WRANGLER" deploy
+          printf '%s' "$ANTHROPIC_API_KEY" | npx --yes "$WRANGLER" secret put ANTHROPIC_API_KEY
+          # 기기·IP 해시에 섞을 값: API 키에서 만들어 따로 관리할 필요가 없게 한다
+          printf '%s' "$ANTHROPIC_API_KEY" | sha256sum | cut -c1-40 | tr -d '\n' | npx --yes "$WRANGLER" secret put SALT
+          echo "AI 서버 주소: https://turnoko-ai.$SUB.workers.dev"
+
+      - name: 시험
+        if: steps.cfg.outputs.ready == 'yes'
+        run: |
+          U="https://turnoko-ai.$SUB.workers.dev"
+          echo "AI 서버 주소: $U"
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS -H "Origin: https://local-rader.github.io" "$U/quota"; then echo; break; fi
+            echo "아직 준비 중, 10초 뒤 다시 확인"; sleep 10
+          done
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.test }}" != "no" ]; then
+            curl -sS -X POST -H "Origin: https://local-rader.github.io" -H "content-type: application/json" \
+              -H "X-Device: github-actions-test-0001" \
+              -d '{"q":"율량동에 요즘 뭐가 지어지고 있어?","place":"all"}' "$U/ask" | jq .
+          fi
