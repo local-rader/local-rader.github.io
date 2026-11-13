@@ -16,8 +16,8 @@ jobs:
           key = os.environ["DATA_GO_KR_KEY"].strip()
           apis = {
             "아파트 매매(상세)": "RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev",
-            "연립다세대 매매": "RTMSDataSvcRHTrade/getRTMSDataSvcRHTrade",
             "단독다가구 매매": "RTMSDataSvcSHTrade/getRTMSDataSvcSHTrade",
+            "연립다세대 매매": "RTMSDataSvcRHTrade/getRTMSDataSvcRHTrade",
             "오피스텔 매매": "RTMSDataSvcOffiTrade/getRTMSDataSvcOffiTrade",
             "토지 매매": "RTMSDataSvcLandTrade/getRTMSDataSvcLandTrade",
             "상업업무용 매매": "RTMSDataSvcNrgTrade/getRTMSDataSvcNrgTrade",
