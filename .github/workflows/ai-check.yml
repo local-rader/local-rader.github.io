@@ -6,17 +6,10 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
-      - name: Anthropic 직접 호출 (키 값은 출력하지 않음)
+      - name: 서버에 시험 질문
         run: |
-          if [ -z "$ANTHROPIC_API_KEY" ]; then echo "키가 비어 있음"; exit 0; fi
-          echo "키 길이: ${#ANTHROPIC_API_KEY}, 앞 7자: ${ANTHROPIC_API_KEY:0:7}"
-          BODY=$(mktemp)
-          CODE=$(curl -sS -o "$BODY" -w "%{http_code}" https://api.anthropic.com/v1/messages \
-            -H "x-api-key: $ANTHROPIC_API_KEY" -H "anthropic-version: 2023-06-01" -H "content-type: application/json" \
-            -d '{"model":"claude-haiku-5-5","max_tokens":5,"messages":[{"role":"user","content":"hi"}]}')
-          echo "HTTP 상태: $CODE"
-          echo "오류 종류: $(jq -r '.error.type // "없음"' "$BODY" 2>/dev/null)"
-          echo "오류 메시지: $(jq -r '.error.message // "없음"' "$BODY" 2>/dev/null | cut -c1-200)"
+          curl -sS -m 60 -X POST -H "Origin: https://local-rader.github.io" -H "content-type: application/json" \
+            -H "X-Device: check-run-$RANDOM$RANDOM" \
+            -d '{"q":"율량동에 요즘 뭐가 지어지고 있어?","place":"all"}' \
+            https://turnoko-ai.turnoko-065f40.workers.dev/ask | cut -c1-600; echo
