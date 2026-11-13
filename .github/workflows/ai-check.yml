@@ -1,0 +1,19 @@
+name: AI 서버 점검 (임시)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 관리자 화면과 방문 기록 응답 확인 (기록은 남기지 않음)
+        run: |
+          U=https://turnoko-ai.turnoko-065f40.workers.dev
+          O="Origin: https://local-rader.github.io"
+          echo "admin: $(curl -s -o /tmp/a.html -w '%{http_code}' $U/admin) title=$(grep -o '<title>[^<]*' /tmp/a.html | head -1)"
+          echo "stats(no key): $(curl -s -o /dev/null -w '%{http_code}' $U/admin/stats)"
+          echo "stats(wrong key): $(curl -s -o /dev/null -w '%{http_code}' -H 'X-Admin-Key: wrong' $U/admin/stats)"
+          echo "hit(selftest): $(curl -s -o /dev/null -w '%{http_code}' -X POST -H "$O" -H 'content-type: text/plain' -d '{"t":"selftest"}' $U/hit)"
+          echo "hit(other origin): $(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Origin: https://evil.example' -d '{}' $U/hit)"
+          echo "quota: $(curl -s -w ' %{http_code}' -H "$O" $U/quota)"
