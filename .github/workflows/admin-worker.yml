@@ -1,0 +1,59 @@
+# 관리자 화면(Cloudflare Worker, turnoko-admin)을 배포한다. 손으로 실행하거나, main의 admin-worker/ 폴더가 바뀌면 실행된다.
+# AI 서버와 같은 Secrets(CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID)와 같은 횟수 저장소(turnoko-quota)를 쓴다.
+name: 관리자 화면 배포
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["admin-worker/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admin-worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER: wrangler@3.114.16
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 설정 확인과 횟수 저장소 찾기
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then echo "::error::Cloudflare Secret이 없습니다"; exit 1; fi
+          API="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID"
+          AUTH="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          SUB=$(curl -sS -H "$AUTH" "$API/workers/subdomain" | jq -r '.result.subdomain // empty')
+          ID=$(curl -fsS -H "$AUTH" "$API/storage/kv/namespaces?per_page=100" | jq -r '.result[] | select(.title=="turnoko-quota") | .id' | head -1)
+          if [ -z "$ID" ]; then echo "::error::횟수 저장소(turnoko-quota)가 없습니다. 'AI 서버 배포'를 먼저 실행하세요"; exit 1; fi
+          sed -i "s/__KV_ID__/$ID/" admin-worker/wrangler.toml
+          echo "SUB=$SUB" >> "$GITHUB_ENV"
+
+      - name: 배포
+        working-directory: admin-worker
+        run: |
+          npx --yes "$WRANGLER" deploy
+          echo "관리자 화면 주소: https://turnoko-admin.$SUB.workers.dev"
+
+      - name: 확인 (비밀번호 없이 숫자가 안 열리는지)
+        run: |
+          U="https://turnoko-admin.$SUB.workers.dev"
+          for i in 1 2 3 4 5 6 7 8 9; do
+            C=$(curl -s -o /dev/null -w '%{http_code}' "$U/" || true)
+            if [ "$C" = "200" ]; then break; fi
+            echo "아직 준비 중($C), 10초 뒤 다시 확인"; sleep 10
+          done
+          echo "화면: $(curl -s -o /dev/null -w '%{http_code}' "$U/")"
+          echo "숫자(비밀번호 없음): $(curl -s -o /dev/null -w '%{http_code}' "$U/stats")"

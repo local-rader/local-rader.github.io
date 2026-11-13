@@ -1,0 +1,14 @@
+# 터놓고 관리자 화면 설정. 배포는 .github/workflows/admin-worker.yml이 한다.
+# __KV_ID__는 배포할 때 AI 서버와 같은 횟수 저장소(turnoko-quota)의 번호로 바뀐다.
+name = "turnoko-admin"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+workers_dev = true
+
+[vars]
+# 관리자 비밀번호의 SHA-256 값(소문자 16진수). 비밀번호 자체는 저장소에 두지 않는다.
+ADMIN_HASH = "f8ae98769bedb1637df75e869897bf915882085bc525e90dec64029634c942d3"
+
+[[kv_namespaces]]
+binding = "QUOTA"
+id = "__KV_ID__"
