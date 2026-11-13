@@ -229,6 +229,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 .k-stall .kv { color: var(--s-stall-ink); }
 .hint { margin: 12px 0 0; font-size: 13px; color: var(--ink-3); }
 /* AI 질문 */
+.sec-head .sec .teo, .teo { color: #4DA8FF; font-size: inherit; } /* 로고의 "터"와 같은 하늘색 */
 .chat-log { display: flex; flex-direction: column; gap: 10px; max-height: min(62vh, 640px); overflow-y: auto; overscroll-behavior: contain; padding: 2px 2px 4px; }
 .msg { max-width: 92%; padding: 10px 12px; border-radius: 12px; font-size: 14.5px; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; }
 .msg.me { align-self: flex-end; background: var(--brand); color: var(--brand-ink); border-bottom-right-radius: 4px; }
@@ -901,7 +902,7 @@ html:not(.touch) {
   <!-- AI 질문: 질문 버튼(자료로 바로 답)과 직접 쓰는 질문(Claude) -->
   <section class="screen" id="scr-ask" aria-labelledby="ask-h" hidden>
     <div class="wrap narrow screen-pad">
-      <div class="sec-head"><h2 class="sec" id="ask-h">터놓고에게 물어보기</h2><span id="ask-asof"></span></div>
+      <div class="sec-head"><h2 class="sec" id="ask-h"><span class="teo">터</span>놓고 물어보기</h2><span id="ask-asof"></span></div>
       <p class="panel-note">청주 건축 인허가 자료로만 답해요. <b>질문 버튼</b>은 사이트 자료로 바로 계산해서 답하고 횟수 제한이 없어요. <b>직접 쓰는 질문</b>은 AI(Claude)가 같은 자료를 보고 답하고, 무료로 한 주에 2번 쓸 수 있어요.</p>
       <article class="card chat">
         <div class="chat-log" id="chat-log" aria-live="polite"></div>
