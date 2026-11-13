@@ -1,6 +1,7 @@
 # 매일 새벽 건축인허가 자료를 받아 permits.json·data.js를 갱신하고 저장소에 커밋한다.
 # 인증키는 저장소 Settings → Secrets and variables → Actions 에 넣는다.
 #   DATA_GO_KR_KEY  공공데이터포털 인증키 (건축인허가)
+#   RTMS_KEY        공공데이터포털 인증키 (실거래가, 다른 계정이라 따로 둔다)
 # 필지 위치·개별공시지가는 브이월드가 해외 서버 접속을 막아서 여기서 받지 않는다.
 # 한국에서 parcels-tool.html(관리자 페이지)을 열어 받은 parcels.json을 저장소에 넣는다.
 name: 데이터 갱신
@@ -37,6 +38,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: 실거래가 받기 (실패해도 인허가 갱신은 계속)
+        continue-on-error: true
+        if: ${{ inputs.mode != 'keys' }}
+        env:
+          RTMS_KEY: ${{ secrets.RTMS_KEY }}
+        run: |
+          if [ -z "$RTMS_KEY" ]; then echo "RTMS_KEY가 없어 건너뜁니다."; exit 0; fi
+          python trades.py update
+
       - name: 인허가 자료 받기
         env:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
@@ -58,6 +68,7 @@ jobs:
           git add permits.json data.js codes.json
           if [ -f ai-context.json ]; then git add ai-context.json; fi
           if [ -f pnus.json ]; then git add pnus.json; fi
+          for f in trades.json trades.js trades-summary.json; do if [ -f "$f" ]; then git add "$f"; fi; done
           if git diff --cached --quiet; then
             echo "바뀐 자료가 없습니다."
           else
