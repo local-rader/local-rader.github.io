@@ -113,12 +113,12 @@ export default {
         headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
         body: JSON.stringify({ model: env.MODEL || "claude-haiku-5-5", max_tokens: 700, system: SYSTEM, messages }),
       });
-      if (!r.ok) throw new Error("status " + r.status);
+      if (!r.ok) { const t = await r.text(); throw new Error("status " + r.status + " " + t.slice(0, 300)); }
       const out = await r.json();
       answer = (out.content || []).filter((c) => c.type === "text").map((c) => c.text).join("\n").trim();
       if (!answer) throw new Error("empty");
     } catch (e) {
-      return json({ error: "ai", message: "AI가 지금 답하지 못했어요. 횟수는 줄지 않았어요. 잠시 뒤 다시 시도해 주세요.", ...quota }, 502);
+      return json({ error: "ai", message: "AI가 지금 답하지 못했어요. 횟수는 줄지 않았어요. 잠시 뒤 다시 시도해 주세요.", detail: String(e && e.message).slice(0, 300), ...quota }, 502);
     }
 
     // ---- 답을 받은 경우에만 횟수를 센다
