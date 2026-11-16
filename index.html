@@ -818,6 +818,7 @@ html:not(.touch) {
         <button type="button" role="tab" id="sub-compare" aria-controls="pane-compare" data-sub="compare">지역 비교</button>
         <button type="button" role="tab" id="sub-trade" aria-controls="pane-trade" data-sub="trade">실거래</button>
         <button type="button" role="tab" id="sub-stall" aria-controls="pane-stall" data-sub="stall">장기 미진행</button>
+        <button type="button" role="tab" id="sub-quality" aria-controls="pane-quality" data-sub="quality">자료 상태</button>
       </div>
 
       <div class="pane stats" id="pane-stats" role="tabpanel" aria-labelledby="sub-stats">
@@ -938,6 +939,30 @@ html:not(.touch) {
           <p>이 목록은 국토교통부 건축HUB 인허가 공개자료에 착공일이나 사용승인일이 <b>기록되지 않은</b> 건을 기계적으로 추린 것입니다. 실제로는 착공·완공했지만 입력이 늦거나 빠진 경우, 허가가 취소됐거나 착공 기간이 연장된 경우가 섞여 있을 수 있습니다.</p>
           <p>건축법은 허가받은 날부터 2년(공장 승인을 받은 공장은 3년) 안에 공사를 시작하지 않으면 허가를 취소하도록 하고, 정당한 사유가 있으면 1년까지 연장할 수 있게 합니다. 자료에 기록된 착공 기한이 있으면 그 날짜를 썼고, 없으면 주용도로 공장 여부를 짐작했습니다.</p>
           <p>이 목록은 법에서 말하는 ‘공사중단 장기방치 건축물’(국토교통부 실태조사로 확인된 건축물)이 아닙니다. 정확한 상태는 해당 구청 건축 부서에서 확인하세요.</p>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-quality" role="tabpanel" aria-labelledby="sub-quality" hidden>
+        <div class="sec-head"><h2 class="sec" id="dq-h">자료 상태</h2><span id="dq-asof"></span></div>
+        <p class="panel-note">터놓고가 쓰는 공공데이터에 빈칸이 얼마나 있는지 그대로 보여줍니다. 빈칸이 많은 동네일수록 용도별 건수와 진행 비율이 실제와 다를 수 있습니다. 위에서 고른 동네가 반영됩니다.</p>
+        <article class="card">
+          <div class="card-head"><h3>한눈에 보기</h3></div>
+          <ul class="facts" id="dq-sum"></ul>
+        </article>
+        <article class="card">
+          <div class="card-head"><h3>허가 달별 용도 기재율</h3></div>
+          <p class="card-desc">허가일 기준 최근 12개월입니다. 용도·공사 종류가 빈 기록은 최근 달만이 아니라 해마다 절반 안팎으로 꾸준히 있습니다. 빈칸이 많은 동네는 용도별 건수가 실제보다 적게 잡혀 있을 수 있습니다.</p>
+          <div class="fbars" id="dq-month"></div>
+          <div class="legend"><span><i style="background:var(--brand)"></i>용도 기록 있음</span><span><i style="background:var(--rule-2)"></i>용도 빈칸</span></div>
+        </article>
+        <article class="card">
+          <div class="card-head"><h3 id="dq-place-h">빈칸이 많은 동네</h3></div>
+          <p class="card-desc" id="dq-place-desc"></p>
+          <div class="fbars" id="dq-place"></div>
+        </article>
+        <div class="disclaimer">
+          <p>‘용도 빈칸’은 국토교통부 건축HUB 자료에 건물 용도와 공사 종류가 비어 있는 기록입니다. 이런 기록은 지도·목록의 용도 필터에서 ‘미기재’로 묶이고, 진행 흐름·공급 예고·장기 미진행 계산에서는 빠집니다.</p>
+          <p>‘지도 위치 없음’은 지번으로 좌표를 찾지 못한 기록으로, 목록에는 나오지만 지도에는 점이 찍히지 않습니다. ‘공시지가 없음’은 해당 필지의 공시지가를 찾지 못한 경우입니다.</p>
         </div>
       </div>
     </div>
@@ -2444,11 +2469,57 @@ html:not(.touch) {
   // ---------- 지역 분석: 지역 통계와 멈춘 기록
   var sub = "stats";
   function drawAnalysis() {
-    ["stats", "flow", "compare", "trade", "stall"].forEach(function (k) {
+    ["stats", "flow", "compare", "trade", "stall", "quality"].forEach(function (k) {
       document.getElementById("pane-" + k).hidden = k !== sub;
       document.getElementById("sub-" + k).setAttribute("aria-selected", String(k === sub));
     });
-    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else drawStall();
+    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else drawStall();
+  }
+
+
+  // ---------- 자료 상태: 공공데이터 빈칸을 그대로 보여준다
+  function drawQuality() {
+    var pl = state.place === "all" ? REGION + " 전체" : state.place;
+    document.getElementById("dq-h").textContent = "자료 상태 · " + pl;
+    document.getElementById("dq-asof").textContent = dot(END) + " 기준";
+    var list = rows.filter(placeOk), n = list.length;
+    var noUse = 0, noLoc = 0, noJiga = 0, recent = 0, recentNo = 0, from = shift(END, 0, -3);
+    list.forEach(function (r) {
+      if (!r.known) noUse++;
+      if (!r.lat) noLoc++;
+      if (!r.jiga) noJiga++;
+      if (r.pms > from) { recent++; if (!r.known) recentNo++; }
+    });
+    var li = function (k, a, t) { return "<li><span>" + k + "</span><b>" + (n ? pct(a, t || n) : 0) + "%</b><span class=\"meta\"> " + nf(a) + "건</span></li>"; };
+    document.getElementById("dq-sum").innerHTML = n ? (
+      "<li><span>전체 기록</span><b>" + nf(n) + "건</b></li>" +
+      li("용도 빈칸", noUse) +
+      (recent ? li("최근 3개월 허가 중 용도 빈칸", recentNo, recent) : "") +
+      li("지도 위치 없음", noLoc) +
+      li("공시지가 없음", noJiga)) : "<li>기록이 없습니다.</li>";
+    var bm = {};
+    list.forEach(function (r) { if (!r.pms) return; var m = r.pms.slice(0, 7); var o = bm[m] = bm[m] || { n: 0, k: 0 }; o.n++; if (r.known) o.k++; });
+    var ms = [], d = END.slice(0, 7) + "-15";
+    for (var i = 0; i < 12; i++) { ms.push(d.slice(0, 7)); d = shift(d, 0, -1); }
+    fbars(document.getElementById("dq-month"), ms.filter(function (m) { return bm[m]; }).map(function (m) {
+      var o = bm[m];
+      return { k: m.slice(0, 4) + "." + m.slice(5), label: "기재 " + pct(o.k, o.n) + "% · " + nf(o.n) + "건",
+        segs: [[o.k / o.n * 100, "var(--brand)"], [(o.n - o.k) / o.n * 100, "var(--rule-2)"]] };
+    }));
+    // 동네별: 기록 20건 이상인 곳 중 빈칸 비율이 높은 순
+    var by = {};
+    list.forEach(function (r) { var k = r.place.split(" ")[0]; var o = by[k] = by[k] || { n: 0, k: 0 }; o.n++; if (r.known) o.k++; });
+    var top = Object.keys(by).filter(function (k) { return by[k].n >= 20; })
+      .sort(function (a, b) { return (by[a].k / by[a].n) - (by[b].k / by[b].n) || by[b].n - by[a].n; }).slice(0, 10);
+    document.getElementById("dq-place-h").textContent = state.place === "all" ? "빈칸이 많은 동네" : "이 지역의 빈칸";
+    document.getElementById("dq-place-desc").textContent = "기록이 20건 이상인 동네(읍·면은 리를 합쳐서)만, 용도 빈칸 비율이 높은 순으로 최대 10곳입니다.";
+    var el = document.getElementById("dq-place");
+    if (!top.length) el.innerHTML = '<p class="empty">기록이 20건 이상인 동네가 없습니다.</p>';
+    else fbars(el, top.map(function (k) {
+      var o = by[k];
+      return { k: k, label: "빈칸 " + pct(o.n - o.k, o.n) + "% · " + nf(o.n) + "건",
+        segs: [[o.k / o.n * 100, "var(--brand)"], [(o.n - o.k) / o.n * 100, "var(--rule-2)"]] };
+    }));
   }
 
   // ---------- 진행 흐름: 허가받은 곳이 실제로 착공·사용승인까지 갔는지
@@ -2849,7 +2920,7 @@ html:not(.touch) {
     var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h), target = h, sharedItem = null;
     if (m) { sharedItem = byPk[decodeURIComponent(m[1])] || null; target = "map"; }
     if (target === "list") target = "map";
-    if (target === "stats" || target === "flow" || target === "compare" || target === "trade" || target === "stall") { sub = target; target = "analysis"; }
+    if (target === "stats" || target === "flow" || target === "compare" || target === "trade" || target === "stall" || target === "quality") { sub = target; target = "analysis"; }
     else if (target === "analysis") sub = "stats";
     if (!TITLES[target]) target = "home";
     var moved = target !== screen;
