@@ -113,7 +113,7 @@ def call(key, path, sg, ym, page=1, rows=1000, tries=4):
     for i in range(tries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "turnoko-collector"})
-            with urllib.request.urlopen(req, timeout=40) as r:
+            with urllib.request.urlopen(req, timeout=15) as r:
                 body = r.read().decode("utf-8", "replace")
             if "SERVICE_KEY_IS_NOT_REGISTERED" in body:
                 raise NotRegistered()

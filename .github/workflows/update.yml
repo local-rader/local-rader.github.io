@@ -49,6 +49,8 @@ jobs:
           python trades.py update
 
       - name: 인허가 자료 받기
+        continue-on-error: true
+        timeout-minutes: 40
         env:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
           SINCE: ${{ inputs.since }}
@@ -63,6 +65,7 @@ jobs:
           fi
 
       - name: 바뀐 자료 저장
+        if: ${{ !cancelled() }}
         run: |
           git config user.name "dongne-radar-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

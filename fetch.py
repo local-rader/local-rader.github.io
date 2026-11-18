@@ -87,7 +87,7 @@ def call(key, sigungu, bjdong, page=1, rows=100, since=None, until=None, tries=5
     for attempt in range(tries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "dongne-radar-collector"})
-            with urllib.request.urlopen(req, timeout=40) as r:
+            with urllib.request.urlopen(req, timeout=15) as r:
                 text = r.read().decode("utf-8", errors="replace")
             if text.lstrip().startswith("<"):
                 # 인증 오류 등은 JSON을 요청해도 XML로 온다
