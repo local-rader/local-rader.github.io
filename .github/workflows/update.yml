@@ -40,6 +40,7 @@ jobs:
 
       - name: 실거래가 받기 (실패해도 인허가 갱신은 계속)
         continue-on-error: true
+        timeout-minutes: 20
         if: ${{ inputs.mode != 'keys' }}
         env:
           RTMS_KEY: ${{ secrets.RTMS_KEY }}
