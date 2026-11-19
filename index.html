@@ -32,18 +32,21 @@
    - 용도 색은 도시계획 용도지역 지도의 관례(주거=노랑, 상업=분홍, 공업=보라)를 따른다
    - 글자 크기: 숫자 28/24, 화면 제목 22, 카드 제목 16, 본문 15, 보조 13 */
 :root {
-  --bg: #F3F5F8;
+  --bg: #FFFFFF;
   --surface: #FFFFFF;
-  --surface-2: #F7F9FB;
+  --surface-2: #F3F8FE;
+  --panel: #F3F8FE;      /* 하늘색이 살짝 도는 면: 카드 바탕 */
+  --sky: #4DA8FF;        /* 로고 하늘색: 현재 메뉴, 강조 선 */
+  --navy: #16325C;       /* 로고 지붕색 */
   --ink: #0F1E33;
   --ink-2: #4B5B70;
-  --ink-3: #75849A;
-  --rule: #E1E6ED;
-  --rule-2: #CBD3DE;
-  --brand: #16325C;
+  --ink-3: #6B7A8F;
+  --rule: #DFEAF6;
+  --rule-2: #C4D6EA;
+  --brand: #1668C4;      /* 버튼·선택: 로고 하늘색을 글자에 쓸 수 있게 진하게 */
   --brand-ink: #FFFFFF;
-  --accent: #2459C9;
-  --accent-soft: #EAF0FB;
+  --accent: #1668C4;
+  --accent-soft: #E3F0FE;
   --s-permit: #2459C9;
   --s-work: #B7791F;
   --s-work-ink: #8F5B06;
@@ -58,7 +61,7 @@
   --c-ind: #8660B4;
   --c-etc: #7C8893;
   --c-none: #C3C9CE;
-  --r-card: 10px;
+  --r-card: 14px;
   --r-ctl: 8px;
   --r-pill: 999px;
   --bar-h: 56px;
@@ -69,15 +72,15 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0D131B; --surface: #151D28; --surface-2: #1A2330; --ink: #E7ECF2; --ink-2: #A9B4C2; --ink-3: #8593A4;
-    --rule: #263142; --rule-2: #34425A; --brand: #2A4E86; --brand-ink: #F2F5F9; --accent: #7EA3F2; --accent-soft: #1C2A44;
+    --bg: #0C1520; --surface: #111C29; --surface-2: #152334; --panel: #142233; --sky: #4DA8FF; --navy: #9CC9F5; --ink: #E7EEF6; --ink-2: #A9B7C7; --ink-3: #8798AB;
+    --rule: #22344A; --rule-2: #2F4660; --brand: #4DA8FF; --brand-ink: #06192D; --accent: #6DB8FF; --accent-soft: #16304C;
     --s-permit: #7EA3F2; --s-work: #E3A93A; --s-work-ink: #E9B04A; --s-done: #4FB683; --s-stall: #F07A45; --s-stall-ink: #F28A5A;
     --focus: #7EA3F2; --c-none: #4A545E; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0D131B; --surface: #151D28; --surface-2: #1A2330; --ink: #E7ECF2; --ink-2: #A9B4C2; --ink-3: #8593A4;
-  --rule: #263142; --rule-2: #34425A; --brand: #2A4E86; --brand-ink: #F2F5F9; --accent: #7EA3F2; --accent-soft: #1C2A44;
+  --bg: #0C1520; --surface: #111C29; --surface-2: #152334; --panel: #142233; --sky: #4DA8FF; --navy: #9CC9F5; --ink: #E7EEF6; --ink-2: #A9B7C7; --ink-3: #8798AB;
+  --rule: #22344A; --rule-2: #2F4660; --brand: #4DA8FF; --brand-ink: #06192D; --accent: #6DB8FF; --accent-soft: #16304C;
   --s-permit: #7EA3F2; --s-work: #E3A93A; --s-work-ink: #E9B04A; --s-done: #4FB683; --s-stall: #F07A45; --s-stall-ink: #F28A5A;
   --focus: #7EA3F2; --c-none: #4A545E; color-scheme: dark;
 }
@@ -103,9 +106,9 @@ h1, h2, h3 { text-wrap: balance; }
 .narrow { max-width: 960px; }
 
 /* ---------- 공통: 위 바, 메뉴 */
-.appbar { position: sticky; top: 0; z-index: 30; background: var(--surface); border-bottom: 1px solid var(--rule); }
+.appbar { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid var(--rule); }
 .appbar-in { display: flex; align-items: center; gap: 6px 16px; flex-wrap: wrap; min-height: var(--bar-h); padding-top: 6px; padding-bottom: 6px; }
-.brand { display: flex; align-items: center; gap: 8px; border: 0; background: none; padding: 6px 0; cursor: pointer; min-width: 0; color: var(--brand); }
+.brand { display: flex; align-items: center; gap: 8px; border: 0; background: none; padding: 6px 0; cursor: pointer; min-width: 0; color: var(--navy); }
 .brand svg { flex: none; }
 .brand .logo-mark { width: 40px; height: 40px; }
 .brand span { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
@@ -114,7 +117,8 @@ h1, h2, h3 { text-wrap: balance; }
   display: flex; align-items: center; padding: 0 14px; text-decoration: none; color: var(--ink-2); font-weight: 500;
   border-bottom: 3px solid transparent; margin-bottom: -1px;
 }
-.topnav a[aria-current="page"] { color: var(--brand); border-bottom-color: var(--brand); font-weight: 700; }
+.topnav a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--sky); font-weight: 700; }
+.topnav a:hover { color: var(--ink); }
 .topnav a { flex: none; white-space: nowrap; }
 .topnav::-webkit-scrollbar { display: none; }
 @media (max-width: 480px) { .topnav { gap: 0; } .topnav a { padding: 0 9px; font-size: 15px; } }
@@ -189,17 +193,18 @@ h1, h2, h3 { text-wrap: balance; }
 }
 
 /* ---------- 공통: 카드와 제목 */
-.card { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-card); padding: 18px; }
+.card { background: var(--panel); border: 0; border-radius: var(--r-card); padding: 20px; }
+@media (max-width: 520px) { .card { padding: 16px; border-radius: 12px; } }
 .card + .card, .grid-2 + .card, .card + .grid-2, .grid-2 + .grid-2 { margin-top: 16px; }
 .grid-2 > .card { margin-top: 0; }
 .card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin: 0 0 14px; }
-.card-head h2, .card-head h3 { margin: 0; font-size: 16px; font-weight: 700; }
+.card-head h2, .card-head h3 { margin: 0; font-size: 16.5px; font-weight: 700; letter-spacing: -0.01em; }
 .card-head .meta { color: var(--ink-3); font-size: 13px; }
 .card-desc { margin: -8px 0 14px; color: var(--ink-3); font-size: 13px; }
 .grid-2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .page-head { padding: 22px 0 18px; }
 .page-head .eyebrow { margin: 0 0 4px; color: var(--accent); font-size: 13px; font-weight: 500; }
-.page-head h1 { margin: 0; font-size: 22px; line-height: 1.35; font-weight: 700; letter-spacing: -0.01em; }
+.page-head h1 { margin: 0; font-size: 28px; line-height: 1.3; font-weight: 700; letter-spacing: -0.02em; }
 .page-head .lede { margin: 6px 0 0; color: var(--ink-2); font-size: 14.5px; }
 .side-brand, .sheet-brand { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 14px; }
 .side-brand { margin: 0 0 10px; }
@@ -211,7 +216,7 @@ h1, h2, h3 { text-wrap: balance; }
 .notice { margin: 12px 0 0; padding: 10px 14px; border-left: 3px solid var(--s-work); background: var(--surface); color: var(--ink-2); font-size: 14px; }
 .page-head .searchbox { margin: 16px 0 0; }
 .panel-note { margin: 0 0 14px; color: var(--ink-2); font-size: 14px; }
-h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
+h2.sec { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
 .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; margin: 0 0 6px; }
 .sec-head span { color: var(--ink-3); font-size: 13px; }
 .screen-pad { padding-top: 20px; }
@@ -226,7 +231,7 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 .kpi-top .meta { display: block; color: var(--ink-3); font-size: 13px; font-weight: 400; margin-top: 2px; }
 .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .kpi {
-  position: relative; border: 1px solid var(--rule); background: var(--surface-2); border-radius: var(--r-ctl);
+  position: relative; border: 1px solid var(--rule); background: var(--surface); border-radius: 12px;
   padding: 12px 12px 12px 16px; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 2px; min-height: 104px;
   text-decoration: none; color: inherit;
 }
@@ -289,7 +294,8 @@ h2.sec { margin: 0; font-size: 20px; font-weight: 700; }
 .entry b { font-size: 20px; line-height: 1.3; font-weight: 700; }
 .entry .why { color: var(--ink-2); font-size: 14px; }
 .entry .go { margin-top: 10px; color: var(--accent); font-size: 14px; font-weight: 500; }
-.entry:hover { border-color: var(--rule-2); }
+.entry { transition: background-color .15s; }
+.entry:hover { background: var(--accent-soft); }
 .about { margin: 20px 0 0; font-size: 14px; color: var(--ink-2); }
 .about summary { cursor: pointer; color: var(--ink); font-weight: 500; padding: 8px 0; }
 .about ul { padding-left: 20px; margin: 4px 0 8px; }
@@ -463,6 +469,14 @@ body.map-full .sheet { z-index: 50; }
 /* ---------- 분석 */
 .subtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--rule); margin: 0 0 18px; overflow-x: auto; scrollbar-width: none; }
 .subtabs::-webkit-scrollbar { display: none; }
+.next { margin: 28px 0 0; }
+.next h2 { margin: 0 0 10px; font-size: 15px; font-weight: 700; color: var(--ink); }
+.next .tiles3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.next a { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 12px; padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--rule); text-decoration: none; color: inherit; background: var(--surface); transition: border-color .15s, background-color .15s; }
+.next a:hover { border-color: var(--sky); background: var(--accent-soft); }
+.next a b { font-size: 15px; color: var(--accent); }
+.next a span { grid-column: 1; font-size: 13px; color: var(--ink-2); }
+.next a svg { grid-column: 2; grid-row: 1 / span 2; width: 18px; height: 18px; color: var(--sky); }
 .qlink { margin: 22px 0 0; font-size: 12.5px; color: var(--ink-3); }
 .qlink a { color: var(--ink-2); }
 .subtabs button { flex: none; white-space: nowrap; border: 0; background: none; padding: 10px 14px 9px; font-size: 15px; font-weight: 500; color: var(--ink-2); border-bottom: 3px solid transparent; cursor: pointer; margin-bottom: -1px; }
@@ -480,7 +494,7 @@ body.map-full .sheet { z-index: 50; }
   .cp-pick label { flex-direction: row; align-items: center; gap: 8px; }
   .cp-pick label > span { flex: none; width: 3.6em; }
 }
-.subtabs button[aria-selected="true"] { color: var(--brand); border-bottom-color: var(--brand); font-weight: 700; }
+.subtabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--sky); font-weight: 700; }
 .bars { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 8px 12px; align-items: center; font-size: 13.5px; }
 .bars .k { color: var(--ink-2); }
 .bars .v { text-align: right; min-width: 3.5em; font-weight: 500; }
@@ -514,7 +528,13 @@ body.map-full .sheet { z-index: 50; }
 .st-ctrl { margin: 12px 0 0; display: flex; align-items: center; gap: 8px; }
 .flabel { flex: none; width: 2.4em; font-size: 13px; color: var(--ink-3); }
 #st-result { margin: 14px 0 2px; }
-.disclaimer { margin: 16px 0 0; padding: 12px 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r-card); font-size: 13px; color: var(--ink-2); }
+.disclaimer { margin: 16px 0 0; padding: 0; font-size: 13px; color: var(--ink-2); }
+details.disc { margin: 18px 0 0; border-top: 1px solid var(--rule); }
+details.disc > summary { cursor: pointer; padding: 12px 0 4px; font-size: 13.5px; color: var(--ink-3); list-style: none; display: flex; align-items: center; gap: 6px; }
+details.disc > summary::-webkit-details-marker { display: none; }
+details.disc > summary svg { width: 14px; height: 14px; transition: transform .15s; }
+details.disc[open] > summary svg { transform: rotate(90deg); }
+details.disc > .disclaimer { margin: 6px 0 0; }
 .disclaimer p { margin: 0; }
 .disclaimer p + p { margin-top: 8px; }
 .disclaimer b { font-weight: 500; color: var(--ink); }
@@ -593,6 +613,7 @@ html:not(.touch) {
   .totop { bottom: 20px; }
   .grid-2 { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
   .grid-2.even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-2.even.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .minimap { flex: 1; height: auto; min-height: 300px; }
   /* 지도 화면: 왼쪽 검색·목록, 오른쪽 지도 */
   body[data-screen="map"] { padding-bottom: 0; }
@@ -766,7 +787,7 @@ button.nrow:hover .nk { color: var(--accent); }
         </article>
       </div>
 
-      <div class="grid-2 even">
+      <div class="grid-2 even g3">
         <a class="card entry" href="#supply">
           <div class="card-head"><h2>완공 예상</h2><span class="badge est">추정</span></div>
           <b id="home-sup"></b>
@@ -778,6 +799,12 @@ button.nrow:hover .nk { color: var(--accent); }
           <b id="home-ana"></b>
           <span class="why">동네별·용도별 신규 허가, 연도별 추이, 지역끼리 비교, 실거래</span>
           <span class="go">지역 분석 보기 →</span>
+        </a>
+        <a class="card entry" href="#town">
+          <div class="card-head"><h2>동네 진단</h2></div>
+          <b id="home-town">건물 노후도와 생활권</b>
+          <span class="why">지은 지 30·40·50년 넘은 건물 비율, 오래된 아파트 단지, 걸어서 10분 안의 생활 시설</span>
+          <span class="go">동네 진단 보기 →</span>
         </a>
       </div>
 
@@ -1063,6 +1090,7 @@ button.nrow:hover .nk { color: var(--accent); }
           <p>‘지도 위치 없음’은 지번으로 좌표를 찾지 못한 기록으로, 목록에는 나오지만 지도에는 점이 찍히지 않습니다. ‘공시지가 없음’은 해당 필지의 공시지가를 찾지 못한 경우입니다.</p>
         </div>
       </div>
+      <nav class="next" id="nextbox" aria-label="이어서 보기"></nav>
       <p class="qlink" id="qlink"><a href="#quality">자료 상태 보기</a> · 공공데이터에 빈칸이 얼마나 있는지 그대로 보여줍니다.</p>
     </div>
   </section>
@@ -2582,6 +2610,7 @@ button.nrow:hover .nk { color: var(--accent); }
     });
     document.querySelector("#scr-analysis .subtabs").hidden = grp === "none";
     document.getElementById("qlink").innerHTML = grp === "none" ? '<a href="#analysis">← 지역 분석으로</a>' : '<a href="#quality">자료 상태 보기</a> · 공공데이터에 빈칸이 얼마나 있는지 그대로 보여줍니다.';
+    drawNext();
     if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else if (sub === "supply") drawSupply(); else drawStall();
   }
 
@@ -3261,6 +3290,43 @@ button.nrow:hover .nk { color: var(--accent); }
     });
   };
 
+
+  // ---------- 이어서 보기: 지금 화면과 관련 있는 다른 기능으로 안내
+  var NEXT_INFO = {
+    flow: ["진행 흐름", "허가받은 건물이 실제로 지어졌는지"],
+    supply: ["완공 예상", "공사 중인 건물이 언제쯤 끝날지"],
+    stall: ["장기 미진행", "허가받고 오래 멈춰 있는 곳"],
+    stats: ["지역 통계", "동네별·용도별 신규 허가"],
+    compare: ["지역 비교", "다른 동네와 나란히 놓고 보기"],
+    trade: ["실거래", "최근 매매 가격과 거래량"],
+    aging: ["노후도", "건물이 지어진 지 얼마나 됐는지"],
+    near: ["생활권", "걸어서 갈 수 있는 생활 시설"],
+    map: ["개발지도", "허가·착공·완공 위치를 지도에서"]
+  };
+  var NEXT = {
+    flow: ["supply", "stall", "map"], supply: ["stall", "trade", "map"], stall: ["flow", "map", "aging"],
+    stats: ["compare", "trade", "aging"], compare: ["stats", "aging", "trade"], trade: ["supply", "aging", "near"],
+    aging: ["near", "trade", "map"], near: ["aging", "trade", "map"], quality: []
+  };
+  var CHEV = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 5 5 5-5 5"/></svg>';
+  function drawNext() {
+    var box = document.getElementById("nextbox"), list = NEXT[sub] || [];
+    if (!list.length) { box.innerHTML = ""; return; }
+    var pl = state.place === "all" ? REGION : state.place;
+    box.innerHTML = "<h2>" + esc(pl) + " 이어서 보기</h2><div class=\"tiles3\">" + list.map(function (k) {
+      var x = NEXT_INFO[k];
+      return '<a href="#' + k + '"><b>' + x[0] + "</b><span>" + x[1] + "</span>" + CHEV + "</a>";
+    }).join("") + "</div>";
+  }
+  // 화면마다 붙은 긴 유의사항은 접어 두고, 누르면 펼친다
+  (function foldDisclaimers() {
+    document.querySelectorAll(".disclaimer").forEach(function (d) {
+      if (d.parentNode.tagName === "DETAILS") return;
+      var w = document.createElement("details"); w.className = "disc";
+      w.innerHTML = '<summary><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 5 5 5-5 5"/></svg>기준과 유의사항</summary>';
+      d.parentNode.insertBefore(w, d); w.appendChild(d);
+    });
+  })();
   document.querySelectorAll(".subtabs [data-sub]").forEach(function (b) {
     b.onclick = function () { location.hash = "#" + b.getAttribute("data-sub"); };
   });
