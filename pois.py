@@ -41,7 +41,10 @@ def get(url, page, rows=1000):
                 text = r.read().decode("utf-8", errors="replace")
             if text.lstrip().startswith("<"):
                 raise PermissionError(text[:300])
-            data = json.loads(text)["response"]
+            raw = json.loads(text)
+            data = raw.get("response") or raw
+            if "body" not in data and "header" not in data:
+                raise PermissionError("알 수 없는 응답: " + text[:400])
             head = data.get("header", {})
             if str(head.get("resultCode", "00")) not in ("00", "0", "03"):
                 raise PermissionError(str(head))
