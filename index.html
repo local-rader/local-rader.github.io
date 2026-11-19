@@ -635,8 +635,11 @@ html:not(.touch) {
 .ctlrow .flabel, #pane-near .flabel { width: auto; }
 .mtable.ag td small { display: block; font-size: 12px; color: var(--ink-3); font-weight: 400; }
 .ctlrow .seg { max-width: 100%; overflow-x: auto; }
-.agmap { position: relative; height: 340px; border-radius: var(--r-ctl); overflow: hidden; background: var(--surface-2); border: 1px solid var(--rule); }
+.agmap { position: relative; height: 460px; border-radius: var(--r-ctl); overflow: hidden; background: var(--surface-2); border: 1px solid var(--rule); }
 .agmap > div:first-child { position: absolute; inset: 0; }
+.agmap.full { position: fixed; inset: 0; z-index: 60; height: 100dvh !important; margin: 0 !important; border: 0; border-radius: 0; }
+body.agmap-open { overflow: hidden; }
+@media (max-width: 720px) { .agmap { height: 380px; } }
 .agdot { border-radius: 50%; border: 1.5px solid rgba(255,255,255,.85); box-shadow: 0 0 0 1px rgba(0,0,0,.18); cursor: pointer; }
 .agtip { background: var(--surface); color: var(--ink); border: 1px solid var(--rule-2); border-radius: 6px; padding: 4px 8px; font-size: 12.5px; white-space: nowrap; }
 .near-sum { font-size: 15px; margin: 0 0 12px; }
@@ -2932,6 +2935,7 @@ button.nrow:hover .nk { color: var(--accent); }
     var el = document.getElementById("ag-map"); if (!el) return;
     msg("agmsg", "");
     var map = AG.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(36.64, 127.47), level: 10, scrollwheel: false });
+    mapExtras(map, el.parentNode);
     var bounds = new kakao.maps.LatLngBounds(), n = 0, maxN = 1, tip = null;
     Object.keys(groups).forEach(function (k) { if (groups[k].n > maxN) maxN = groups[k].n; });
     Object.keys(groups).forEach(function (k) {
@@ -2951,6 +2955,22 @@ button.nrow:hover .nk { color: var(--accent); }
       bounds.extend(ll); n++;
     });
     if (n > 1) map.setBounds(bounds, 24, 24, 24, 24); else if (n === 1) { map.setCenter(bounds.getSouthWest()); map.setLevel(6); }
+  }
+
+  // 노후도·생활권 지도: 확대·축소 버튼(휴대폰은 두 손가락으로도), 전체 화면
+  function mapExtras(map, wrap) {
+    try { map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT); } catch (e) {}
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "mapfull"; b.textContent = "전체 화면"; b.setAttribute("aria-pressed", "false");
+    wrap.appendChild(b);
+    function set(on) {
+      var c = map.getCenter();
+      wrap.classList.toggle("full", on); document.body.classList.toggle("agmap-open", on);
+      b.textContent = on ? "나가기" : "전체 화면"; b.setAttribute("aria-pressed", String(on));
+      setTimeout(function () { map.relayout(); map.setCenter(c); }, 30);
+    }
+    b.onclick = function () { set(!wrap.classList.contains("full")); };
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && wrap.classList.contains("full")) set(false); });
   }
 
   // ---------- 생활권: 카카오 장소 검색으로 걸어서 갈 수 있는 거리 안의 생활 시설을 센다
@@ -3154,8 +3174,9 @@ button.nrow:hover .nk { color: var(--accent); }
   function nearPaint() {
     var out = document.getElementById("nr-out");
     out.innerHTML = '<article class="card"><div class="card-head"><h3>' + esc(NR.label) + ' 주변</h3><span class="meta">직선 ' + nf(NR.min * WALK) + "m</span></div>" +
-      '<div class="agmap" style="height:300px;margin:0 0 14px"><div id="nr-map"></div></div>' + nearHtml(NR.res, NR.min, false) + "</article>";
+      '<div class="agmap" style="margin:0 0 14px"><div id="nr-map"></div></div>' + nearHtml(NR.res, NR.min, false) + "</article>";
     var map = new kakao.maps.Map(document.getElementById("nr-map"), { center: new kakao.maps.LatLng(NR.at[0], NR.at[1]), level: NR.min <= 5 ? 4 : NR.min <= 10 ? 5 : 6, scrollwheel: false });
+    mapExtras(map, document.getElementById("nr-map").parentNode);
     new kakao.maps.Circle({ map: map, center: new kakao.maps.LatLng(NR.at[0], NR.at[1]), radius: NR.min * WALK, strokeWeight: 2, strokeColor: "#2459C9", strokeOpacity: 0.8, fillColor: "#2459C9", fillOpacity: 0.08 });
     var base = [], sel = [];
     function mark(y, x, cls, title, bag) {
