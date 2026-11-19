@@ -2953,6 +2953,7 @@ button.nrow:hover .nk { color: var(--accent); }
   try { var _m = +localStorage.getItem("dr:nrmin"); if (_m === 5 || _m === 10 || _m === 15) NR.min = _m; } catch (e) {}
   var NEAR_Q = [
     { local: "bus", src: "국토교통부 (TAGO) 버스정류소정보", rows: [{ t: "시내버스 정류소" }] },
+    { kw: "버스터미널", rows: [{ t: "시외·고속버스 터미널", re: /터미널|시외버스|고속버스/ }] },
     { code: "SC4", rows: [{ t: "초등학교", re: /초등학교/ }, { t: "중·고등학교", re: /중학교|고등학교/ }] },
     { code: "PS3", rows: [{ t: "어린이집·유치원" }] },
     { code: "HP8", rows: [{ t: "병원·의원" }] },
