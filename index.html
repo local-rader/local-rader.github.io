@@ -2910,7 +2910,7 @@ button.nrow:hover .nk { color: var(--accent); }
         '<article class="card"><div class="card-head"><h3>지은 지 30년이 지난 공동주택 단지</h3><span class="meta">20세대 이상 · ' + cut + "년 이전</span></div>" +
         (cx.length ? '<div class="mtable-wrap"><table class="mtable ag"><thead><tr><th>단지</th><th>동네</th><th>사용승인</th><th>세대</th></tr></thead><tbody>' +
           cx.slice(0, AG.shown).map(function (c) {
-            return "<tr><td>" + esc(c.name || "이름 없음") + "<small>" + esc(c.addr) + "</small></td><td>" + esc(c.place) + "</td><td>" + c.y + "년<small>" + (AG_Y - c.y) + "년 차</small></td><td>" + nf(c.hh) + "</td></tr>";
+            return "<tr><td>" + esc(c.name || "이름 없음") + "<small>" + esc(c.addr.replace(/^충청북도 청주시 /, "")) + (c.lots > 1 ? " 외 " + (c.lots - 1) + "필지" : "") + "</small></td><td>" + esc(c.place) + "</td><td>" + c.y + "년<small>" + (AG_Y - c.y) + "년 차</small></td><td>" + nf(c.hh) + "</td></tr>";
           }).join("") + "</tbody></table></div>" +
           (cx.length > AG.shown ? '<button type="button" class="linkbtn" id="ag-more" style="margin-top:10px">더 보기 (' + nf(cx.length - AG.shown) + "곳 남음)</button>" : "")
           : '<p class="empty" style="padding:0">' + esc(pl) + "에는 해당하는 단지가 없어요.</p>") + "</article>" : "");

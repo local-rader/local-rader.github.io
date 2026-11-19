@@ -257,7 +257,16 @@ def build(store=None):
         for c in s.get("complexes", []):
             c = dict(c, gu=s.get("gu", ""), place=s.get("place", ""))
             complexes.append(c)
-    complexes.sort(key=lambda c: (c["y"], -c["hh"]))
+    # 한 단지가 여러 지번에 걸친 경우(같은 동네·같은 이름·같은 사용승인 연도)는 하나로 합친다
+    merged = {}
+    for c in complexes:
+        k = (c["gu"], c["place"], c["name"], c["y"]) if c["name"] else (c["gu"], c["place"], c["addr"], c["y"])
+        m = merged.get(k)
+        if m:
+            m["hh"] += c["hh"]; m["dongs"] += c["dongs"]; m["y2"] = max(m["y2"], c["y2"]); m["lots"] += 1
+        else:
+            merged[k] = dict(c, lots=1)
+    complexes = sorted(merged.values(), key=lambda c: (c["y"], -c["hh"]))
     got = sorted(s.get("got", "") for s in store["areas"].values())
     out = {
         "meta": {
