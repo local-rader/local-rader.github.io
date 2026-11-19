@@ -18,8 +18,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "pois.json")
 KST = timezone(timedelta(hours=9))
 SETS = {
-    "park": ("https://api.data.go.kr/openapi/tn_pubr_public_cty_park_info_api", ("parkNm",), ("parkSe",)),
-    "lib": ("https://api.data.go.kr/openapi/tn_pubr_public_lbrry_api", ("lbrryNm",), ("lbrrySe",)),
+    "park": (["https://api.data.go.kr/openapi/tn_pubr_public_cty_park_info_api"], ("parkNm",), ("parkSe",)),
+    "lib": (["https://api.data.go.kr/openapi/tn_pubr_public_lbrry_api"], ("lbrryNm",), ("lbrrySe",)),
+    # 전국전통시장표준데이터 https://www.data.go.kr/data/15012894/standard.do (주소 이름은 확인 전이라 후보를 차례로 시도)
+    "market": (["https://api.data.go.kr/openapi/tn_pubr_public_trdit_mrkt_api",
+                "https://api.data.go.kr/openapi/tn_pubr_public_tradit_mrkt_api",
+                "https://api.data.go.kr/openapi/tn_pubr_public_trdit_market_api"], ("mrktNm", "marketNm"), ("mrktType", "mrktSe")),
+    # 전국마을회관및경로당표준데이터 https://www.data.go.kr/data/15114136/standard.do
+    "senior": (["https://api.data.go.kr/openapi/tn_pubr_public_vill_hall_sen_cent_api"], ("fcltyNm", "facltNm", "vlhlNm", "senctrNm"), ("fcltySe", "facltSe", "fcltyType")),
 }
 REGION = "청주시"
 
@@ -66,11 +72,26 @@ def pick(it, names):
         v = str(it.get(n) or "").strip()
         if v:
             return v
+    for k, v in it.items():  # 이름 칸을 모를 때: '...Nm'으로 끝나는 첫 칸 (기관명·시도명 제외)
+        if k.endswith("Nm") and k not in ("insttNm", "ctprvnNm", "signguNm", "institutionNm", "operInstitutionNm") and str(v or "").strip():
+            return str(v).strip()
     return ""
 
 
+def resolve(urls):
+    errs = []
+    for u in urls:
+        try:
+            get(u, 1, rows=1)
+            return u
+        except Exception as e:  # noqa: BLE001
+            errs.append(f"{u.rsplit('/', 1)[-1]}: {e}")
+    raise RuntimeError(" / ".join(errs))
+
+
 def fetch(kind):
-    url, nm, se = SETS[kind]
+    urls, nm, se = SETS[kind]
+    url = resolve(urls)
     out, page = [], 1
     while True:
         total, items = get(url, page)
@@ -102,10 +123,13 @@ def fetch(kind):
 
 
 def probe():
-    for kind, (url, _, _) in SETS.items():
+    for kind, (urls, _, _) in SETS.items():
         try:
+            url = resolve(urls)
             total, items = get(url, 1, rows=2)
-            print(kind, "전국", total, "건, 항목:", ", ".join(sorted(items[0].keys())) if items else "")
+            print(kind, url.rsplit("/", 1)[-1], "전국", total, "건, 항목:", ", ".join(sorted(items[0].keys())) if items else "")
+            if items:
+                print("   예:", {k: v for k, v in items[0].items() if k.endswith("Nm") or k.endswith("Se") or k in ("latitude", "longitude", "rdnmadr")})
         except Exception as e:  # noqa: BLE001
             print(kind, "실패:", e)
 
@@ -117,7 +141,7 @@ def update():
     except (OSError, ValueError):
         pass
     out = {"meta": {"got": datetime.now(KST).strftime("%Y-%m-%d"), "fields": ["name", "lat", "lng", "kind"],
-                    "source": {"park": "전국도시공원정보표준데이터", "lib": "전국도서관표준데이터"}}}
+                    "source": {"park": "전국도시공원정보표준데이터", "lib": "전국도서관표준데이터", "market": "전국전통시장표준데이터", "senior": "전국마을회관및경로당표준데이터"}}}
     ok = 0
     for kind in SETS:
         try:

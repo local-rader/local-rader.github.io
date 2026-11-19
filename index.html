@@ -642,6 +642,11 @@ html:not(.touch) {
 .near-sum { font-size: 15px; margin: 0 0 12px; }
 .near-sum b { font-weight: 600; }
 .near-list { margin: 0; padding: 0; list-style: none; }
+.ngroup { margin: 0 0 6px; }
+.ngroup h4 { display: flex; justify-content: space-between; align-items: center; margin: 14px 0 2px; padding: 0 0 6px; border-bottom: 2px solid var(--ink); font-size: 14.5px; }
+.ngroup .gk { font-size: 12.5px; font-weight: 500; padding: 2px 8px; border-radius: var(--r-pill); background: var(--surface-2); color: var(--ink-3); }
+.ngroup .gk.ok { background: var(--accent-soft); color: var(--accent); }
+.ngroup .gk.no { color: var(--s-stall-ink); }
 .near-list > li { border-top: 1px solid var(--rule); }
 .near-list > li:first-child { border-top: 0; }
 .nrow { display: grid; grid-template-columns: 8.5em 4.8em minmax(0, 1fr) 1em; gap: 4px 10px; padding: 10px 0; font-size: 14px; align-items: baseline; width: 100%; background: none; border: 0; text-align: left; color: inherit; font: inherit; }
@@ -1012,7 +1017,8 @@ button.nrow:hover .nk { color: var(--accent); }
         </article>
         <div id="nr-out"></div>
         <div class="disclaimer">
-          <p>시내버스 정류소·공원·도서관은 공공데이터(국토교통부 버스정류소정보, 전국도시공원·도서관 표준데이터) 위치로, 나머지는 카카오 지도에 등록된 장소로 셉니다. 카카오 장소는 빠지거나 문을 닫은 곳이 섞여 있을 수 있습니다. 항목을 누르면 해당하는 곳 목록이 나옵니다. 거리는 <b>직선거리</b>이고, 1분에 80m 걷는다고 보고 시간을 계산했습니다. 실제로 걷는 길은 이보다 깁니다.</p>
+          <p>시내버스 정류소·전통시장·경로당·공원·공공도서관은 공공데이터(국토교통부 버스정류소정보, 행정안전부 표준데이터 등) 위치로, 나머지는 카카오 지도에 등록된 장소로 셉니다. 카카오 장소는 빠지거나 문을 닫은 곳이 섞여 있을 수 있습니다. 항목을 누르면 해당하는 곳 목록이 나옵니다. 거리는 <b>직선거리</b>이고, 1분에 80m 걷는다고 보고 시간을 계산했습니다. 실제로 걷는 길은 이보다 깁니다.</p>
+          <p>시설은 교통, 장보기·생활, 건강·돌봄, 교육, 여가 다섯 가지 생활 기능으로 묶었습니다. 한 기능 안에 시설이 하나라도 걸어서 갈 거리에 있으면 ‘있음’입니다. 일자리는 믿을 만한 위치 자료가 없어 넣지 않았습니다.</p>
           <p>시설 수는 많고 적음을 보여줄 뿐, 살기 좋은 정도를 점수로 매긴 것이 아닙니다.</p>
         </div>
       </div>
@@ -2951,20 +2957,29 @@ button.nrow:hover .nk { color: var(--accent); }
   var WALK = 80; // 1분에 걷는 거리(m)
   var NR = { min: 10, at: null, label: "", token: 0, map: null, ov: [] };
   try { var _m = +localStorage.getItem("dr:nrmin"); if (_m === 5 || _m === 10 || _m === 15) NR.min = _m; } catch (e) {}
+  // 생활 기능별로 묶는다. 일자리는 믿을 만한 위치 자료가 없어 넣지 않는다.
+  var NEAR_G = [
+    { id: "move", t: "교통" }, { id: "shop", t: "장보기·생활" }, { id: "care", t: "건강·돌봄" },
+    { id: "edu", t: "교육" }, { id: "fun", t: "여가" }
+  ];
   var NEAR_Q = [
-    { local: "bus", src: "국토교통부 (TAGO) 버스정류소정보", rows: [{ t: "시내버스 정류소" }] },
-    { kw: "버스터미널", rows: [{ t: "시외·고속버스 터미널", re: /터미널|시외버스|고속버스/ }] },
-    { code: "SC4", rows: [{ t: "초등학교", re: /초등학교/ }, { t: "중·고등학교", re: /중학교|고등학교/ }] },
-    { code: "PS3", rows: [{ t: "어린이집·유치원" }] },
-    { code: "HP8", rows: [{ t: "병원·의원" }] },
-    { code: "PM9", rows: [{ t: "약국" }] },
-    { code: "CS2", rows: [{ t: "편의점" }] },
-    { code: "MT1", rows: [{ t: "대형마트" }] },
-    { local: "park", src: "전국도시공원정보표준데이터", rows: [{ t: "공원" }] },
-    { local: "lib", src: "전국도서관표준데이터", rows: [{ t: "공공도서관" }] },
-    { kw: "작은도서관", rows: [{ t: "작은도서관", re: /도서관/ }] },
-    { kw: "행정복지센터", rows: [{ t: "행정복지센터", re: /행정복지센터|주민센터|읍사무소|면사무소/ }] },
-    { code: "BK9", rows: [{ t: "은행" }] }
+    { local: "bus", src: "국토교통부 (TAGO) 버스정류소정보", rows: [{ g: "move", t: "시내버스 정류소" }] },
+    { kw: "버스터미널", rows: [{ g: "move", t: "시외·고속버스 터미널", re: /터미널|시외버스|고속버스/ }] },
+    { code: "CS2", rows: [{ g: "shop", t: "편의점" }] },
+    { code: "MT1", rows: [{ g: "shop", t: "대형마트" }] },
+    { local: "market", src: "전국전통시장표준데이터", rows: [{ g: "shop", t: "전통시장" }] },
+    { code: "BK9", rows: [{ g: "shop", t: "은행" }] },
+    { kw: "행정복지센터", rows: [{ g: "shop", t: "행정복지센터", re: /행정복지센터|주민센터|읍사무소|면사무소/ }] },
+    { code: "HP8", rows: [{ g: "care", t: "병원·의원" }] },
+    { code: "PM9", rows: [{ g: "care", t: "약국" }] },
+    { code: "PS3", rows: [{ g: "care", t: "어린이집·유치원" }] },
+    { local: "senior", src: "전국마을회관및경로당표준데이터", rows: [{ g: "care", t: "경로당·마을회관" }] },
+    { code: "SC4", rows: [{ g: "edu", t: "초등학교", re: /초등학교/ }, { g: "edu", t: "중·고등학교", re: /중학교|고등학교/ }] },
+    { local: "lib", src: "전국도서관표준데이터", rows: [{ g: "edu", t: "공공도서관" }] },
+    { kw: "작은도서관", rows: [{ g: "edu", t: "작은도서관", re: /도서관/ }] },
+    { local: "park", src: "전국도시공원정보표준데이터", rows: [{ g: "fun", t: "공원" }] },
+    { kw: "체육시설", rows: [{ g: "fun", t: "체육시설", re: /체육|운동장|수영장|체력단련|골프연습|테니스|풋살|축구장|야구장/, not: /용품|학원/ } ] },
+    { code: "CT1", rows: [{ g: "fun", t: "문화시설" }] }
   ];
   // 시내버스 정류소는 카카오 장소 검색에 거의 없어서 공공데이터(busstops.json)로 직접 거리를 잰다
   var BUS = { list: null, failed: false, wait: [] };
@@ -3038,12 +3053,12 @@ button.nrow:hover .nk { color: var(--accent); }
     var radius = minutes * WALK, res = [], left = NEAR_Q.length, failed = 0;
     NEAR_Q.forEach(function (q, qi) {
       nrSearch(q, ll, radius, 3, function (list, info) {
-        if (!list) { if (!q.local) failed++; q.rows.forEach(function (row, ri) { res[qi * 10 + ri] = { t: row.t, n: null, pending: !!q.local }; }); return fin(); }
+        if (!list) { if (!q.local) failed++; q.rows.forEach(function (row, ri) { res[qi * 10 + ri] = { g: row.g, t: row.t, n: null, pending: !!q.local }; }); return fin(); }
         var pend = 0;
         q.rows.forEach(function (row, ri) {
           var hit = list.filter(function (x) { return rowMatch(row, x) && +x.distance <= radius; });
           var whole = !row.re && !row.not;
-          var r = { t: row.t, n: whole && info.capped ? info.total : hit.length, capped: info.capped && !whole, near: hit[0] ? pick(hit[0]) : null, names: info.names, list: hit.map(pick), src: q.src };
+          var r = { g: row.g, t: row.t, n: whole && info.capped ? info.total : hit.length, capped: info.capped && !whole, near: hit[0] ? pick(hit[0]) : null, names: info.names, list: hit.map(pick), src: q.src };
           res[qi * 10 + ri] = r;
           if (!r.near) {
             pend++;
@@ -3061,22 +3076,32 @@ button.nrow:hover .nk { color: var(--accent); }
     function fin() { if (--left === 0) cb(res.filter(Boolean), failed === NEAR_Q.length); }
   }
   function nearHtml(res, minutes, compact) {
-    var have = res.filter(function (r) { return r.n > 0; }), miss = res.filter(function (r) { return r.n === 0; });
-    var sum = '<p class="near-sum">걸어서 <b>' + minutes + "분</b>(직선 " + nf(minutes * WALK) + "m) 안에 " + res.length + "가지 중 <b>" + have.length + "가지</b>가 있어요." +
-      (miss.length ? '<br><span class="result">없는 것: ' + miss.map(function (r) { return esc(r.t); }).join(", ") + "</span>" : "") + "</p>";
+    var gs = NEAR_G.map(function (g) {
+      var rs = []; res.forEach(function (r, i) { if (r.g === g.id) rs.push([r, i]); });
+      return { g: g, rs: rs, ok: rs.some(function (x) { return x[0].n > 0; }), known: rs.some(function (x) { return x[0].n != null; }) };
+    });
+    var okN = gs.filter(function (x) { return x.ok; }).length;
+    var missF = gs.filter(function (x) { return !x.ok && x.known; }).map(function (x) { return x.g.t; });
+    var missR = res.filter(function (r) { return r.n === 0; }).map(function (r) { return r.t; });
+    var sum = '<p class="near-sum">걸어서 <b>' + minutes + "분</b>(직선 " + nf(minutes * WALK) + "m) 안에 생활 기능 " + NEAR_G.length + "가지 중 <b>" + okN + "가지</b>를 누릴 수 있어요." +
+      (missF.length ? '<br><span class="result">빠진 기능: ' + missF.map(esc).join(", ") + "</span>" : "") +
+      (missR.length ? '<br><span class="result">없는 시설: ' + missR.map(esc).join(", ") + "</span>" : "") + "</p>";
     function link(x) { return x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.name) + "</a>" : esc(x.name); }
-    return sum + '<ul class="near-list">' + res.map(function (r, i) {
+    function row(r, i) {
       if (r.n == null && r.pending) return '<li><div class="nrow"><span class="nk">' + esc(r.t) + '</span><span class="nn zero">준비 중</span><span class="nf">공공데이터를 받는 중이에요</span></div></li>';
       var n = r.n == null ? '<span class="nn zero">확인 못 함</span>' : '<span class="nn' + (r.n ? "" : " zero") + '">' + (r.n ? nf(r.n) + (r.capped ? "곳+" : "곳") : "없음") + (r.names && r.n ? '<small>이름 ' + nf(r.names) + "개</small>" : "") + "</span>";
-      var f = r.near ? (r.n ? "가장 가까운 곳 " : "가장 가까운 곳 ") + esc(r.near.name) + " · " + distTxt(r.near.d) : (r.n == null ? "" : "5km 안에 없음");
-      var many = r.list && r.list.length > 0;
+      var f = r.near ? "가장 가까운 곳 " + esc(r.near.name) + " · " + distTxt(r.near.d) : (r.n == null ? "" : "5km 안에 없음");
       var head = '<span class="nk">' + esc(r.t) + "</span>" + n + '<span class="nf">' + f + "</span>";
-      if (!many) return '<li><div class="nrow">' + head + "</div></li>";
+      if (!(r.list && r.list.length)) return '<li><div class="nrow">' + head + "</div></li>";
       return '<li><button type="button" class="nrow" data-nri="' + i + '" aria-expanded="false">' + head + '<span class="chev" aria-hidden="true">›</span></button>' +
         '<ol class="nlist" hidden>' + r.list.map(function (x) { return "<li><span>" + link(x) + "</span><span>" + distTxt(x.d) + "</span></li>"; }).join("") +
         (r.capped ? '<li class="result">가까운 순으로 ' + r.list.length + "곳까지만 보여줘요</li>" : "") +
         (r.src ? '<li class="result">출처: ' + esc(r.src) + "</li>" : "") + "</ol></li>";
-    }).join("") + "</ul>";
+    }
+    return sum + gs.map(function (x) {
+      return '<div class="ngroup"><h4><span>' + esc(x.g.t) + '</span><span class="gk ' + (x.ok ? "ok" : x.known ? "no" : "") + '">' + (x.ok ? "있음" : x.known ? "없음" : "확인 중") + "</span></h4>" +
+        '<ul class="near-list">' + x.rs.map(function (y) { return row(y[0], y[1]); }).join("") + "</ul></div>";
+    }).join("");
   }
   function bindNear(box, res, onOpen) {
     box.querySelectorAll("[data-nri]").forEach(function (b) {
