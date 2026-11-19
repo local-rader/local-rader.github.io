@@ -82,9 +82,13 @@ def fetch(kind):
                 lat, lng = float(it.get("latitude")), float(it.get("longitude"))
             except (TypeError, ValueError):
                 continue
-            if not (36.3 < lat < 37.0 and 127.2 < lng < 127.8):
+            if not (36.45 < lat < 36.85 and 127.25 < lng < 127.75):  # 청주시 범위 밖 좌표 오류 제외
                 continue
-            out.append([pick(it, nm), round(lat, 6), round(lng, 6), pick(it, se)])
+            name = pick(it, nm)
+            h = name.split(" ")
+            if len(h) % 2 == 0 and h[: len(h) // 2] == h[len(h) // 2:]:
+                name = " ".join(h[: len(h) // 2])  # '○○도서관 ○○도서관' 같은 중복 이름
+            out.append([name, round(lat, 6), round(lng, 6), pick(it, se)])
         if not items or page * 1000 >= total:
             break
         page += 1
