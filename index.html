@@ -625,6 +625,35 @@ html:not(.touch) {
 .tlist .ts { grid-column: 2 / -1; color: var(--ink-3); font-size: 12.5px; line-height: 1.45; }
 .tlist .tag { display: inline-block; font-size: 11.5px; line-height: 1.5; border: 1px solid var(--rule-2); border-radius: 4px; padding: 0 5px; margin-left: 4px; color: var(--ink-2); vertical-align: 1px; }
 @media (min-width: 720px) { .tkpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .tkpis .kpi.wide { grid-column: auto; } }
+/* 노후도·생활권 */
+:root { --ag0: #F4E6D2; --ag1: #E8C599; --ag2: #D4944E; --ag3: #AE6229; --ag4: #733614; --ag-na: #C3C9CE; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ag0: #463626; --ag1: #74552F; --ag2: #AD7639; --ag3: #DA9852; --ag4: #F6C88E; --ag-na: #4A545E; } }
+:root[data-theme="dark"] { --ag0: #463626; --ag1: #74552F; --ag2: #AD7639; --ag3: #DA9852; --ag4: #F6C88E; --ag-na: #4A545E; }
+.agkey { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 12px 0 0; font-size: 12.5px; color: var(--ink-2); }
+.agkey i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.ctlrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 14px; }
+.ctlrow .flabel, #pane-near .flabel { width: auto; }
+.mtable.ag td small { display: block; font-size: 12px; color: var(--ink-3); font-weight: 400; }
+.ctlrow .seg { max-width: 100%; overflow-x: auto; }
+.agmap { position: relative; height: 340px; border-radius: var(--r-ctl); overflow: hidden; background: var(--surface-2); border: 1px solid var(--rule); }
+.agmap > div:first-child { position: absolute; inset: 0; }
+.agdot { border-radius: 50%; border: 1.5px solid rgba(255,255,255,.85); box-shadow: 0 0 0 1px rgba(0,0,0,.18); cursor: pointer; }
+.agtip { background: var(--surface); color: var(--ink); border: 1px solid var(--rule-2); border-radius: 6px; padding: 4px 8px; font-size: 12.5px; white-space: nowrap; }
+.near-sum { font-size: 15px; margin: 0 0 12px; }
+.near-sum b { font-weight: 600; }
+.near-list { margin: 0; padding: 0; list-style: none; }
+.near-list li { display: grid; grid-template-columns: 8.5em 4.8em minmax(0, 1fr); gap: 4px 10px; padding: 10px 0; border-top: 1px solid var(--rule); font-size: 14px; align-items: baseline; }
+.near-list li:first-child { border-top: 0; }
+.near-list .nk { color: var(--ink-2); }
+.near-list .nn { font-weight: 600; }
+.near-list .nn.zero { color: var(--s-stall-ink); font-weight: 500; }
+.near-list .nf { color: var(--ink-3); font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
+.near-list .nf a { color: inherit; }
+.nmark { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+.nmark.me { width: 14px; height: 14px; background: var(--s-stall); }
+.near-box { margin: 14px 0 0; padding: 12px 14px; border: 1px solid var(--rule); border-radius: var(--r-card); background: var(--surface-2); }
+.near-box h3 { margin: 0 0 8px; font-size: 15px; }
+@media (max-width: 520px) { .near-list li { grid-template-columns: 7.2em 4.2em minmax(0, 1fr); font-size: 13.5px; } }
 </style>
 <script>if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("touch");</script>
 </head>
@@ -819,6 +848,8 @@ html:not(.touch) {
         <button type="button" role="tab" id="sub-compare" aria-controls="pane-compare" data-sub="compare">지역 비교</button>
         <button type="button" role="tab" id="sub-trade" aria-controls="pane-trade" data-sub="trade">실거래</button>
         <button type="button" role="tab" id="sub-stall" aria-controls="pane-stall" data-sub="stall">장기 미진행</button>
+        <button type="button" role="tab" id="sub-aging" aria-controls="pane-aging" data-sub="aging">노후도</button>
+        <button type="button" role="tab" id="sub-near" aria-controls="pane-near" data-sub="near">생활권</button>
         <button type="button" role="tab" id="sub-quality" aria-controls="pane-quality" data-sub="quality">자료 상태</button>
       </div>
 
@@ -940,6 +971,37 @@ html:not(.touch) {
           <p>이 목록은 국토교통부 건축HUB 인허가 공개자료에 착공일이나 사용승인일이 <b>기록되지 않은</b> 건을 기계적으로 추린 것입니다. 실제로는 착공·완공했지만 입력이 늦거나 빠진 경우, 허가가 취소됐거나 착공 기간이 연장된 경우가 섞여 있을 수 있습니다.</p>
           <p>건축법은 허가받은 날부터 2년(공장 승인을 받은 공장은 3년) 안에 공사를 시작하지 않으면 허가를 취소하도록 하고, 정당한 사유가 있으면 1년까지 연장할 수 있게 합니다. 자료에 기록된 착공 기한이 있으면 그 날짜를 썼고, 없으면 주용도로 공장 여부를 짐작했습니다.</p>
           <p>이 목록은 법에서 말하는 ‘공사중단 장기방치 건축물’(국토교통부 실태조사로 확인된 건축물)이 아닙니다. 정확한 상태는 해당 구청 건축 부서에서 확인하세요.</p>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-aging" role="tabpanel" aria-labelledby="sub-aging" hidden>
+        <div class="sec-head"><h2 class="sec" id="ag-h">건물 노후도</h2><span id="ag-asof"></span></div>
+        <p class="panel-note">건축물대장에 적힌 <b>사용승인 연도</b>로 건물이 지어진 지 얼마나 됐는지 봅니다. 주 건물만 세고 창고·화장실 같은 부속 건물은 뺐습니다. 위에서 고른 동네가 반영됩니다.</p>
+        <div id="ag-body"><p class="result">노후도 자료를 불러오는 중입니다…</p></div>
+        <div class="disclaimer">
+          <p>건축물대장에 사용승인일이 비어 있는 건물은 연도별 집계에서 빠지고 ‘연도 없음’으로만 셉니다. 오래된 건물일수록 기록이 빠진 경우가 많아, 실제 노후도는 이 숫자보다 높을 수 있습니다.</p>
+          <p>‘30년 이상’은 재건축 연한으로 자주 쓰이는 기준을 빌린 것일 뿐입니다. 실제 재건축이 가능한지는 재건축진단 등 별도 절차로 정해집니다. 공동주택 단지는 같은 지번의 공동주택 건물을 묶어 20세대 이상만 보여줍니다.</p>
+          <p>지도의 점은 동네 경계가 아니라, 그 동네에서 인허가가 있었던 필지 위치의 평균입니다.</p>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-near" role="tabpanel" aria-labelledby="sub-near" hidden>
+        <div class="sec-head"><h2 class="sec">생활권 분석</h2></div>
+        <p class="panel-note">주소나 건물 이름을 넣으면, 걸어서 갈 수 있는 거리 안에 버스정류장·학교·병원 같은 생활 시설이 얼마나 있는지 보여줍니다. 개발지도에서 건물을 눌러 ‘주변 생활권 보기’로 열 수도 있어요.</p>
+        <article class="card">
+          <form class="searchbox" id="nr-form" role="search">
+            <div class="field">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
+              <input type="search" id="nr-q" placeholder="예: 청주시청, 율량동 산업단지로" aria-label="생활권을 볼 주소나 건물 이름">
+            </div>
+            <button type="submit">보기</button>
+          </form>
+          <div class="st-ctrl"><span class="flabel" aria-hidden="true">걸어서</span><div class="seg" id="nr-rad" role="group" aria-label="걷는 시간"></div></div>
+        </article>
+        <div id="nr-out"></div>
+        <div class="disclaimer">
+          <p>카카오 지도에 등록된 장소를 센 것이라 빠지거나 문을 닫은 곳이 섞여 있을 수 있습니다. 거리는 <b>직선거리</b>이고, 1분에 80m 걷는다고 보고 시간을 계산했습니다. 실제로 걷는 길은 이보다 깁니다.</p>
+          <p>시설 수는 많고 적음을 보여줄 뿐, 살기 좋은 정도를 점수로 매긴 것이 아닙니다.</p>
         </div>
       </div>
 
@@ -1336,6 +1398,7 @@ html:not(.touch) {
       track(r) + (gap ? "<p>" + gap + "</p>" : "") +
       (r.stall ? '<p class="item-note">' + r.stall.note + "</p>" : est ? '<p class="item-note">' + est.note + "</p>" : "") +
       '<div class="acts"><button type="button" class="btn solid" id="sh-map">' + (screen === "map" ? "지도에서 위치 보기" : "개발지도에서 보기") + '</button><button type="button" class="btn" id="sh-share">링크 공유</button><button type="button" class="btn" id="sh-fav">' + (state.fav[r.pk] ? "관심 필지 해제" : "관심 필지로 등록") + '</button></div>' +
+      '<div class="near-box" id="sh-near"><h3>주변 생활권</h3><p class="result" style="margin:0 0 10px">걸어서 10분(직선 800m) 안에 있는 생활 시설을 찾아봅니다.</p><button type="button" class="btn" id="sh-near-btn">주변 생활권 보기</button></div>' +
       groupHTML(r) +
       '<h3>자세한 내용</h3><dl class="more-facts">' + more.map(function (x) { return "<dt>" + x[0] + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>" +
       "<p>원문은 세움터에서 대지위치로 확인할 수 있습니다.</p>";
@@ -1347,6 +1410,7 @@ html:not(.touch) {
     };
     document.getElementById("sh-share").onclick = function () { share(r, this); };
     document.getElementById("sh-fav").onclick = function () { toggleFav(r, this); };
+    document.getElementById("sh-near-btn").onclick = function () { nearForRecord(r, document.getElementById("sh-near")); };
   }
 
   // ---------- 기간 고르기 (data-period 자리마다 같은 버튼을 그린다: 홈, 거르기, 지역 통계)
@@ -2471,11 +2535,11 @@ html:not(.touch) {
   // ---------- 지역 분석: 지역 통계와 멈춘 기록
   var sub = "stats";
   function drawAnalysis() {
-    ["stats", "flow", "compare", "trade", "stall", "quality"].forEach(function (k) {
+    ["stats", "flow", "compare", "trade", "stall", "aging", "near", "quality"].forEach(function (k) {
       document.getElementById("pane-" + k).hidden = k !== sub;
       document.getElementById("sub-" + k).setAttribute("aria-selected", String(k === sub));
     });
-    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else drawStall();
+    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else drawStall();
   }
 
 
@@ -2730,6 +2794,289 @@ html:not(.touch) {
       }).join("") + "</tbody>";
   }
 
+  // ---------- 노후도: 건축물대장 사용승인 연도 (aging.json)
+  var AG = { data: null, loading: false, failed: false, kind: "all", all: false, shown: 20, map: null, ov: [] };
+  var AG_Y = +new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 4);
+  var AG_BANDS = [
+    { t: "10년 미만", c: "var(--ag0)", hex: ["#F4E6D2", "#463626"], ok: function (a) { return a < 10; } },
+    { t: "10~19년", c: "var(--ag1)", ok: function (a) { return a >= 10 && a < 20; } },
+    { t: "20~29년", c: "var(--ag2)", ok: function (a) { return a >= 20 && a < 30; } },
+    { t: "30~39년", c: "var(--ag3)", ok: function (a) { return a >= 30 && a < 40; } },
+    { t: "40년 이상", c: "var(--ag4)", ok: function (a) { return a >= 40; } }
+  ];
+  var AG_KINDS = [{ v: "all", t: "모든 건물" }, { v: "house", t: "단독주택" }, { v: "apt", t: "공동주택" }, { v: "etc", t: "주택 외" }];
+  function loadAging(cb) {
+    if (AG.data || AG.loading) return AG.data && cb();
+    AG.loading = true;
+    fetch("aging.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (d) { AG.data = d; AG.loading = false; cb(); })
+      .catch(function () { AG.failed = true; AG.loading = false; cb(); });
+  }
+  function agPlaceOk(p) { return state.place === "all" || p.gu === state.place || p.place === state.place || p.place.indexOf(state.place + " ") === 0; }
+  function agNew() { return { n: 0, old: 0, b: [0, 0, 0, 0, 0], dec: {}, unknown: 0, lat: 0, lng: 0, w: 0 }; }
+  function agAdd(o, p) {
+    ["house", "apt", "etc"].forEach(function (k) {
+      if (AG.kind !== "all" && AG.kind !== k) return;
+      var ys = (p.y || {})[k] || {};
+      Object.keys(ys).forEach(function (y) {
+        var c = ys[y], age = AG_Y - +y, d = +y < 1970 ? "1960년대 이전" : y.slice(0, 3) + "0년대";
+        o.n += c; if (age >= 30) o.old += c;
+        AG_BANDS.forEach(function (b, i) { if (b.ok(age)) o.b[i] += c; });
+        o.dec[d] = (o.dec[d] || 0) + c;
+      });
+    });
+    if (AG.kind === "all") o.unknown += p.unknown || 0;
+    if (p.at) { var w = 1; o.lat += p.at[0] * w; o.lng += p.at[1] * w; o.w += w; }
+    return o;
+  }
+  function agLevelKey(p) {
+    if (state.place === "all") return p.place.split(" ")[0];
+    if (GU_LIST.indexOf(state.place) >= 0) return p.place.split(" ")[0];
+    return p.place;
+  }
+  function agColorIdx(share) { return share >= 0.8 ? 4 : share >= 0.6 ? 3 : share >= 0.4 ? 2 : share >= 0.2 ? 1 : 0; }
+  function drawAging() {
+    var box = document.getElementById("ag-body");
+    if (!AG.data) {
+      if (AG.failed) { box.innerHTML = '<article class="card"><p class="empty" style="padding:0">노후도 자료를 준비하고 있어요. 건축물대장 자료를 받는 대로 이 화면에 동네별 노후도가 나옵니다.</p></article>'; return; }
+      loadAging(function () { if (screen === "analysis" && sub === "aging") drawAging(); });
+      return;
+    }
+    var D = AG.data, pl = state.place === "all" ? REGION + " 전체" : state.place;
+    document.getElementById("ag-h").textContent = "건물 노후도 · " + pl;
+    document.getElementById("ag-asof").textContent = D.meta.newest ? "건축물대장 " + dot(D.meta.newest) + " 받음" : "";
+    var mine = D.places.filter(agPlaceOk);
+    if (!mine.length) { box.innerHTML = '<article class="card"><p class="empty" style="padding:0">' + esc(pl) + "의 건축물대장 자료가 아직 없어요.</p></article>"; return; }
+    var tot = agNew(), city = agNew();
+    mine.forEach(function (p) { agAdd(tot, p); });
+    D.places.forEach(function (p) { agAdd(city, p); });
+    var groups = {}, gl;
+    mine.forEach(function (p) { var k = agLevelKey(p); agAdd(groups[k] || (groups[k] = agNew()), p); });
+    var MIN = 30;
+    gl = Object.keys(groups).filter(function (k) { return groups[k].n >= MIN; })
+      .sort(function (a, b) { return groups[b].old / groups[b].n - groups[a].old / groups[a].n || groups[b].n - groups[a].n; });
+    var small = Object.keys(groups).length - gl.length;
+    var cut = AG_Y - 30;
+    var cx = (D.complexes || []).filter(function (c) { return agPlaceOk(c) && c.y <= cut; });
+    var decs = Object.keys(tot.dec).sort(), topDec = decs.slice().sort(function (a, b) { return tot.dec[b] - tot.dec[a]; })[0];
+    var kindName = AG_KINDS.filter(function (k) { return k.v === AG.kind; })[0].t;
+
+    var facts = [
+      "<li><b>" + nf(tot.n) + "동</b> 사용승인 연도가 기록된 " + (AG.kind === "all" ? "주 건물" : kindName) + (tot.unknown ? " <span class=\"result\">(연도 없음 " + nf(tot.unknown) + "동 별도)</span>" : "") + "</li>",
+      "<li><b>" + pct(tot.old, tot.n) + "%</b> 지은 지 30년 이상 (" + cut + "년 이전 사용승인, " + nf(tot.old) + "동)" +
+        (state.place !== "all" && city.n ? ' <span class="result">청주 전체는 ' + pct(city.old, city.n) + "%</span>" : "") + "</li>",
+      topDec ? "<li><b>" + topDec + "</b> 가장 많이 지어진 시기 (" + pct(tot.dec[topDec], tot.n) + "%)</li>" : "",
+      AG.kind === "all" || AG.kind === "apt" ? "<li><b>" + nf(cx.length) + "곳</b> 지은 지 30년이 지난 20세대 이상 공동주택 단지</li>" : ""
+    ].join("");
+    var levelName = state.place === "all" ? "동네별" : GU_LIST.indexOf(state.place) >= 0 ? state.place + " 동네별" : state.place + " 마을별";
+    var shownG = AG.all ? gl : gl.slice(0, 15);
+    var html =
+      '<article class="card"><div class="ctlrow"><span class="flabel">건물 종류</span><div class="seg" role="group" aria-label="건물 종류">' +
+        AG_KINDS.map(function (k) { return '<button type="button" data-agk="' + k.v + '" aria-pressed="' + (AG.kind === k.v) + '">' + k.t + "</button>"; }).join("") +
+      '</div></div><ul class="facts">' + facts + "</ul></article>" +
+      '<article class="card"><div class="card-head"><h3>' + esc(levelName) + " 30년 이상 된 건물 비율</h3></div>" +
+        '<p class="card-desc">오래된 건물 비율이 높은 순서입니다. 막대는 건물 나이별 구성이고, 건물이 ' + MIN + "동 미만인 곳" + (small ? "(" + small + "곳)" : "") + "은 뺐습니다.</p>" +
+        '<div class="fbars" id="ag-bars"></div>' +
+        (gl.length > 15 ? '<button type="button" class="linkbtn" id="ag-all" style="margin-top:10px">' + (AG.all ? "15곳만 보기" : "모두 보기 (" + gl.length + "곳)") + "</button>" : "") +
+        '<div class="agkey">' + AG_BANDS.map(function (b) { return '<span><i style="background:' + b.c + '"></i>' + b.t + "</span>"; }).join("") + "</div></article>" +
+      '<article class="card"><div class="card-head"><h3>지도로 보기</h3></div>' +
+        '<p class="card-desc">점 색이 진할수록 30년 이상 된 건물 비율이 높고, 점이 클수록 건물이 많습니다. 점을 누르면 숫자가 나와요.</p>' +
+        '<div class="agmap"><div id="ag-map"></div><div class="mapmsg" id="agmsg">지도를 불러오는 중입니다.</div></div>' +
+        '<div class="agkey">' + ["20% 미만", "20~39%", "40~59%", "60~79%", "80% 이상"].map(function (t, i) { return '<span><i style="background:var(--ag' + i + ')"></i>' + t + "</span>"; }).join("") + "</div></article>" +
+      '<article class="card"><div class="card-head"><h3>지어진 시기 (' + esc(pl) + ")</h3></div>" +
+        '<p class="card-desc">사용승인 연도를 10년 단위로 묶은 건물 수입니다.</p><div class="bars" id="ag-dec"></div></article>' +
+      (AG.kind === "all" || AG.kind === "apt" ?
+        '<article class="card"><div class="card-head"><h3>지은 지 30년이 지난 공동주택 단지</h3><span class="meta">20세대 이상 · ' + cut + "년 이전</span></div>" +
+        (cx.length ? '<div class="mtable-wrap"><table class="mtable ag"><thead><tr><th>단지</th><th>동네</th><th>사용승인</th><th>세대</th></tr></thead><tbody>' +
+          cx.slice(0, AG.shown).map(function (c) {
+            return "<tr><td>" + esc(c.name || "이름 없음") + "<small>" + esc(c.addr) + "</small></td><td>" + esc(c.place) + "</td><td>" + c.y + "년<small>" + (AG_Y - c.y) + "년 차</small></td><td>" + nf(c.hh) + "</td></tr>";
+          }).join("") + "</tbody></table></div>" +
+          (cx.length > AG.shown ? '<button type="button" class="linkbtn" id="ag-more" style="margin-top:10px">더 보기 (' + nf(cx.length - AG.shown) + "곳 남음)</button>" : "")
+          : '<p class="empty" style="padding:0">' + esc(pl) + "에는 해당하는 단지가 없어요.</p>") + "</article>" : "");
+    box.innerHTML = html;
+    fbars(document.getElementById("ag-bars"), shownG.map(function (k) {
+      var g = groups[k];
+      return { k: k, label: pct(g.old, g.n) + "% · " + nf(g.n) + "동", segs: g.b.map(function (v, i) { return [v / g.n * 100, AG_BANDS[i].c]; }).reverse() };
+    }));
+    var maxDec = Math.max.apply(null, decs.map(function (d) { return tot.dec[d]; }).concat([1]));
+    bars(document.getElementById("ag-dec"), decs.map(function (d) {
+      var age = AG_Y - (+d.slice(0, 4) + 5);
+      return { k: d, label: nf(tot.dec[d]) + "동", segs: [[tot.dec[d], age >= 30 ? "var(--ag3)" : "var(--ag1)"]] };
+    }), maxDec);
+    box.querySelectorAll("[data-agk]").forEach(function (b) { b.onclick = function () { AG.kind = b.getAttribute("data-agk"); AG.shown = 20; drawAging(); }; });
+    var all = document.getElementById("ag-all"); if (all) all.onclick = function () { AG.all = !AG.all; drawAging(); };
+    var more = document.getElementById("ag-more"); if (more) more.onclick = function () { AG.shown += 20; drawAging(); };
+    AG.map = null; AG.ov = [];
+    drawAgMap(groups);
+  }
+  function drawAgMap(groups) {
+    if (M.sdk !== "ready") { if (M.sdk === "error") { msg("agmsg", "지도를 불러오지 못했습니다."); return; } loadSDK(function () { if (screen === "analysis" && sub === "aging") drawAgMap(groups); }); return; }
+    var el = document.getElementById("ag-map"); if (!el) return;
+    msg("agmsg", "");
+    var map = AG.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(36.64, 127.47), level: 10, scrollwheel: false });
+    var bounds = new kakao.maps.LatLngBounds(), n = 0, maxN = 1, tip = null;
+    Object.keys(groups).forEach(function (k) { if (groups[k].n > maxN) maxN = groups[k].n; });
+    Object.keys(groups).forEach(function (k) {
+      var g = groups[k]; if (!g.w || !g.n) return;
+      var ll = new kakao.maps.LatLng(g.lat / g.w, g.lng / g.w), sh = g.old / g.n;
+      var size = Math.round(12 + 26 * Math.sqrt(g.n / maxN));
+      var d = document.createElement("div");
+      d.className = "agdot";
+      d.style.cssText = "width:" + size + "px;height:" + size + "px;background:" + (g.n < 30 ? "var(--ag-na)" : "var(--ag" + agColorIdx(sh) + ")");
+      d.title = k + " · 30년 이상 " + pct(g.old, g.n) + "% · " + nf(g.n) + "동";
+      d.onclick = function () {
+        if (tip) tip.setMap(null);
+        var t = document.createElement("div"); t.className = "agtip"; t.textContent = d.title;
+        tip = new kakao.maps.CustomOverlay({ map: map, position: ll, content: t, yAnchor: 1.6, zIndex: 5 });
+      };
+      AG.ov.push(new kakao.maps.CustomOverlay({ map: map, position: ll, content: d, zIndex: 2 }));
+      bounds.extend(ll); n++;
+    });
+    if (n > 1) map.setBounds(bounds, 24, 24, 24, 24); else if (n === 1) { map.setCenter(bounds.getSouthWest()); map.setLevel(6); }
+  }
+
+  // ---------- 생활권: 카카오 장소 검색으로 걸어서 갈 수 있는 거리 안의 생활 시설을 센다
+  var WALK = 80; // 1분에 걷는 거리(m)
+  var NR = { min: 10, at: null, label: "", token: 0, map: null, ov: [] };
+  try { var _m = +localStorage.getItem("dr:nrmin"); if (_m === 5 || _m === 10 || _m === 15) NR.min = _m; } catch (e) {}
+  var NEAR_Q = [
+    { kw: "버스정류장", rows: [{ t: "버스정류장", re: /버스정류장/ }] },
+    { code: "SC4", rows: [{ t: "초등학교", re: /초등학교/ }, { t: "중·고등학교", re: /중학교|고등학교/ }] },
+    { code: "PS3", rows: [{ t: "어린이집·유치원" }] },
+    { code: "HP8", rows: [{ t: "병원·의원" }] },
+    { code: "PM9", rows: [{ t: "약국" }] },
+    { code: "CS2", rows: [{ t: "편의점" }] },
+    { code: "MT1", rows: [{ t: "대형마트" }] },
+    { kw: "공원", rows: [{ t: "공원", re: /공원/, not: /주차장|놀이공원|묘지/ }] },
+    { kw: "도서관", rows: [{ t: "도서관", re: /도서관/ }] },
+    { kw: "행정복지센터", rows: [{ t: "행정복지센터", re: /행정복지센터|주민센터|읍사무소|면사무소/ }] },
+    { code: "BK9", rows: [{ t: "은행" }] }
+  ];
+  function nrSearch(q, ll, radius, maxPages, cb) {
+    var ps = new kakao.maps.services.Places(), S = kakao.maps.services.Status, out = [], pages = 0, called = false;
+    var opt = { location: new kakao.maps.LatLng(ll[0], ll[1]), radius: radius, sort: kakao.maps.services.SortBy.DISTANCE };
+    function done(data, st, pg) {
+      if (st === S.ERROR) { if (!called) { called = true; cb(null); } return; }
+      if (st === S.OK) {
+        out = out.concat(data); pages++;
+        if (pg && pg.hasNextPage && pages < maxPages) { pg.nextPage(); return; }
+      }
+      if (called) return; called = true;
+      cb(out, { total: pg && pg.totalCount || out.length, capped: !!(pg && pg.hasNextPage && st === S.OK) });
+    }
+    if (q.code) ps.categorySearch(q.code, done, opt); else ps.keywordSearch(q.kw, done, opt);
+  }
+  function rowMatch(row, x) {
+    var c = x.category_name || "";
+    if (row.re && !row.re.test(c)) return false;
+    if (row.not && row.not.test(c + " " + x.place_name)) return false;
+    return true;
+  }
+  function distTxt(m) { m = +m; return (m >= 1000 ? (Math.round(m / 100) / 10) + "km" : Math.round(m) + "m") + " · 걸어서 약 " + Math.max(1, Math.round(m / WALK)) + "분"; }
+  // 결과: [{t, n, capped, near:{name, d, url, y, x}}]
+  function nearRun(ll, minutes, cb) {
+    var radius = minutes * WALK, res = [], left = NEAR_Q.length, failed = 0;
+    NEAR_Q.forEach(function (q, qi) {
+      nrSearch(q, ll, radius, 3, function (list, info) {
+        if (!list) { failed++; q.rows.forEach(function (row, ri) { res[qi * 10 + ri] = { t: row.t, n: null }; }); return fin(); }
+        var pend = 0;
+        q.rows.forEach(function (row, ri) {
+          var hit = list.filter(function (x) { return rowMatch(row, x) && +x.distance <= radius; });
+          var whole = !row.re && !row.not;
+          var r = { t: row.t, n: whole && info.capped ? info.total : hit.length, capped: info.capped && !whole, near: hit[0] ? pick(hit[0]) : null };
+          res[qi * 10 + ri] = r;
+          if (!r.near) {
+            pend++;
+            nrSearch(q, ll, 5000, 1, function (l2) {
+              var h = (l2 || []).filter(function (x) { return rowMatch(row, x); })[0];
+              if (h) r.near = pick(h);
+              if (--pend === 0) fin();
+            });
+          }
+        });
+        if (!pend) fin();
+      });
+    });
+    function pick(x) { return { name: x.place_name, d: +x.distance, url: x.place_url, y: +x.y, x: +x.x }; }
+    function fin() { if (--left === 0) cb(res.filter(Boolean), failed === NEAR_Q.length); }
+  }
+  function nearHtml(res, minutes, compact) {
+    var have = res.filter(function (r) { return r.n > 0; }), miss = res.filter(function (r) { return r.n === 0; });
+    var sum = '<p class="near-sum">걸어서 <b>' + minutes + "분</b>(직선 " + nf(minutes * WALK) + "m) 안에 " + res.length + "가지 중 <b>" + have.length + "가지</b>가 있어요." +
+      (miss.length ? '<br><span class="result">없는 것: ' + miss.map(function (r) { return esc(r.t); }).join(", ") + "</span>" : "") + "</p>";
+    return sum + '<ul class="near-list">' + res.map(function (r) {
+      var n = r.n == null ? '<span class="nn zero">확인 못 함</span>' : '<span class="nn' + (r.n ? "" : " zero") + '">' + (r.n ? nf(r.n) + (r.capped ? "곳+" : "곳") : "없음") + "</span>";
+      var f = r.near ? (r.near.url && !compact ? '<a href="' + esc(r.near.url) + '" target="_blank" rel="noopener">' + esc(r.near.name) + "</a>" : esc(r.near.name)) + " · " + distTxt(r.near.d) : (r.n == null ? "" : "5km 안에 없음");
+      return '<li><span class="nk">' + esc(r.t) + "</span>" + n + '<span class="nf">' + (r.near ? "가장 가까운 곳 " : "") + f + "</span></li>";
+    }).join("") + "</ul>";
+  }
+  function nearForRecord(r, box) {
+    box.innerHTML = '<h3>주변 생활권</h3><p class="result" style="margin:0">찾는 중입니다…</p>';
+    loadSDK(function () {
+      geocode(r, function (ll) {
+        if (!ll) { box.innerHTML = '<h3>주변 생활권</h3><p class="result" style="margin:0">이 기록은 위치를 찾지 못해 생활권을 볼 수 없어요.</p>'; return; }
+        nearRun(ll, 10, function (res, allFail) {
+          if (allFail) { box.innerHTML = '<h3>주변 생활권</h3><p class="result" style="margin:0">장소 검색이 잠시 안 돼요. 조금 뒤 다시 눌러 주세요.</p>'; return; }
+          box.innerHTML = "<h3>주변 생활권</h3>" + nearHtml(res, 10, true) +
+            '<button type="button" class="linkbtn" id="sh-near-more" style="margin-top:8px">지도와 함께 자세히 보기 →</button>';
+          document.getElementById("sh-near-more").onclick = function () {
+            NR.at = ll; NR.label = r.name || r.addr; NR.res = null;
+            closeSheet(); location.hash = "#near";
+          };
+        });
+      });
+    });
+  }
+  function drawNear() {
+    var rad = document.getElementById("nr-rad");
+    rad.innerHTML = [5, 10, 15].map(function (m) { return '<button type="button" data-nrm="' + m + '" aria-pressed="' + (NR.min === m) + '">' + m + "분</button>"; }).join("");
+    rad.querySelectorAll("[data-nrm]").forEach(function (b) {
+      b.onclick = function () { NR.min = +b.getAttribute("data-nrm"); try { localStorage.setItem("dr:nrmin", NR.min); } catch (e) {} NR.res = null; drawNear(); };
+    });
+    var out = document.getElementById("nr-out");
+    if (!NR.at) { out.innerHTML = '<article class="card"><p class="empty" style="padding:0">주소나 건물 이름을 넣고 ‘보기’를 누르세요.</p></article>'; return; }
+    if (NR.res && NR.resMin === NR.min && NR.resAt === NR.at) return nearPaint();
+    var tk = ++NR.token;
+    out.innerHTML = '<article class="card"><p class="result">' + esc(NR.label) + " 주변을 찾는 중입니다…</p></article>";
+    loadSDK(function () {
+      nearRun(NR.at, NR.min, function (res, allFail) {
+        if (tk !== NR.token) return;
+        if (allFail) { out.innerHTML = '<article class="card"><p class="empty" style="padding:0">장소 검색이 잠시 안 돼요. 조금 뒤 다시 해 보세요.</p></article>'; return; }
+        NR.res = res; NR.resMin = NR.min; NR.resAt = NR.at;
+        nearPaint();
+      });
+    });
+  }
+  function nearPaint() {
+    var out = document.getElementById("nr-out");
+    out.innerHTML = '<article class="card"><div class="card-head"><h3>' + esc(NR.label) + ' 주변</h3><span class="meta">직선 ' + nf(NR.min * WALK) + "m</span></div>" +
+      '<div class="agmap" style="height:300px;margin:0 0 14px"><div id="nr-map"></div></div>' + nearHtml(NR.res, NR.min, false) + "</article>";
+    var map = new kakao.maps.Map(document.getElementById("nr-map"), { center: new kakao.maps.LatLng(NR.at[0], NR.at[1]), level: NR.min <= 5 ? 4 : NR.min <= 10 ? 5 : 6, scrollwheel: false });
+    new kakao.maps.Circle({ map: map, center: new kakao.maps.LatLng(NR.at[0], NR.at[1]), radius: NR.min * WALK, strokeWeight: 2, strokeColor: "#2459C9", strokeOpacity: 0.8, fillColor: "#2459C9", fillOpacity: 0.08 });
+    function mark(y, x, cls, title) {
+      var d = document.createElement("div"); d.className = "nmark" + (cls ? " " + cls : ""); d.title = title;
+      new kakao.maps.CustomOverlay({ map: map, position: new kakao.maps.LatLng(y, x), content: d, zIndex: cls ? 3 : 2 });
+    }
+    NR.res.forEach(function (r) { if (r.near && r.near.d <= NR.min * WALK) mark(r.near.y, r.near.x, "", r.t + ": " + r.near.name); });
+    mark(NR.at[0], NR.at[1], "me", NR.label);
+  }
+  document.getElementById("nr-form").onsubmit = function (e) {
+    e.preventDefault();
+    var q = document.getElementById("nr-q").value.trim(); if (!q) return;
+    var out = document.getElementById("nr-out");
+    out.innerHTML = '<article class="card"><p class="result">위치를 찾는 중입니다…</p></article>';
+    loadSDK(function () {
+      var full = /청주/.test(q) ? q : "충청북도 청주시 " + q;
+      M.geo.addressSearch(full, function (res, st) {
+        if (st === kakao.maps.services.Status.OK && res[0]) { NR.at = [+res[0].y, +res[0].x]; NR.label = res[0].address_name || q; NR.res = null; return drawNear(); }
+        new kakao.maps.services.Places().keywordSearch(q, function (d, st2) {
+          if (st2 === kakao.maps.services.Status.OK && d[0]) { NR.at = [+d[0].y, +d[0].x]; NR.label = d[0].place_name; NR.res = null; return drawNear(); }
+          out.innerHTML = '<article class="card"><p class="empty" style="padding:0">‘' + esc(q) + "’ 위치를 청주에서 찾지 못했어요. 동 이름과 번지, 또는 건물 이름으로 다시 넣어 보세요.</p></article>";
+        }, { location: new kakao.maps.LatLng(36.6424, 127.489), radius: 20000 });
+      });
+    });
+  };
+
   document.querySelectorAll(".subtabs [data-sub]").forEach(function (b) {
     b.onclick = function () { location.hash = "#" + b.getAttribute("data-sub"); };
   });
@@ -2922,7 +3269,7 @@ html:not(.touch) {
     var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h), target = h, sharedItem = null;
     if (m) { sharedItem = byPk[decodeURIComponent(m[1])] || null; target = "map"; }
     if (target === "list") target = "map";
-    if (target === "stats" || target === "flow" || target === "compare" || target === "trade" || target === "stall" || target === "quality") { sub = target; target = "analysis"; }
+    if (target === "stats" || target === "flow" || target === "compare" || target === "trade" || target === "stall" || target === "quality" || target === "aging" || target === "near") { sub = target; target = "analysis"; }
     else if (target === "analysis") sub = "stats";
     if (!TITLES[target]) target = "home";
     var moved = target !== screen;

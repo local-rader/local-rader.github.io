@@ -181,7 +181,7 @@ def fetch_area(base, k, sg, bj, deadline):
 
 
 def pick_base(k):
-    sg, bj = "43114", "10100"  # 청원구 내덕동으로 시험
+    sg, bj = "43114", "10100"  # 청원구 우암동으로 시험
     errs = []
     for b in BASES:
         try:
@@ -195,7 +195,7 @@ def pick_base(k):
 def probe():
     b, total, items = pick_base(key())
     print("사용 주소:", b)
-    print("내덕동 표제부 전체 건수:", total)
+    print("우암동 표제부 전체 건수:", total)
     if items:
         print("응답 항목:", ", ".join(sorted(items[0].keys())))
         for it in items:
