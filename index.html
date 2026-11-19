@@ -121,7 +121,8 @@ h1, h2, h3 { text-wrap: balance; }
 .topnav a:hover { color: var(--ink); }
 .topnav a { flex: none; white-space: nowrap; }
 .topnav::-webkit-scrollbar { display: none; }
-@media (max-width: 480px) { .topnav { gap: 0; } .topnav a { padding: 0 9px; font-size: 15px; } }
+@media (max-width: 560px) { .topnav { gap: 0; justify-content: space-between; } .topnav a { padding: 0 3px; font-size: 14px; letter-spacing: -0.02em; } }
+@media (max-width: 340px) { .topnav a { font-size: 13px; padding: 0 2px; } }
 .place { margin-left: auto; flex: 0 1 200px; max-width: 55%; }
 @media (max-width: 560px) { .place { flex: 1 1 120px; max-width: none; } .appbar-in { flex-wrap: wrap; column-gap: 8px; } .appbar-in .favstar { order: 2; } }
 .favstar { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 40px; min-width: 40px; justify-content: center; border: 1px solid var(--rule-2); border-radius: var(--r-ctl); background: var(--surface); color: var(--ink-3); cursor: pointer; padding: 0 9px; font-size: 14px; font-weight: 500; }
