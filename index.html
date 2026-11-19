@@ -642,8 +642,20 @@ html:not(.touch) {
 .near-sum { font-size: 15px; margin: 0 0 12px; }
 .near-sum b { font-weight: 600; }
 .near-list { margin: 0; padding: 0; list-style: none; }
-.near-list li { display: grid; grid-template-columns: 8.5em 4.8em minmax(0, 1fr); gap: 4px 10px; padding: 10px 0; border-top: 1px solid var(--rule); font-size: 14px; align-items: baseline; }
-.near-list li:first-child { border-top: 0; }
+.near-list > li { border-top: 1px solid var(--rule); }
+.near-list > li:first-child { border-top: 0; }
+.nrow { display: grid; grid-template-columns: 8.5em 4.8em minmax(0, 1fr) 1em; gap: 4px 10px; padding: 10px 0; font-size: 14px; align-items: baseline; width: 100%; background: none; border: 0; text-align: left; color: inherit; font: inherit; }
+button.nrow { cursor: pointer; }
+button.nrow:hover .nk { color: var(--accent); }
+.nrow .chev { color: var(--ink-3); transition: transform .15s; justify-self: end; }
+.nrow[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.nn small { display: block; font-weight: 400; font-size: 12px; color: var(--ink-3); }
+.nlist { margin: 0 0 10px; padding: 8px 12px; list-style: none; background: var(--surface-2); border-radius: var(--r-ctl); font-size: 13.5px; max-height: 320px; overflow: auto; }
+.nlist li { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-top: 1px solid var(--rule); }
+.nlist li:first-child { border-top: 0; }
+.nlist li > span:last-child { color: var(--ink-3); flex: none; font-size: 12.5px; }
+.nlist a { color: var(--accent); }
+.nmark.pick { width: 12px; height: 12px; background: var(--s-work); }
 .near-list .nk { color: var(--ink-2); }
 .near-list .nn { font-weight: 600; }
 .near-list .nn.zero { color: var(--s-stall-ink); font-weight: 500; }
@@ -653,7 +665,7 @@ html:not(.touch) {
 .nmark.me { width: 14px; height: 14px; background: var(--s-stall); }
 .near-box { margin: 14px 0 0; padding: 12px 14px; border: 1px solid var(--rule); border-radius: var(--r-card); background: var(--surface-2); }
 .near-box h3 { margin: 0 0 8px; font-size: 15px; }
-@media (max-width: 520px) { .near-list li { grid-template-columns: 7.2em 4.2em minmax(0, 1fr); font-size: 13.5px; } }
+@media (max-width: 520px) { .nrow { grid-template-columns: 6.6em 3.8em minmax(0, 1fr) .8em; font-size: 13.5px; } .nlist li { flex-direction: column; gap: 0; } }
 </style>
 <script>if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("touch");</script>
 </head>
@@ -987,7 +999,7 @@ html:not(.touch) {
 
       <div class="pane" id="pane-near" role="tabpanel" aria-labelledby="sub-near" hidden>
         <div class="sec-head"><h2 class="sec">생활권 분석</h2></div>
-        <p class="panel-note">주소나 건물 이름을 넣으면, 걸어서 갈 수 있는 거리 안에 버스정류장·학교·병원 같은 생활 시설이 얼마나 있는지 보여줍니다. 개발지도에서 건물을 눌러 ‘주변 생활권 보기’로 열 수도 있어요.</p>
+        <p class="panel-note">주소나 건물 이름을 넣으면, 걸어서 갈 수 있는 거리 안에 버스정류소·학교·병원 같은 생활 시설이 얼마나 있는지 보여줍니다. 개발지도에서 건물을 눌러 ‘주변 생활권 보기’로 열 수도 있어요.</p>
         <article class="card">
           <form class="searchbox" id="nr-form" role="search">
             <div class="field">
@@ -1000,7 +1012,7 @@ html:not(.touch) {
         </article>
         <div id="nr-out"></div>
         <div class="disclaimer">
-          <p>카카오 지도에 등록된 장소를 센 것이라 빠지거나 문을 닫은 곳이 섞여 있을 수 있습니다. 거리는 <b>직선거리</b>이고, 1분에 80m 걷는다고 보고 시간을 계산했습니다. 실제로 걷는 길은 이보다 깁니다.</p>
+          <p>시내버스 정류소·공원·도서관은 공공데이터(국토교통부 버스정류소정보, 전국도시공원·도서관 표준데이터) 위치로, 나머지는 카카오 지도에 등록된 장소로 셉니다. 카카오 장소는 빠지거나 문을 닫은 곳이 섞여 있을 수 있습니다. 항목을 누르면 해당하는 곳 목록이 나옵니다. 거리는 <b>직선거리</b>이고, 1분에 80m 걷는다고 보고 시간을 계산했습니다. 실제로 걷는 길은 이보다 깁니다.</p>
           <p>시설 수는 많고 적음을 보여줄 뿐, 살기 좋은 정도를 점수로 매긴 것이 아닙니다.</p>
         </div>
       </div>
@@ -2940,15 +2952,15 @@ html:not(.touch) {
   var NR = { min: 10, at: null, label: "", token: 0, map: null, ov: [] };
   try { var _m = +localStorage.getItem("dr:nrmin"); if (_m === 5 || _m === 10 || _m === 15) NR.min = _m; } catch (e) {}
   var NEAR_Q = [
-    { local: "bus", rows: [{ t: "시내버스 정류소" }] },
+    { local: "bus", src: "국토교통부 (TAGO) 버스정류소정보", rows: [{ t: "시내버스 정류소" }] },
     { code: "SC4", rows: [{ t: "초등학교", re: /초등학교/ }, { t: "중·고등학교", re: /중학교|고등학교/ }] },
     { code: "PS3", rows: [{ t: "어린이집·유치원" }] },
     { code: "HP8", rows: [{ t: "병원·의원" }] },
     { code: "PM9", rows: [{ t: "약국" }] },
     { code: "CS2", rows: [{ t: "편의점" }] },
     { code: "MT1", rows: [{ t: "대형마트" }] },
-    { kw: "공원", rows: [{ t: "공원", re: /공원/, not: /주차장|놀이공원|묘지/ }] },
-    { kw: "도서관", rows: [{ t: "도서관", re: /도서관/ }] },
+    { local: "park", src: "전국도시공원정보표준데이터", rows: [{ t: "공원" }] },
+    { local: "lib", src: "전국도서관표준데이터", rows: [{ t: "도서관" }] },
     { kw: "행정복지센터", rows: [{ t: "행정복지센터", re: /행정복지센터|주민센터|읍사무소|면사무소/ }] },
     { code: "BK9", rows: [{ t: "은행" }] }
   ];
@@ -2979,8 +2991,26 @@ html:not(.touch) {
       cb(out, { total: out.length, capped: false, names: Object.keys(seen).length });
     });
   }
+  var POI = { d: null, failed: false, wait: [] };
+  function loadPoi(cb) {
+    if (POI.d || POI.failed) return cb();
+    POI.wait.push(cb); if (POI.wait.length > 1) return;
+    fetch("pois.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (d) { POI.d = d; }).catch(function () { POI.failed = true; })
+      .then(function () { var w = POI.wait; POI.wait = []; w.forEach(function (f) { f(); }); });
+  }
+  function poiSearch(kind, ll, radius, cb) {
+    loadPoi(function () {
+      var L = POI.d && POI.d[kind]; if (!L || !L.length) return cb(null);
+      var out = [];
+      L.forEach(function (s) { var m = meters(ll[0], ll[1], s[1], s[2]); if (m <= radius) out.push({ place_name: s[0] + (s[3] ? " (" + s[3] + ")" : ""), category_name: kind, distance: String(Math.round(m)), place_url: "", y: s[1], x: s[2] }); });
+      out.sort(function (a, b) { return a.distance - b.distance; });
+      cb(out, { total: out.length, capped: false });
+    });
+  }
   function nrSearch(q, ll, radius, maxPages, cb) {
     if (q.local === "bus") return busSearch(ll, radius, cb);
+    if (q.local) return poiSearch(q.local, ll, radius, cb);
     var ps = new kakao.maps.services.Places(), S = kakao.maps.services.Status, out = [], pages = 0, called = false;
     var opt = { location: new kakao.maps.LatLng(ll[0], ll[1]), radius: radius, sort: kakao.maps.services.SortBy.DISTANCE };
     function done(data, st, pg) {
@@ -3006,12 +3036,12 @@ html:not(.touch) {
     var radius = minutes * WALK, res = [], left = NEAR_Q.length, failed = 0;
     NEAR_Q.forEach(function (q, qi) {
       nrSearch(q, ll, radius, 3, function (list, info) {
-        if (!list) { failed++; q.rows.forEach(function (row, ri) { res[qi * 10 + ri] = { t: row.t, n: null }; }); return fin(); }
+        if (!list) { if (!q.local) failed++; q.rows.forEach(function (row, ri) { res[qi * 10 + ri] = { t: row.t, n: null, pending: !!q.local }; }); return fin(); }
         var pend = 0;
         q.rows.forEach(function (row, ri) {
           var hit = list.filter(function (x) { return rowMatch(row, x) && +x.distance <= radius; });
           var whole = !row.re && !row.not;
-          var r = { t: row.t, n: whole && info.capped ? info.total : hit.length, capped: info.capped && !whole, near: hit[0] ? pick(hit[0]) : null, names: info.names };
+          var r = { t: row.t, n: whole && info.capped ? info.total : hit.length, capped: info.capped && !whole, near: hit[0] ? pick(hit[0]) : null, names: info.names, list: hit.map(pick), src: q.src };
           res[qi * 10 + ri] = r;
           if (!r.near) {
             pend++;
@@ -3032,12 +3062,29 @@ html:not(.touch) {
     var have = res.filter(function (r) { return r.n > 0; }), miss = res.filter(function (r) { return r.n === 0; });
     var sum = '<p class="near-sum">걸어서 <b>' + minutes + "분</b>(직선 " + nf(minutes * WALK) + "m) 안에 " + res.length + "가지 중 <b>" + have.length + "가지</b>가 있어요." +
       (miss.length ? '<br><span class="result">없는 것: ' + miss.map(function (r) { return esc(r.t); }).join(", ") + "</span>" : "") + "</p>";
-    return sum + '<ul class="near-list">' + res.map(function (r) {
-      var n = r.n == null ? '<span class="nn zero">확인 못 함</span>' : '<span class="nn' + (r.n ? "" : " zero") + '">' + (r.n ? nf(r.n) + (r.capped ? "곳+" : "곳") : "없음") + (r.names && r.n ? '<small class="result" style="display:block;font-weight:400">이름 ' + nf(r.names) + "개</small>" : "") + "</span>";
-      if (r.n == null && r.t === "시내버스 정류소") return '<li><span class="nk">' + esc(r.t) + '</span><span class="nn zero">준비 중</span><span class="nf">정류소 자료를 받는 중이에요</span></li>';
-      var f = r.near ? (r.near.url && !compact ? '<a href="' + esc(r.near.url) + '" target="_blank" rel="noopener">' + esc(r.near.name) + "</a>" : esc(r.near.name)) + " · " + distTxt(r.near.d) : (r.n == null ? "" : "5km 안에 없음");
-      return '<li><span class="nk">' + esc(r.t) + "</span>" + n + '<span class="nf">' + (r.near ? "가장 가까운 곳 " : "") + f + "</span></li>";
+    function link(x) { return x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.name) + "</a>" : esc(x.name); }
+    return sum + '<ul class="near-list">' + res.map(function (r, i) {
+      if (r.n == null && r.pending) return '<li><div class="nrow"><span class="nk">' + esc(r.t) + '</span><span class="nn zero">준비 중</span><span class="nf">공공데이터를 받는 중이에요</span></div></li>';
+      var n = r.n == null ? '<span class="nn zero">확인 못 함</span>' : '<span class="nn' + (r.n ? "" : " zero") + '">' + (r.n ? nf(r.n) + (r.capped ? "곳+" : "곳") : "없음") + (r.names && r.n ? '<small>이름 ' + nf(r.names) + "개</small>" : "") + "</span>";
+      var f = r.near ? (r.n ? "가장 가까운 곳 " : "가장 가까운 곳 ") + esc(r.near.name) + " · " + distTxt(r.near.d) : (r.n == null ? "" : "5km 안에 없음");
+      var many = r.list && r.list.length > 0;
+      var head = '<span class="nk">' + esc(r.t) + "</span>" + n + '<span class="nf">' + f + "</span>";
+      if (!many) return '<li><div class="nrow">' + head + "</div></li>";
+      return '<li><button type="button" class="nrow" data-nri="' + i + '" aria-expanded="false">' + head + '<span class="chev" aria-hidden="true">›</span></button>' +
+        '<ol class="nlist" hidden>' + r.list.map(function (x) { return "<li><span>" + link(x) + "</span><span>" + distTxt(x.d) + "</span></li>"; }).join("") +
+        (r.capped ? '<li class="result">가까운 순으로 ' + r.list.length + "곳까지만 보여줘요</li>" : "") +
+        (r.src ? '<li class="result">출처: ' + esc(r.src) + "</li>" : "") + "</ol></li>";
     }).join("") + "</ul>";
+  }
+  function bindNear(box, res, onOpen) {
+    box.querySelectorAll("[data-nri]").forEach(function (b) {
+      b.onclick = function () {
+        var open = b.getAttribute("aria-expanded") !== "true";
+        box.querySelectorAll("[data-nri]").forEach(function (o) { o.setAttribute("aria-expanded", "false"); o.nextElementSibling.hidden = true; });
+        b.setAttribute("aria-expanded", String(open)); b.nextElementSibling.hidden = !open;
+        if (onOpen) onOpen(open ? res[+b.getAttribute("data-nri")] : null);
+      };
+    });
   }
   function nearForRecord(r, box) {
     box.innerHTML = '<h3>주변 생활권</h3><p class="result" style="margin:0">찾는 중입니다…</p>';
@@ -3048,6 +3095,7 @@ html:not(.touch) {
           if (allFail) { box.innerHTML = '<h3>주변 생활권</h3><p class="result" style="margin:0">장소 검색이 잠시 안 돼요. 조금 뒤 다시 눌러 주세요.</p>'; return; }
           box.innerHTML = "<h3>주변 생활권</h3>" + nearHtml(res, 10, true) +
             '<button type="button" class="linkbtn" id="sh-near-more" style="margin-top:8px">지도와 함께 자세히 보기 →</button>';
+          bindNear(box, res);
           document.getElementById("sh-near-more").onclick = function () {
             NR.at = ll; NR.label = r.name || r.addr; NR.res = null;
             closeSheet(); location.hash = "#near";
@@ -3082,12 +3130,20 @@ html:not(.touch) {
       '<div class="agmap" style="height:300px;margin:0 0 14px"><div id="nr-map"></div></div>' + nearHtml(NR.res, NR.min, false) + "</article>";
     var map = new kakao.maps.Map(document.getElementById("nr-map"), { center: new kakao.maps.LatLng(NR.at[0], NR.at[1]), level: NR.min <= 5 ? 4 : NR.min <= 10 ? 5 : 6, scrollwheel: false });
     new kakao.maps.Circle({ map: map, center: new kakao.maps.LatLng(NR.at[0], NR.at[1]), radius: NR.min * WALK, strokeWeight: 2, strokeColor: "#2459C9", strokeOpacity: 0.8, fillColor: "#2459C9", fillOpacity: 0.08 });
-    function mark(y, x, cls, title) {
+    var base = [], sel = [];
+    function mark(y, x, cls, title, bag) {
       var d = document.createElement("div"); d.className = "nmark" + (cls ? " " + cls : ""); d.title = title;
-      new kakao.maps.CustomOverlay({ map: map, position: new kakao.maps.LatLng(y, x), content: d, zIndex: cls ? 3 : 2 });
+      var o = new kakao.maps.CustomOverlay({ map: map, position: new kakao.maps.LatLng(y, x), content: d, zIndex: cls === "me" ? 4 : cls ? 3 : 2 });
+      if (bag) bag.push(o);
     }
-    NR.res.forEach(function (r) { if (r.near && r.near.d <= NR.min * WALK) mark(r.near.y, r.near.x, "", r.t + ": " + r.near.name); });
+    function showBase(on) { base.forEach(function (o) { o.setMap(on ? map : null); }); }
+    NR.res.forEach(function (r) { if (r.near && r.near.d <= NR.min * WALK) mark(r.near.y, r.near.x, "", r.t + ": " + r.near.name, base); });
     mark(NR.at[0], NR.at[1], "me", NR.label);
+    bindNear(document.getElementById("nr-out"), NR.res, function (r) {
+      sel.forEach(function (o) { o.setMap(null); }); sel = [];
+      showBase(!r);
+      if (r) r.list.forEach(function (x) { mark(x.y, x.x, "pick", r.t + ": " + x.name, sel); });
+    });
   }
   document.getElementById("nr-form").onsubmit = function (e) {
     e.preventDefault();
