@@ -2940,7 +2940,7 @@ html:not(.touch) {
   var NR = { min: 10, at: null, label: "", token: 0, map: null, ov: [] };
   try { var _m = +localStorage.getItem("dr:nrmin"); if (_m === 5 || _m === 10 || _m === 15) NR.min = _m; } catch (e) {}
   var NEAR_Q = [
-    { kw: "버스정류장", rows: [{ t: "버스정류장", re: /버스정류장/ }] },
+    { local: "bus", rows: [{ t: "시내버스 정류소" }] },
     { code: "SC4", rows: [{ t: "초등학교", re: /초등학교/ }, { t: "중·고등학교", re: /중학교|고등학교/ }] },
     { code: "PS3", rows: [{ t: "어린이집·유치원" }] },
     { code: "HP8", rows: [{ t: "병원·의원" }] },
@@ -2952,7 +2952,35 @@ html:not(.touch) {
     { kw: "행정복지센터", rows: [{ t: "행정복지센터", re: /행정복지센터|주민센터|읍사무소|면사무소/ }] },
     { code: "BK9", rows: [{ t: "은행" }] }
   ];
+  // 시내버스 정류소는 카카오 장소 검색에 거의 없어서 공공데이터(busstops.json)로 직접 거리를 잰다
+  var BUS = { list: null, failed: false, wait: [] };
+  function loadBus(cb) {
+    if (BUS.list || BUS.failed) return cb();
+    BUS.wait.push(cb); if (BUS.wait.length > 1) return;
+    fetch("busstops.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (d) { BUS.list = d.stops; }).catch(function () { BUS.failed = true; })
+      .then(function () { var w = BUS.wait; BUS.wait = []; w.forEach(function (f) { f(); }); });
+  }
+  function meters(a, b, c, d) {
+    var R = 6371000, r = Math.PI / 180, x = (d - b) * r * Math.cos((a + c) / 2 * r), y = (c - a) * r;
+    return Math.sqrt(x * x + y * y) * R;
+  }
+  function busSearch(ll, radius, cb) {
+    loadBus(function () {
+      if (!BUS.list) return cb(null);
+      var seen = {}, out = [];
+      BUS.list.forEach(function (s) {
+        var m = meters(ll[0], ll[1], s[1], s[2]); if (m > radius) return;
+        out.push({ place_name: s[0] + (s[3] ? " (" + s[3] + ")" : ""), category_name: "버스정류소", distance: String(Math.round(m)), place_url: "", y: s[1], x: s[2], nm: s[0] });
+      });
+      out.sort(function (a, b) { return a.distance - b.distance; });
+      // 길 건너편 정류소는 이름이 같으므로 이름 기준으로도 센다
+      out.forEach(function (x) { seen[x.nm] = 1; });
+      cb(out, { total: out.length, capped: false, names: Object.keys(seen).length });
+    });
+  }
   function nrSearch(q, ll, radius, maxPages, cb) {
+    if (q.local === "bus") return busSearch(ll, radius, cb);
     var ps = new kakao.maps.services.Places(), S = kakao.maps.services.Status, out = [], pages = 0, called = false;
     var opt = { location: new kakao.maps.LatLng(ll[0], ll[1]), radius: radius, sort: kakao.maps.services.SortBy.DISTANCE };
     function done(data, st, pg) {
@@ -2983,7 +3011,7 @@ html:not(.touch) {
         q.rows.forEach(function (row, ri) {
           var hit = list.filter(function (x) { return rowMatch(row, x) && +x.distance <= radius; });
           var whole = !row.re && !row.not;
-          var r = { t: row.t, n: whole && info.capped ? info.total : hit.length, capped: info.capped && !whole, near: hit[0] ? pick(hit[0]) : null };
+          var r = { t: row.t, n: whole && info.capped ? info.total : hit.length, capped: info.capped && !whole, near: hit[0] ? pick(hit[0]) : null, names: info.names };
           res[qi * 10 + ri] = r;
           if (!r.near) {
             pend++;
@@ -3005,7 +3033,8 @@ html:not(.touch) {
     var sum = '<p class="near-sum">걸어서 <b>' + minutes + "분</b>(직선 " + nf(minutes * WALK) + "m) 안에 " + res.length + "가지 중 <b>" + have.length + "가지</b>가 있어요." +
       (miss.length ? '<br><span class="result">없는 것: ' + miss.map(function (r) { return esc(r.t); }).join(", ") + "</span>" : "") + "</p>";
     return sum + '<ul class="near-list">' + res.map(function (r) {
-      var n = r.n == null ? '<span class="nn zero">확인 못 함</span>' : '<span class="nn' + (r.n ? "" : " zero") + '">' + (r.n ? nf(r.n) + (r.capped ? "곳+" : "곳") : "없음") + "</span>";
+      var n = r.n == null ? '<span class="nn zero">확인 못 함</span>' : '<span class="nn' + (r.n ? "" : " zero") + '">' + (r.n ? nf(r.n) + (r.capped ? "곳+" : "곳") : "없음") + (r.names && r.n ? '<small class="result" style="display:block;font-weight:400">이름 ' + nf(r.names) + "개</small>" : "") + "</span>";
+      if (r.n == null && r.t === "시내버스 정류소") return '<li><span class="nk">' + esc(r.t) + '</span><span class="nn zero">준비 중</span><span class="nf">정류소 자료를 받는 중이에요</span></li>';
       var f = r.near ? (r.near.url && !compact ? '<a href="' + esc(r.near.url) + '" target="_blank" rel="noopener">' + esc(r.near.name) + "</a>" : esc(r.near.name)) + " · " + distTxt(r.near.d) : (r.n == null ? "" : "5km 안에 없음");
       return '<li><span class="nk">' + esc(r.t) + "</span>" + n + '<span class="nf">' + (r.near ? "가장 가까운 곳 " : "") + f + "</span></li>";
     }).join("") + "</ul>";

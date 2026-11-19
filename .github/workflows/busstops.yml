@@ -1,0 +1,45 @@
+# 청주 시내버스 정류소 위치 → busstops.json (생활권 분석용). 한 달에 한 번.
+name: 버스정류소 갱신
+
+on:
+  schedule:
+    - cron: "23 18 5 * *"   # 매월 6일 한국시간 03:23
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "update 또는 probe"
+        required: false
+        default: "update"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: busstops
+  cancel-in-progress: false
+
+jobs:
+  stops:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 정류소 받기
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          MODE: ${{ inputs.mode }}
+        run: python busstops.py "${MODE:-update}"
+      - name: 저장
+        if: ${{ success() && inputs.mode != 'probe' }}
+        run: |
+          git config user.name "dongne-radar-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add busstops.json
+          if git diff --cached --quiet; then echo "바뀐 자료가 없습니다."; else
+            git commit -m "버스정류소 갱신 $(TZ=Asia/Seoul date +%F)"
+            git pull --rebase -X theirs origin main
+            git push
+          fi
