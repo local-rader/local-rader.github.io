@@ -123,6 +123,47 @@ h1, h2, h3 { text-wrap: balance; }
 .topnav::-webkit-scrollbar { display: none; }
 @media (max-width: 480px) { .topnav { gap: 0; } .topnav a { padding: 0 9px; font-size: 15px; } }
 .place { margin-left: auto; flex: 0 1 200px; max-width: 55%; }
+@media (max-width: 560px) { .place { flex: 1 1 120px; max-width: none; } .appbar-in { flex-wrap: wrap; column-gap: 8px; } .appbar-in .favstar { order: 2; } }
+.favstar { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 40px; min-width: 40px; justify-content: center; border: 1px solid var(--rule-2); border-radius: var(--r-ctl); background: var(--surface); color: var(--ink-3); cursor: pointer; padding: 0 9px; font-size: 14px; font-weight: 500; }
+.favstar svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
+.favstar[aria-pressed="true"] { color: #F2A900; border-color: #F5C842; background: #FFF8E1; }
+.favstar[aria-pressed="true"] svg { fill: currentColor; }
+.favstar.big { height: 36px; }
+.favbar { display: flex; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-top: 7px; padding-bottom: 8px; border-top: 1px solid var(--rule); }
+.favbar::-webkit-scrollbar { display: none; }
+.favbar.inline { border-top: 0; padding: 0; flex-wrap: wrap; }
+.favbar .fl { flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--ink-3); margin-right: 4px; }
+.favbar .fl svg { width: 14px; height: 14px; fill: #F2A900; }
+.favbar button { flex: none; border: 1px solid var(--rule-2); background: var(--surface); border-radius: var(--r-pill); padding: 4px 12px; font-size: 13.5px; cursor: pointer; color: var(--ink-2); }
+.favbar button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); font-weight: 600; }
+.toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 80; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+.homefav { margin: 0 0 16px; }
+.homefav:empty { display: none; }
+.homefav .card-head { margin: 0 0 8px; }
+.favhint { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 14px; border: 1px dashed var(--rule-2); border-radius: 12px; font-size: 13.5px; color: var(--ink-2); }
+.favhint svg { flex: none; width: 18px; height: 18px; fill: none; stroke: #F2A900; stroke-width: 1.7; }
+.favrows { display: grid; gap: 8px; }
+.favrow { display: grid; grid-template-columns: 7.5em repeat(4, minmax(0, 1fr)); gap: 8px; align-items: stretch; background: var(--panel); border-radius: 12px; padding: 10px; }
+.favrow .fname { border: 0; background: none; text-align: left; font-size: 16px; font-weight: 700; color: var(--ink); cursor: pointer; padding: 6px; }
+.favrow .fname:hover { color: var(--accent); }
+.favrow a { display: flex; flex-direction: column; justify-content: center; padding: 6px 10px; border-radius: 8px; background: var(--surface); text-decoration: none; color: inherit; min-width: 0; }
+.favrow a:hover { outline: 1.5px solid var(--sky); }
+.favrow small { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.favrow b { font-size: 16px; }
+@media (max-width: 720px) { .favrow { grid-template-columns: repeat(2, minmax(0, 1fr)); } .favrow .fname { grid-column: 1 / -1; padding: 2px 4px; } }
+.rhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 6px; }
+.rgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 860px) { .rgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.rgrid .card + .card { margin-top: 0; }
+.rstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+.rstat { background: var(--surface); border-radius: 10px; padding: 10px 12px; }
+.rstat b { display: block; font-size: 22px; line-height: 1.2; letter-spacing: -0.02em; }
+.rstat span { font-size: 12.5px; color: var(--ink-3); line-height: 1.35; display: block; margin-top: 2px; }
+.rmore { display: inline-flex; align-items: center; gap: 2px; margin: 4px 16px 0 0; padding-top: 6px; font-size: 14px; font-weight: 600; color: var(--accent); text-decoration: none; }
+.rmore svg { width: 16px; height: 16px; }
+
 .bottomnav {
   display: none;
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--surface); border-top: 1px solid var(--rule);
@@ -731,7 +772,9 @@ button.nrow:hover .nk { color: var(--accent); }
       <a href="#ask" data-nav="ask">AI 질문</a>
     </nav>
     <select class="sel place" id="f-place" aria-label="동네"></select>
+    <button type="button" class="favstar" id="fav-star" aria-pressed="false" aria-label="관심 동네로 등록" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.5l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/></svg></button>
   </div>
+  <div class="wrap favbar" id="favbar" hidden></div>
 </header>
 
 <main>
@@ -755,6 +798,8 @@ button.nrow:hover .nk { color: var(--accent); }
           <button type="submit">검색</button>
         </form>
       </div>
+
+      <section class="homefav" id="home-fav" aria-label="관심 동네 소식"></section>
 
       <article class="card" aria-labelledby="sum-h">
         <div class="kpi-top">
@@ -883,6 +928,7 @@ button.nrow:hover .nk { color: var(--accent); }
         <button type="button" role="tab" id="sub-stats" aria-controls="pane-stats" data-sub="stats" data-grp="analysis">지역 통계</button>
         <button type="button" role="tab" id="sub-compare" aria-controls="pane-compare" data-sub="compare" data-grp="analysis">지역 비교</button>
         <button type="button" role="tab" id="sub-trade" aria-controls="pane-trade" data-sub="trade" data-grp="analysis">실거래</button>
+        <button type="button" role="tab" id="sub-report" aria-controls="pane-report" data-sub="report" data-grp="town">동네 리포트</button>
         <button type="button" role="tab" id="sub-aging" aria-controls="pane-aging" data-sub="aging" data-grp="town">노후도</button>
         <button type="button" role="tab" id="sub-near" aria-controls="pane-near" data-sub="near" data-grp="town">생활권</button>
         <button type="button" role="tab" id="sub-quality" aria-controls="pane-quality" data-sub="quality" data-grp="none" hidden>자료 상태</button>
@@ -1032,6 +1078,10 @@ button.nrow:hover .nk { color: var(--accent); }
           <p>건축법은 허가받은 날부터 2년(공장 승인을 받은 공장은 3년) 안에 공사를 시작하지 않으면 허가를 취소하도록 하고, 정당한 사유가 있으면 1년까지 연장할 수 있게 합니다. 자료에 기록된 착공 기한이 있으면 그 날짜를 썼고, 없으면 주용도로 공장 여부를 짐작했습니다.</p>
           <p>이 목록은 법에서 말하는 ‘공사중단 장기방치 건축물’(국토교통부 실태조사로 확인된 건축물)이 아닙니다. 정확한 상태는 해당 구청 건축 부서에서 확인하세요.</p>
         </div>
+      </div>
+
+      <div class="pane" id="pane-report" role="tabpanel" aria-labelledby="sub-report" hidden>
+        <div id="rp-body"></div>
       </div>
 
       <div class="pane" id="pane-aging" role="tabpanel" aria-labelledby="sub-aging" hidden>
@@ -1320,6 +1370,10 @@ button.nrow:hover .nk { color: var(--accent); }
   if (state.cat !== "all" && !CATS.some(function (c) { return c.id === state.cat; })) state.cat = "all";
   if (MONTHS.indexOf(state.from) < 0) state.from = MONTHS[0];
   if (MONTHS.indexOf(state.to) < 0) state.to = MONTHS[MONTHS.length - 1];
+  var FAVP = [];
+  try { FAVP = JSON.parse(localStorage.getItem("dr:favp") || "[]").filter(function (x) { return typeof x === "string"; }).slice(0, 5); } catch (e) { FAVP = []; }
+  function saveFavP() { try { localStorage.setItem("dr:favp", JSON.stringify(FAVP)); } catch (e) {} }
+  var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.5l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/></svg>';
   function remember() { try { localStorage.setItem("dr:v2", JSON.stringify({ period: state.period, from: state.from, to: state.to, place: state.place, ev: state.ev, cat: state.cat, sort: state.sort, size: state.size, favOnly: state.favOnly, cmp: state.cmp })); } catch (e) {} }
 
   // 고른 기간의 첫날과 마지막날. 자료 기준일이 달의 마지막 날이면 달력 달 단위로 센다.
@@ -1523,7 +1577,9 @@ button.nrow:hover .nk { color: var(--accent); }
       if (dong.length) h += '<optgroup label="동">' + dong.map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
       if (town.length) h += '<optgroup label="읍·면">' + town.map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
     }
+    if (FAVP.length) h = opt("all", REGION + " 전체", total) + '<optgroup label="관심 동네">' + FAVP.map(function (p) { return opt(p, "★ " + p, gcnt[p] || cnt[p]); }).join("") + "</optgroup>" + h.slice(opt("all", REGION + " 전체", total).length);
     sel.innerHTML = h; sel.value = state.place;
+    if (typeof drawFavUI === "function" && document.getElementById("favbar")) drawFavUI();
   }
   document.getElementById("f-place").onchange = function () { state.place = this.value; changed(); };
 
@@ -1536,6 +1592,7 @@ button.nrow:hover .nk { color: var(--accent); }
       .filter(function (r) { if (seen[r.addr]) return false; seen[r.addr] = 1; return true; }).slice(0, n);
   }
   function drawHome() {
+    drawHomeFav();
     var pl = placeLabel();
     document.getElementById("sum-title").textContent = pl + " 개발 현황";
     document.getElementById("sum-range").textContent = periodName() + " · " + dot(R.show) + " ~ " + dot(R.to);
@@ -2602,7 +2659,7 @@ button.nrow:hover .nk { color: var(--accent); }
   // ---------- 지역 분석: 지역 통계와 멈춘 기록
   var sub = "stats";
   function drawAnalysis() {
-    ["stats", "flow", "supply", "compare", "trade", "stall", "aging", "near", "quality"].forEach(function (k) {
+    ["stats", "flow", "supply", "compare", "trade", "stall", "report", "aging", "near", "quality"].forEach(function (k) {
       document.getElementById("pane-" + k).hidden = k !== sub;
       var b = document.getElementById("sub-" + k);
       b.setAttribute("aria-selected", String(k === sub));
@@ -2611,7 +2668,7 @@ button.nrow:hover .nk { color: var(--accent); }
     document.querySelector("#scr-analysis .subtabs").hidden = grp === "none";
     document.getElementById("qlink").innerHTML = grp === "none" ? '<a href="#analysis">← 지역 분석으로</a>' : '<a href="#quality">자료 상태 보기</a> · 공공데이터에 빈칸이 얼마나 있는지 그대로 보여줍니다.';
     drawNext();
-    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else if (sub === "supply") drawSupply(); else drawStall();
+    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else if (sub === "supply") drawSupply(); else if (sub === "report") drawReport(); else drawStall();
   }
 
 
@@ -3301,17 +3358,19 @@ button.nrow:hover .nk { color: var(--accent); }
     trade: ["실거래", "최근 매매 가격과 거래량"],
     aging: ["노후도", "건물이 지어진 지 얼마나 됐는지"],
     near: ["생활권", "걸어서 갈 수 있는 생활 시설"],
-    map: ["개발지도", "허가·착공·완공 위치를 지도에서"]
+    map: ["개발지도", "허가·착공·완공 위치를 지도에서"],
+    report: ["동네 리포트", "이 동네 정보를 한 화면에 모아서"]
   };
   var NEXT = {
     flow: ["supply", "stall", "map"], supply: ["stall", "trade", "map"], stall: ["flow", "map", "aging"],
-    stats: ["compare", "trade", "aging"], compare: ["stats", "aging", "trade"], trade: ["supply", "aging", "near"],
-    aging: ["near", "trade", "map"], near: ["aging", "trade", "map"], quality: []
+    stats: ["report", "compare", "trade"], compare: ["report", "stats", "aging"], trade: ["report", "supply", "aging"],
+    aging: ["report", "near", "trade"], near: ["report", "aging", "map"], report: [], quality: []
   };
   var CHEV = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 5 5 5-5 5"/></svg>';
   function drawNext() {
     var box = document.getElementById("nextbox"), list = NEXT[sub] || [];
     if (!list.length) { box.innerHTML = ""; return; }
+    if (state.place === "all") list = list.filter(function (k) { return k !== "report"; });
     var pl = state.place === "all" ? REGION : state.place;
     box.innerHTML = "<h2>" + esc(pl) + " 이어서 보기</h2><div class=\"tiles3\">" + list.map(function (k) {
       var x = NEXT_INFO[k];
@@ -3327,6 +3386,169 @@ button.nrow:hover .nk { color: var(--accent); }
       d.parentNode.insertBefore(w, d); w.appendChild(d);
     });
   })();
+  // ---------- 관심 동네: 이 브라우저에만 저장. 위 줄에서 바로 바꾸고, 홈·동네 리포트에서 모아 본다
+  function toast(t) {
+    var el = document.getElementById("toast");
+    if (!el) { el = document.createElement("div"); el.id = "toast"; el.className = "toast"; el.setAttribute("role", "status"); document.body.appendChild(el); }
+    el.textContent = t; el.classList.add("on"); clearTimeout(el._t); el._t = setTimeout(function () { el.classList.remove("on"); }, 1800);
+  }
+  function toggleFavP(p) {
+    if (!p || p === "all") return;
+    var i = FAVP.indexOf(p);
+    if (i >= 0) { FAVP.splice(i, 1); toast(p + "을(를) 관심 동네에서 뺐어요"); }
+    else if (FAVP.length >= 5) { toast("관심 동네는 5곳까지 넣을 수 있어요"); return; }
+    else { FAVP.push(p); toast(p + "을(를) 관심 동네에 넣었어요"); }
+    saveFavP(); drawFavUI();
+    if (screen === "home") drawHomeFav();
+    if (screen === "analysis" && sub === "report") drawReport();
+  }
+  function goPlace(p, hash) {
+    if (state.place !== p) { state.place = p; changed(); }
+    if (location.hash !== "#" + hash) location.hash = "#" + hash;
+  }
+  function drawFavUI() {
+    var st = document.getElementById("fav-star"), on = FAVP.indexOf(state.place) >= 0;
+    st.hidden = state.place === "all";
+    st.setAttribute("aria-pressed", String(on));
+    st.setAttribute("aria-label", on ? "관심 동네에서 빼기" : "관심 동네로 등록");
+    st.title = on ? "관심 동네에서 빼기" : "관심 동네로 등록";
+    var bar = document.getElementById("favbar");
+    bar.hidden = !FAVP.length;
+    bar.innerHTML = '<span class="fl">' + STAR + "관심 동네</span>" + FAVP.map(function (p) {
+      return '<button type="button" data-fp="' + esc(p) + '" aria-pressed="' + (state.place === p) + '">' + esc(p) + "</button>";
+    }).join("") + '<button type="button" data-fp="all" aria-pressed="' + (state.place === "all") + '">' + esc(REGION) + " 전체</button>";
+    bar.querySelectorAll("[data-fp]").forEach(function (b) {
+      b.onclick = function () { var p = b.getAttribute("data-fp"); if (p !== state.place) { state.place = p; changed(); } };
+    });
+  }
+  document.getElementById("fav-star").onclick = function () { toggleFavP(state.place); };
+  function placeOkP(r, p) { return p === "all" || r.gu === p || r.place === p || r.place.indexOf(p + " ") === 0; }
+  function agPlaceOkP(x, p) { return p === "all" || x.gu === p || x.place === p || x.place.indexOf(p + " ") === 0; }
+  // 한 동네의 모든 기능 숫자를 모은다 (노후도·실거래는 불러온 뒤에만 채워진다)
+  function townSummary(p) {
+    var a3 = fromN(3), a12 = fromN(12), o = { p: p, a3: a3 };
+    var base = rows.filter(function (r) { return r.known && placeOkP(r, p); });
+    o.pms = 0; o.st = 0; o.done = 0; o.cat = {}; o.cat12 = 0;
+    base.forEach(function (r) {
+      if (since(r.pms, a3)) o.pms++; if (since(r.stcns, a3)) o.st++; if (since(r.apr, a3)) o.done++;
+      if (since(r.pms, a12)) { o.cat[r.cat] = (o.cat[r.cat] || 0) + 1; o.cat12++; }
+    });
+    var seen = {};
+    o.big = base.filter(function (r) { return NEW[r.gb] && r.area > 0 && since(r.pms, a3); }).sort(function (x, y) { return y.area - x.area; })
+      .filter(function (r) { if (seen[r.addr]) return false; seen[r.addr] = 1; return true; }).slice(0, 3);
+    var building = base.filter(function (r) { return NEW[r.gb] && r.stcns && !r.apr && !r.stall; });
+    o.building = building.length; o.bq = {};
+    building.forEach(function (r) { var b = forecast(r).bucket; o.bq[b] = (o.bq[b] || 0) + 1; });
+    o.nextQ = Object.keys(o.bq).filter(function (q) { return q !== "soon" && q !== "late"; }).sort()[0] || null;
+    o.stall = rows.filter(function (r) { return r.stall && placeOkP(r, p); }).length;
+    if (AG.data) {
+      var g = { n: 0, a30: 0, a40: 0, a50: 0 }, c = { n: 0, a30: 0 };
+      function add(t, x) { ["house", "apt", "etc"].forEach(function (k) { var ys = (x.y || {})[k] || {}; Object.keys(ys).forEach(function (y) { var n = ys[y], age = AG_Y - +y; t.n += n; if (age >= 30) t.a30 += n; if (t.a40 != null && age >= 40) t.a40 += n; if (t.a50 != null && age >= 50) t.a50 += n; }); }); }
+      AG.data.places.forEach(function (x) { if (agPlaceOkP(x, p)) add(g, x); add(c, x); });
+      o.ag = g; o.agCity = c;
+      var cx = (AG.data.complexes || []).filter(function (x) { return agPlaceOkP(x, p) && AG_Y - x.y >= 30; });
+      o.cx = cx.length; o.cxOld = cx.slice().sort(function (x, y) { return x.y - y.y; })[0] || null;
+    }
+    if (window.TRADES) {
+      var T = window.TRADES, meta = T.meta || {}, full = meta.complete || "", aggP = ((T.agg || {}).apt || {})[p === "all" ? "all" : p] || {};
+      var l3 = [addMonths(full, -2), addMonths(full, -1), full];
+      o.tr3 = l3.reduce(function (s, m) { var v = aggP[yymmOf(m)]; return s + (v ? v[0] : 0); }, 0);
+      o.trRange = (+l3[0].slice(5)) + "~" + (+full.slice(5)) + "월";
+      var okp = T.places.map(function (k) { return tPlaceOk(k, p); });
+      o.trMed = tMedian(T.rows.filter(function (r) { return r[0] === 0 && okp[r[1]]; }).map(function (r) { return r[3]; }));
+    }
+    return o;
+  }
+  function needExtra(cb) {
+    var left = 0;
+    function one() { if (--left === 0) cb(); }
+    if (!AG.data && !AG.failed && !AG.loading) { left++; loadAging(one); }
+    if (!window.TRADES && !TR.failed && !TR.loading) { left++; loadTrades(one); }
+  }
+  function drawHomeFav() {
+    var box = document.getElementById("home-fav");
+    if (!FAVP.length) {
+      box.innerHTML = '<p class="favhint">' + STAR + "<span>위에서 동네를 고르고 별표를 누르면, 그 동네 소식을 여기에 모아 보여드려요.</span></p>";
+      return;
+    }
+    needExtra(function () { if (screen === "home") drawHomeFav(); });
+    box.innerHTML = '<div class="card-head"><h2>관심 동네 소식</h2><span class="meta">허가·착공·완공은 최근 3달 · ' + dot(END) + " 기준</span></div>" +
+      '<div class="favrows">' + FAVP.map(function (p) {
+        var o = townSummary(p);
+        return '<div class="favrow"><button type="button" class="fname" data-go="report" data-p="' + esc(p) + '">' + esc(p) + "</button>" +
+          '<a href="#map" data-go="map" data-p="' + esc(p) + '"><small>허가·착공·완공</small><b>' + nf(o.pms) + " · " + nf(o.st) + " · " + nf(o.done) + "</b></a>" +
+          '<a href="#supply" data-go="supply" data-p="' + esc(p) + '"><small>공사 중</small><b>' + nf(o.building) + "곳</b></a>" +
+          '<a href="#aging" data-go="aging" data-p="' + esc(p) + '"><small>30년 넘은 건물</small><b>' + (o.ag && o.ag.n ? pct(o.ag.a30, o.ag.n) + "%" : "–") + "</b></a>" +
+          '<a href="#trade" data-go="trade" data-p="' + esc(p) + '"><small>아파트 거래 ' + (o.trRange || "") + "</small><b>" + (o.tr3 != null ? nf(o.tr3) + "건" : "–") + "</b></a></div>";
+      }).join("") + "</div>";
+    bindGo(box);
+  }
+  function bindGo(box) {
+    box.querySelectorAll("[data-go]").forEach(function (a) {
+      a.onclick = function (e) { e.preventDefault(); goPlace(a.getAttribute("data-p"), a.getAttribute("data-go")); };
+    });
+  }
+  function drawReport() {
+    var box = document.getElementById("rp-body"), p = state.place;
+    if (p === "all") {
+      box.innerHTML = '<article class="card"><h3 style="margin:0 0 8px">어느 동네를 볼까요?</h3><p class="result" style="margin:0 0 12px">맨 위에서 동네를 고르면, 개발·공급·실거래·노후도·생활권을 한 화면에 모아 보여드려요.</p>' +
+        (FAVP.length ? '<div class="favbar inline">' + FAVP.map(function (x) { return '<button type="button" data-go="report" data-p="' + esc(x) + '">' + esc(x) + "</button>"; }).join("") + "</div>" : "") + "</article>";
+      bindGo(box); return;
+    }
+    needExtra(function () { if (screen === "analysis" && sub === "report") drawReport(); });
+    var o = townSummary(p), on = FAVP.indexOf(p) >= 0;
+    var catList = CATS.filter(function (c) { return o.cat[c.id] && c.id !== "none"; }).sort(function (a, b) { return o.cat[b.id] - o.cat[a.id]; }).slice(0, 3);
+    function more(go, t) { return '<a class="rmore" href="#' + go + '" data-go="' + go + '" data-p="' + esc(p) + '">' + t + CHEV + "</a>"; }
+    function stat(v, l) { return '<div class="rstat"><b>' + v + "</b><span>" + l + "</span></div>"; }
+    var html =
+      '<div class="rhead"><h2 class="sec">' + esc(p) + ' 동네 리포트</h2><button type="button" class="favstar big" id="rp-star" aria-pressed="' + on + '">' + STAR + "<span>" + (on ? "관심 동네" : "관심 동네로 등록") + "</span></button></div>" +
+      '<p class="panel-note">사이트의 모든 기능에서 ' + esc(p) + " 정보만 모았어요. 항목을 누르면 이 동네가 선택된 채로 자세한 화면으로 넘어가요.</p>" +
+      '<div class="rgrid">' +
+      // 개발 현황
+      '<article class="card"><div class="card-head"><h3>개발 현황</h3><span class="meta">최근 3달</span></div>' +
+        '<div class="rstats">' + stat(nf(o.pms) + "건", "신규 허가") + stat(nf(o.st) + "건", "착공") + stat(nf(o.done) + "건", "사용승인") + "</div>" +
+        (o.big.length ? '<div class="group">' + o.big.map(function (r) { return itemHtml(r, md(r.pms)); }).join("") + "</div>" : '<p class="result">이 기간에 규모가 기록된 새 건물 허가는 없어요.</p>') +
+        more("map", "개발지도에서 보기") + "</article>" +
+      // 공급 전망
+      '<article class="card"><div class="card-head"><h3>공급 전망</h3><span class="badge est">추정</span></div>' +
+        '<div class="rstats">' + stat(nf(o.building) + "곳", "공사 중인 새 건물") + stat(o.nextQ ? nf(o.bq[o.nextQ]) + "곳" : "–", o.nextQ ? qLabel(o.nextQ) + " 완공 예상" : "다음 분기 완공 예상") + stat(nf(o.stall) + "곳", "장기 미진행") + "</div>" +
+        more("supply", "완공 예상 보기") + more("stall", "장기 미진행 보기") + "</article>" +
+      // 용도
+      '<article class="card"><div class="card-head"><h3>무엇이 지어지나</h3><span class="meta">최근 1년 신규 허가</span></div>' +
+        (catList.length ? '<div class="fbars" id="rp-cat"></div>' : '<p class="result">최근 1년 동안 용도가 기록된 허가가 없어요.</p>') +
+        more("stats", "지역 통계 보기") + more("compare", "다른 동네와 비교") + "</article>" +
+      // 실거래
+      '<article class="card"><div class="card-head"><h3>아파트 실거래</h3><span class="meta">' + (o.trRange ? o.trRange + " 거래" : "") + "</span></div>" +
+        (o.tr3 != null ? '<div class="rstats">' + stat(nf(o.tr3) + "건", "최근 3달 거래") + stat(o.trMed != null ? won(o.trMed) : "–", "거래 금액 중앙값 (최근 12달)") + "</div>" : '<p class="result">실거래 자료를 불러오는 중이에요.</p>') +
+        more("trade", "실거래 보기") + "</article>" +
+      // 노후도
+      '<article class="card"><div class="card-head"><h3>건물 노후도</h3><span class="meta">사용승인 연도 기준</span></div>' +
+        (o.ag && o.ag.n ? '<div class="rstats">' + stat(pct(o.ag.a30, o.ag.n) + "%", "30년 넘은 건물 (청주 " + pct(o.agCity.a30, o.agCity.n) + "%)") + stat(pct(o.ag.a40, o.ag.n) + "%", "40년 넘은 건물") + stat(nf(o.cx) + "곳", "30년 지난 공동주택 단지") + "</div>" +
+          (o.cxOld ? '<p class="result" style="margin:0 0 6px">가장 오래된 단지: ' + esc(o.cxOld.name || "이름 없음") + " (" + o.cxOld.y + "년, " + nf(o.cxOld.hh) + "세대)</p>" : "") : '<p class="result">노후도 자료를 불러오는 중이에요.</p>') +
+        more("aging", "노후도 보기") + "</article>" +
+      // 생활권
+      '<article class="card"><div class="card-head"><h3>생활권</h3><span class="meta">동네 중심 기준</span></div>' +
+        '<p class="result" style="margin:0 0 10px">' + esc(p) + " 중심에서 걸어서 10분 안에 버스정류소·학교·병원·공원 같은 시설이 얼마나 있는지 봐요. 내 집 기준으로 보려면 생활권 화면에서 주소를 넣으세요.</p>" +
+        '<button type="button" class="btn solid" id="rp-near">' + esc(p) + " 생활권 보기</button></article>" +
+      "</div>";
+    box.innerHTML = html;
+    if (catList.length) fbars(document.getElementById("rp-cat"), catList.map(function (c) {
+      return { k: c.name, label: pct(o.cat[c.id], o.cat12) + "% · " + nf(o.cat[c.id]) + "건", segs: [[o.cat[c.id] / o.cat12 * 100, color(c.id)]] };
+    }));
+    bindItems(box); bindGo(box);
+    document.getElementById("rp-star").onclick = function () { toggleFavP(p); };
+    document.getElementById("rp-near").onclick = function () {
+      var btn = this; btn.disabled = true; btn.textContent = "위치를 찾는 중…";
+      loadSDK(function () {
+        var gu = rows.filter(function (r) { return placeOkP(r, p); })[0];
+        var q = "충청북도 청주시 " + (GU_LIST.indexOf(p) >= 0 ? p : (gu ? gu.gu + " " : "") + p);
+        M.geo.addressSearch(q, function (res, st) {
+          if (st === kakao.maps.services.Status.OK && res[0]) { NR.at = [+res[0].y, +res[0].x]; NR.label = p + " 중심"; NR.res = null; location.hash = "#near"; }
+          else { btn.disabled = false; btn.textContent = "위치를 찾지 못했어요"; }
+        });
+      });
+    };
+  }
   document.querySelectorAll(".subtabs [data-sub]").forEach(function (b) {
     b.onclick = function () { location.hash = "#" + b.getAttribute("data-sub"); };
   });
@@ -3516,9 +3738,9 @@ button.nrow:hover .nk { color: var(--accent); }
   var screen = "";
   var TITLES = { home: "터놓고", map: "개발지도", analysis: "지역 분석", ask: "AI 질문" };
   // 공급 전망·지역 분석·동네 진단은 한 화면(scr-analysis)을 나눠 쓰고, 묶음마다 보이는 탭이 다르다
-  var GRP = { flow: "outlook", supply: "outlook", stall: "outlook", stats: "analysis", compare: "analysis", trade: "analysis", aging: "town", near: "town", quality: "none" };
+  var GRP = { report: "town", flow: "outlook", supply: "outlook", stall: "outlook", stats: "analysis", compare: "analysis", trade: "analysis", aging: "town", near: "town", quality: "none" };
   var GRP_T = { outlook: "공급 전망", analysis: "지역 분석", town: "동네 진단", none: "자료 상태" };
-  var GRP_LAST = { outlook: "flow", analysis: "stats", town: "aging" };
+  var GRP_LAST = { outlook: "flow", analysis: "stats", town: "report" };
   var grp = "analysis";
   function route() {
     var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h), target = h, sharedItem = null;
