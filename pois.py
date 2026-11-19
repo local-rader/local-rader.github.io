@@ -25,7 +25,7 @@ SETS = {
                 "https://api.data.go.kr/openapi/tn_pubr_public_tradit_mrkt_api",
                 "https://api.data.go.kr/openapi/tn_pubr_public_trdit_market_api"], ("mrktNm", "marketNm"), ("mrktType", "mrktSe")),
     # 전국마을회관및경로당표준데이터 https://www.data.go.kr/data/15114136/standard.do
-    "senior": (["https://api.data.go.kr/openapi/tn_pubr_public_vill_hall_sen_cent_api"], ("fcltyNm", "facltNm", "vlhlNm", "senctrNm"), ("fcltySe", "facltSe", "fcltyType")),
+    "senior": (["https://api.data.go.kr/openapi/tn_pubr_public_vill_hall_sen_cent_api"], ("flctNm", "fcltyNm", "facltNm"), ("flctTyp", "fcltySe", "facltSe")),
 }
 REGION = "청주시"
 
@@ -103,8 +103,11 @@ def fetch(kind):
             addr = " ".join(str(v) for v in it.values() if isinstance(v, str))
             if REGION not in addr:
                 continue
+            if "폐업" in str(it.get("busiCodNm") or ""):
+                continue
             try:
-                lat, lng = float(it.get("latitude")), float(it.get("longitude"))
+                lat = float(it.get("latitude") or it.get("lat"))
+                lng = float(it.get("longitude") or it.get("lot"))
             except (TypeError, ValueError):
                 why["nocoord"] += 1
                 continue
