@@ -1,0 +1,51 @@
+# 건축물대장(표제부)으로 동네별 건물 노후도를 모은다 → aging.json
+# 한 달에 한 번, 오래 전에 받은 동네부터 이어서 받는다. 인증키는 DATA_GO_KR_KEY.
+name: 노후도 갱신
+
+on:
+  schedule:
+    - cron: "41 17 3 * *"   # 매월 4일 한국시간 02:41
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "update(자료 받기) 또는 probe(접속·항목만 점검)"
+        required: false
+        default: "update"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-update
+  cancel-in-progress: false
+
+jobs:
+  aging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 건축물대장 받기
+        continue-on-error: true
+        timeout-minutes: 70
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          MODE: ${{ inputs.mode }}
+          AGING_BUDGET: "3600"
+        run: python aging.py "${MODE:-update}"
+      - name: 바뀐 자료 저장
+        if: ${{ !cancelled() && inputs.mode != 'probe' }}
+        run: |
+          git config user.name "dongne-radar-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for f in aging.json aging-store.json; do if [ -f "$f" ]; then git add "$f"; fi; done
+          if git diff --cached --quiet; then
+            echo "바뀐 자료가 없습니다."
+          else
+            git commit -m "노후도 갱신 $(TZ=Asia/Seoul date +%F)"
+            git pull --rebase -X theirs origin main
+            git push
+          fi
