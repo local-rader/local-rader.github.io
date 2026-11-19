@@ -93,17 +93,25 @@ def fetch(kind):
     urls, nm, se = SETS[kind]
     url = resolve(urls)
     out, page = [], 1
+    why = {"region": 0, "nocoord": 0, "bbox": 0}
+    samples = []
     while True:
         total, items = get(url, page)
+        if page == 1 and items:
+            print(f"  [{kind}] 항목 예:", {k: v for k, v in items[0].items() if v not in (None, "")})
         for it in items:
-            addr = " ".join(str(it.get(k) or "") for k in ("rdnmadr", "lnmadr", "ctprvnNm", "signguNm", "insttNm"))
+            addr = " ".join(str(v) for v in it.values() if isinstance(v, str))
             if REGION not in addr:
                 continue
             try:
                 lat, lng = float(it.get("latitude")), float(it.get("longitude"))
             except (TypeError, ValueError):
+                why["nocoord"] += 1
                 continue
-            if not (36.45 < lat < 36.85 and 127.25 < lng < 127.75):  # 청주시 범위 밖 좌표 오류 제외
+            if not (36.38 < lat < 36.86 and 127.22 < lng < 127.78):  # 청주시 범위 밖 좌표 오류 제외
+                why["bbox"] += 1
+                if len(samples) < 5:
+                    samples.append((pick(it, nm), lat, lng, it.get("rdnmadr") or it.get("lnmadr")))
                 continue
             name = pick(it, nm)
             h = name.split(" ")
@@ -114,6 +122,7 @@ def fetch(kind):
             break
         page += 1
         time.sleep(0.3)
+    print(f"  [{kind}] 청주 {len(out)}곳, 좌표 없음 {why['nocoord']}, 범위 밖 {why['bbox']}", samples)
     seen, uniq = set(), []
     for x in out:
         k = (x[0], round(x[1], 4), round(x[2], 4))
