@@ -463,6 +463,8 @@ body.map-full .sheet { z-index: 50; }
 /* ---------- 분석 */
 .subtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--rule); margin: 0 0 18px; overflow-x: auto; scrollbar-width: none; }
 .subtabs::-webkit-scrollbar { display: none; }
+.qlink { margin: 22px 0 0; font-size: 12.5px; color: var(--ink-3); }
+.qlink a { color: var(--ink-2); }
 .subtabs button { flex: none; white-space: nowrap; border: 0; background: none; padding: 10px 14px 9px; font-size: 15px; font-weight: 500; color: var(--ink-2); border-bottom: 3px solid transparent; cursor: pointer; margin-bottom: -1px; }
 @media (max-width: 480px) { .subtabs { gap: 0; } .subtabs button { padding-inline: 10px; font-size: 14.5px; } }
 /* 지역 비교 */
@@ -626,9 +628,17 @@ html:not(.touch) {
 .tlist .tag { display: inline-block; font-size: 11.5px; line-height: 1.5; border: 1px solid var(--rule-2); border-radius: 4px; padding: 0 5px; margin-left: 4px; color: var(--ink-2); vertical-align: 1px; }
 @media (min-width: 720px) { .tkpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .tkpis .kpi.wide { grid-column: auto; } }
 /* 노후도·생활권 */
-:root { --ag0: #F4E6D2; --ag1: #E8C599; --ag2: #D4944E; --ag3: #AE6229; --ag4: #733614; --ag-na: #C3C9CE; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ag0: #463626; --ag1: #74552F; --ag2: #AD7639; --ag3: #DA9852; --ag4: #F6C88E; --ag-na: #4A545E; } }
-:root[data-theme="dark"] { --ag0: #463626; --ag1: #74552F; --ag2: #AD7639; --ag3: #DA9852; --ag4: #F6C88E; --ag-na: #4A545E; }
+:root { --ag0: #FFEB8A; --ag1: #FDBA45; --ag2: #F57C2A; --ag3: #DC3A26; --ag4: #96112B; --ag-na: #C3C9CE; --ag2-ink: #C2551A; --ag3-ink: #C42E1D; --ag4-ink: #96112B; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ag-na: #4A545E; --ag2-ink: #F7924A; --ag3-ink: #F2624D; --ag4-ink: #F0566E; --ag4: #C21D3A; } }
+:root[data-theme="dark"] { --ag-na: #4A545E; --ag2-ink: #F7924A; --ag3-ink: #F2624D; --ag4-ink: #F0566E; --ag4: #C21D3A; }
+.agbig { display: flex; align-items: center; gap: 16px; padding: 6px 0 12px; border-bottom: 1px solid var(--rule); font-size: 14.5px; color: var(--ink-2); }
+.agbig b { color: var(--ink); }
+.agpct { flex: none; font-size: 44px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+.agsteps { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 10px 0 0; font-size: 13.5px; color: var(--ink-3); }
+.agsteps .on { color: var(--ink); }
+.agfind { display: flex; align-items: center; gap: 10px; margin: 16px 0 8px; padding: 12px 0 0; border-top: 1px dashed var(--rule-2); font-size: 13.5px; color: var(--ink-2); }
+.agfind .sel { min-width: 10em; }
+.seg button:disabled { opacity: .4; cursor: default; }
 .agkey { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 12px 0 0; font-size: 12.5px; color: var(--ink-2); }
 .agkey i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .ctlrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 14px; }
@@ -691,8 +701,9 @@ button.nrow:hover .nk { color: var(--accent); }
     <nav class="topnav" aria-label="메뉴">
       <a href="#home" data-nav="home">홈</a>
       <a href="#map" data-nav="map">개발지도</a>
-      <a href="#supply" data-nav="supply">공급 예고</a>
+      <a href="#outlook" data-nav="outlook">공급 전망</a>
       <a href="#analysis" data-nav="analysis">지역 분석</a>
+      <a href="#town" data-nav="town">동네 진단</a>
       <a href="#ask" data-nav="ask">AI 질문</a>
     </nav>
     <select class="sel place" id="f-place" aria-label="동네"></select>
@@ -754,15 +765,15 @@ button.nrow:hover .nk { color: var(--accent); }
 
       <div class="grid-2 even">
         <a class="card entry" href="#supply">
-          <div class="card-head"><h2>공급 예고</h2><span class="badge est">추정</span></div>
+          <div class="card-head"><h2>완공 예상</h2><span class="badge est">추정</span></div>
           <b id="home-sup"></b>
           <span class="why" id="home-sup-why"></span>
-          <span class="go">공급 예고 보기 →</span>
+          <span class="go">공급 전망 보기 →</span>
         </a>
         <a class="card entry" href="#analysis">
           <div class="card-head"><h2>지역 분석</h2></div>
           <b id="home-ana"></b>
-          <span class="why">동네별·용도별 신규 허가, 연도별 추이, 착공·완공까지 간 비율, 지역끼리 비교</span>
+          <span class="why">동네별·용도별 신규 허가, 연도별 추이, 지역끼리 비교, 실거래</span>
           <span class="go">지역 분석 보기 →</span>
         </a>
       </div>
@@ -831,46 +842,20 @@ button.nrow:hover .nk { color: var(--accent); }
     </div>
   </section>
 
-  <!-- 공급 예고 -->
-  <section class="screen" id="scr-supply" aria-labelledby="sup-h" hidden>
-    <div class="wrap narrow screen-pad">
-      <div class="sec-head"><h2 class="sec" id="sup-h">공급 예고</h2><span id="sup-asof"></span></div>
-      <p class="panel-note">지금 착공 기록이 있는 새 건물이 언제쯤 사용승인을 받을지, 청주에서 비슷한 규모의 건물이 걸린 기간으로 <b>추정</b>했습니다. 확인된 사실은 착공 기록뿐이고, 완공 시기는 추정입니다.</p>
-      <article class="card" aria-labelledby="sup-chart-h">
-        <div class="card-head"><h3 id="sup-chart-h">분기별 사용승인 예상 건수</h3><span class="badge est">추정</span></div>
-        <p class="card-desc">진한 막대는 가운데 값 기준으로 그 분기에 끝날 것으로 보이는 곳, 빗금은 그 분기에 끝날 수도 있는 곳(예상 범위가 걸침)입니다. 예상 시점이 이미 지난 곳은 빗금에만 들어갑니다.</p>
-        <div class="qchart" id="sup-chart"></div>
-        <div class="qkey"><span><i style="background:var(--brand)"></i>가능성 높음 (가운데 값)</span><span><i style="background:repeating-linear-gradient(135deg, var(--rule-2) 0 4px, transparent 4px 8px)"></i>예상 범위에 걸침</span></div>
-      </article>
-      <article class="card" aria-labelledby="sup-list-h">
-        <div class="card-head"><h3 id="sup-list-h">분기별 사업장</h3><span class="meta">착공 기록 확인 · 완공 시기 추정</span></div>
-        <div id="sup-buckets"></div>
-        <p class="panel-note" id="sup-ext" style="margin:12px 0 0"></p>
-      </article>
-      <article class="card">
-        <div class="card-head"><h3>허가만 받은 곳 (착공 기록 없음)</h3></div>
-        <p class="panel-note" id="sup-pipe" style="margin:0"></p>
-      </article>
-      <article class="card">
-        <div class="card-head"><h3>산출 기준</h3></div>
-        <div id="sup-method"></div>
-      </article>
-      <p class="disclaimer">예상 완공 시기는 착공일에 청주의 비슷한 건물(규모)이 착공부터 사용승인까지 걸린 기간을 더해 계산한 통계적 추정 범위이며, 건축주의 공식 일정이 아닙니다. 공사비·자금 사정, 설계 변경 등으로 크게 달라질 수 있고, 아파트 입주 물량은 한국부동산원 발표와 다를 수 있습니다.</p>
-    </div>
-  </section>
 
   <!-- 지역 분석: 지역 통계와 장기 미진행 -->
   <section class="screen" id="scr-analysis" aria-label="지역 분석" hidden>
     <div class="wrap narrow screen-pad">
       <div class="subtabs" role="tablist" aria-label="분석 종류">
-        <button type="button" role="tab" id="sub-stats" aria-controls="pane-stats" data-sub="stats">지역 통계</button>
-        <button type="button" role="tab" id="sub-flow" aria-controls="pane-flow" data-sub="flow">진행 흐름</button>
-        <button type="button" role="tab" id="sub-compare" aria-controls="pane-compare" data-sub="compare">지역 비교</button>
-        <button type="button" role="tab" id="sub-trade" aria-controls="pane-trade" data-sub="trade">실거래</button>
-        <button type="button" role="tab" id="sub-stall" aria-controls="pane-stall" data-sub="stall">장기 미진행</button>
-        <button type="button" role="tab" id="sub-aging" aria-controls="pane-aging" data-sub="aging">노후도</button>
-        <button type="button" role="tab" id="sub-near" aria-controls="pane-near" data-sub="near">생활권</button>
-        <button type="button" role="tab" id="sub-quality" aria-controls="pane-quality" data-sub="quality">자료 상태</button>
+        <button type="button" role="tab" id="sub-flow" aria-controls="pane-flow" data-sub="flow" data-grp="outlook">진행 흐름</button>
+        <button type="button" role="tab" id="sub-supply" aria-controls="pane-supply" data-sub="supply" data-grp="outlook">완공 예상</button>
+        <button type="button" role="tab" id="sub-stall" aria-controls="pane-stall" data-sub="stall" data-grp="outlook">장기 미진행</button>
+        <button type="button" role="tab" id="sub-stats" aria-controls="pane-stats" data-sub="stats" data-grp="analysis">지역 통계</button>
+        <button type="button" role="tab" id="sub-compare" aria-controls="pane-compare" data-sub="compare" data-grp="analysis">지역 비교</button>
+        <button type="button" role="tab" id="sub-trade" aria-controls="pane-trade" data-sub="trade" data-grp="analysis">실거래</button>
+        <button type="button" role="tab" id="sub-aging" aria-controls="pane-aging" data-sub="aging" data-grp="town">노후도</button>
+        <button type="button" role="tab" id="sub-near" aria-controls="pane-near" data-sub="near" data-grp="town">생활권</button>
+        <button type="button" role="tab" id="sub-quality" aria-controls="pane-quality" data-sub="quality" data-grp="none" hidden>자료 상태</button>
       </div>
 
       <div class="pane stats" id="pane-stats" role="tabpanel" aria-labelledby="sub-stats">
@@ -973,6 +958,31 @@ button.nrow:hover .nk { color: var(--accent); }
         <div class="hscroll tkinds" id="tr-kinds" role="group" aria-label="부동산 종류"></div>
         <div id="tr-body"><p class="result">실거래 자료를 불러오는 중입니다…</p></div>
       </div>
+      <div class="pane" id="pane-supply" role="tabpanel" aria-labelledby="sub-supply" hidden>
+      <div class="sec-head"><h2 class="sec" id="sup-h">완공 예상</h2><span id="sup-asof"></span></div>
+      <p class="panel-note">지금 착공 기록이 있는 새 건물이 언제쯤 사용승인을 받을지, 청주에서 비슷한 규모의 건물이 걸린 기간으로 <b>추정</b>했습니다. 확인된 사실은 착공 기록뿐이고, 완공 시기는 추정입니다.</p>
+      <article class="card" aria-labelledby="sup-chart-h">
+        <div class="card-head"><h3 id="sup-chart-h">분기별 사용승인 예상 건수</h3><span class="badge est">추정</span></div>
+        <p class="card-desc">진한 막대는 가운데 값 기준으로 그 분기에 끝날 것으로 보이는 곳, 빗금은 그 분기에 끝날 수도 있는 곳(예상 범위가 걸침)입니다. 예상 시점이 이미 지난 곳은 빗금에만 들어갑니다.</p>
+        <div class="qchart" id="sup-chart"></div>
+        <div class="qkey"><span><i style="background:var(--brand)"></i>가능성 높음 (가운데 값)</span><span><i style="background:repeating-linear-gradient(135deg, var(--rule-2) 0 4px, transparent 4px 8px)"></i>예상 범위에 걸침</span></div>
+      </article>
+      <article class="card" aria-labelledby="sup-list-h">
+        <div class="card-head"><h3 id="sup-list-h">분기별 사업장</h3><span class="meta">착공 기록 확인 · 완공 시기 추정</span></div>
+        <div id="sup-buckets"></div>
+        <p class="panel-note" id="sup-ext" style="margin:12px 0 0"></p>
+      </article>
+      <article class="card">
+        <div class="card-head"><h3>허가만 받은 곳 (착공 기록 없음)</h3></div>
+        <p class="panel-note" id="sup-pipe" style="margin:0"></p>
+      </article>
+      <article class="card">
+        <div class="card-head"><h3>산출 기준</h3></div>
+        <div id="sup-method"></div>
+      </article>
+      <p class="disclaimer">예상 완공 시기는 착공일에 청주의 비슷한 건물(규모)이 착공부터 사용승인까지 걸린 기간을 더해 계산한 통계적 추정 범위이며, 건축주의 공식 일정이 아닙니다. 공사비·자금 사정, 설계 변경 등으로 크게 달라질 수 있고, 아파트 입주 물량은 한국부동산원 발표와 다를 수 있습니다.</p>
+      </div>
+
       <div class="pane" id="pane-stall" role="tabpanel" aria-labelledby="sub-stall" hidden>
         <div class="sec-head"><h2 class="sec" id="st-h">장기 미진행</h2><span id="st-asof"></span></div>
         <p class="panel-note">허가를 받고 오랫동안 착공 기록이 없거나, 착공하고 오랫동안 사용승인 기록이 없는 곳입니다. 신축·증축처럼 착공 신고를 하는 공사만 셉니다. 기간 선택과 상관없이 데이터 기준일 현재 상태입니다.</p>
@@ -1050,6 +1060,7 @@ button.nrow:hover .nk { color: var(--accent); }
           <p>‘지도 위치 없음’은 지번으로 좌표를 찾지 못한 기록으로, 목록에는 나오지만 지도에는 점이 찍히지 않습니다. ‘공시지가 없음’은 해당 필지의 공시지가를 찾지 못한 경우입니다.</p>
         </div>
       </div>
+      <p class="qlink" id="qlink"><a href="#quality">자료 상태 보기</a> · 공공데이터에 빈칸이 얼마나 있는지 그대로 보여줍니다.</p>
     </div>
   </section>
   <!-- AI 질문: 질문 버튼(자료로 바로 답)과 직접 쓰는 질문(Claude) -->
@@ -1093,13 +1104,17 @@ button.nrow:hover .nk { color: var(--accent); }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
       <span>개발지도</span>
     </a>
-    <a href="#supply" data-nav="supply">
+    <a href="#outlook" data-nav="outlook">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="M8 14h3M8 17h6"/></svg>
-      <span>공급 예고</span>
+      <span>공급 전망</span>
     </a>
     <a href="#analysis" data-nav="analysis">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>
       <span>지역 분석</span>
+    </a>
+    <a href="#town" data-nav="town">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 10 5.5l6.5 5.5"/><path d="M5.5 9.5V19h6"/><circle cx="16.5" cy="16" r="3"/><path d="m18.7 18.2 2 2"/></svg>
+      <span>동네 진단</span>
     </a>
     <a href="#ask" data-nav="ask">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 5.5h15v10h-8l-4 3.5v-3.5h-3z"/><path d="M8.5 10.5h7"/></svg>
@@ -2556,11 +2571,15 @@ button.nrow:hover .nk { color: var(--accent); }
   // ---------- 지역 분석: 지역 통계와 멈춘 기록
   var sub = "stats";
   function drawAnalysis() {
-    ["stats", "flow", "compare", "trade", "stall", "aging", "near", "quality"].forEach(function (k) {
+    ["stats", "flow", "supply", "compare", "trade", "stall", "aging", "near", "quality"].forEach(function (k) {
       document.getElementById("pane-" + k).hidden = k !== sub;
-      document.getElementById("sub-" + k).setAttribute("aria-selected", String(k === sub));
+      var b = document.getElementById("sub-" + k);
+      b.setAttribute("aria-selected", String(k === sub));
+      b.hidden = b.getAttribute("data-grp") !== grp;
     });
-    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else drawStall();
+    document.querySelector("#scr-analysis .subtabs").hidden = grp === "none";
+    document.getElementById("qlink").innerHTML = grp === "none" ? '<a href="#analysis">← 지역 분석으로</a>' : '<a href="#quality">자료 상태 보기</a> · 공공데이터에 빈칸이 얼마나 있는지 그대로 보여줍니다.';
+    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else if (sub === "supply") drawSupply(); else drawStall();
   }
 
 
@@ -2816,16 +2835,17 @@ button.nrow:hover .nk { color: var(--accent); }
   }
 
   // ---------- 노후도: 건축물대장 사용승인 연도 (aging.json)
-  var AG = { data: null, loading: false, failed: false, kind: "all", all: false, shown: 20, map: null, ov: [] };
+  var AG = { data: null, loading: false, failed: false, kind: "all", th: 30, cx: 0, pick: "", shown: 20, map: null, ov: [] };
+  try { var _th = +localStorage.getItem("dr:agth"); if (_th === 30 || _th === 40 || _th === 50) AG.th = _th; } catch (e) {}
   var AG_Y = +new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 4);
   var AG_BANDS = [
-    { t: "10년 미만", c: "var(--ag0)", hex: ["#F4E6D2", "#463626"], ok: function (a) { return a < 10; } },
-    { t: "10~19년", c: "var(--ag1)", ok: function (a) { return a >= 10 && a < 20; } },
-    { t: "20~29년", c: "var(--ag2)", ok: function (a) { return a >= 20 && a < 30; } },
-    { t: "30~39년", c: "var(--ag3)", ok: function (a) { return a >= 30 && a < 40; } },
-    { t: "40년 이상", c: "var(--ag4)", ok: function (a) { return a >= 40; } }
+    { t: "10년 미만", c: "var(--ag0)", lo: 0, hi: 10 }, { t: "10~29년", c: "var(--ag1)", lo: 10, hi: 30 },
+    { t: "30~39년", c: "var(--ag2)", lo: 30, hi: 40 }, { t: "40~49년", c: "var(--ag3)", lo: 40, hi: 50 },
+    { t: "50년 이상", c: "var(--ag4)", lo: 50, hi: 999 }
   ];
   var AG_KINDS = [{ v: "all", t: "모든 건물" }, { v: "house", t: "단독주택" }, { v: "apt", t: "공동주택" }, { v: "etc", t: "주택 외" }];
+  var AG_TH = [30, 40, 50];
+  var AG_CX = [{ t: "30~39년", lo: 30, hi: 40 }, { t: "40~49년", lo: 40, hi: 50 }, { t: "50년 이상", lo: 50, hi: 999 }];
   function loadAging(cb) {
     if (AG.data || AG.loading) return AG.data && cb();
     AG.loading = true;
@@ -2834,80 +2854,84 @@ button.nrow:hover .nk { color: var(--accent); }
       .catch(function () { AG.failed = true; AG.loading = false; cb(); });
   }
   function agPlaceOk(p) { return state.place === "all" || p.gu === state.place || p.place === state.place || p.place.indexOf(state.place + " ") === 0; }
-  function agNew() { return { n: 0, old: 0, b: [0, 0, 0, 0, 0], dec: {}, unknown: 0, lat: 0, lng: 0, w: 0 }; }
+  function agNew() { return { n: 0, a30: 0, a40: 0, a50: 0, b: [0, 0, 0, 0, 0], unknown: 0, lat: 0, lng: 0, w: 0 }; }
   function agAdd(o, p) {
     ["house", "apt", "etc"].forEach(function (k) {
       if (AG.kind !== "all" && AG.kind !== k) return;
       var ys = (p.y || {})[k] || {};
       Object.keys(ys).forEach(function (y) {
-        var c = ys[y], age = AG_Y - +y, d = +y < 1970 ? "1960년대 이전" : y.slice(0, 3) + "0년대";
-        o.n += c; if (age >= 30) o.old += c;
-        AG_BANDS.forEach(function (b, i) { if (b.ok(age)) o.b[i] += c; });
-        o.dec[d] = (o.dec[d] || 0) + c;
+        var c = ys[y], age = AG_Y - +y;
+        o.n += c; if (age >= 30) o.a30 += c; if (age >= 40) o.a40 += c; if (age >= 50) o.a50 += c;
+        AG_BANDS.forEach(function (b, i) { if (age >= b.lo && age < b.hi) o.b[i] += c; });
       });
     });
     if (AG.kind === "all") o.unknown += p.unknown || 0;
-    if (p.at) { var w = 1; o.lat += p.at[0] * w; o.lng += p.at[1] * w; o.w += w; }
+    if (p.at) { o.lat += p.at[0]; o.lng += p.at[1]; o.w += 1; }
     return o;
   }
-  function agLevelKey(p) {
-    if (state.place === "all") return p.place.split(" ")[0];
-    if (GU_LIST.indexOf(state.place) >= 0) return p.place.split(" ")[0];
-    return p.place;
-  }
+  function agOld(g) { return g["a" + AG.th]; }
+  function agLevelKey(p) { return state.place === "all" || GU_LIST.indexOf(state.place) >= 0 ? p.place.split(" ")[0] : p.place; }
   function agColorIdx(share) { return share >= 0.8 ? 4 : share >= 0.6 ? 3 : share >= 0.4 ? 2 : share >= 0.2 ? 1 : 0; }
+  function seg(attr, list, cur) {
+    return '<div class="seg" role="group">' + list.map(function (x) { return '<button type="button" ' + attr + '="' + x.v + '" aria-pressed="' + (String(cur) === String(x.v)) + '"' + (x.off ? " disabled" : "") + ">" + x.t + "</button>"; }).join("") + "</div>";
+  }
   function drawAging() {
     var box = document.getElementById("ag-body");
     if (!AG.data) {
-      if (AG.failed) { box.innerHTML = '<article class="card"><p class="empty" style="padding:0">노후도 자료를 준비하고 있어요. 건축물대장 자료를 받는 대로 이 화면에 동네별 노후도가 나옵니다.</p></article>'; return; }
+      if (AG.failed) { box.innerHTML = '<article class="card"><p class="empty" style="padding:0">노후도 자료를 준비하고 있어요.</p></article>'; return; }
       loadAging(function () { if (screen === "analysis" && sub === "aging") drawAging(); });
       return;
     }
-    var D = AG.data, pl = state.place === "all" ? REGION + " 전체" : state.place;
+    var D = AG.data, pl = state.place === "all" ? REGION + " 전체" : state.place, th = AG.th, cut = AG_Y - th;
     document.getElementById("ag-h").textContent = "건물 노후도 · " + pl;
     document.getElementById("ag-asof").textContent = D.meta.newest ? "건축물대장 " + dot(D.meta.newest) + " 받음" : "";
     var mine = D.places.filter(agPlaceOk);
     if (!mine.length) { box.innerHTML = '<article class="card"><p class="empty" style="padding:0">' + esc(pl) + "의 건축물대장 자료가 아직 없어요.</p></article>"; return; }
-    var tot = agNew(), city = agNew();
-    mine.forEach(function (p) { agAdd(tot, p); });
+    var tot = agNew(), city = agNew(), groups = {};
+    mine.forEach(function (p) { agAdd(tot, p); var k = agLevelKey(p); agAdd(groups[k] || (groups[k] = agNew()), p); });
     D.places.forEach(function (p) { agAdd(city, p); });
-    var groups = {}, gl;
-    mine.forEach(function (p) { var k = agLevelKey(p); agAdd(groups[k] || (groups[k] = agNew()), p); });
     var MIN = 30;
-    gl = Object.keys(groups).filter(function (k) { return groups[k].n >= MIN; })
-      .sort(function (a, b) { return groups[b].old / groups[b].n - groups[a].old / groups[a].n || groups[b].n - groups[a].n; });
-    var small = Object.keys(groups).length - gl.length;
-    var cut = AG_Y - 30;
-    var cx = (D.complexes || []).filter(function (c) { return agPlaceOk(c) && c.y <= cut; });
-    var decs = Object.keys(tot.dec).sort(), topDec = decs.slice().sort(function (a, b) { return tot.dec[b] - tot.dec[a]; })[0];
+    var gl = Object.keys(groups).filter(function (k) { return groups[k].n >= MIN; })
+      .sort(function (a, b) { return agOld(groups[b]) / groups[b].n - agOld(groups[a]) / groups[a].n || groups[b].n - groups[a].n; });
+    var levelName = state.place === "all" ? "동네" : GU_LIST.indexOf(state.place) >= 0 ? state.place + " 동네" : state.place + " 마을";
     var kindName = AG_KINDS.filter(function (k) { return k.v === AG.kind; })[0].t;
+    // 공동주택 단지: 나이대별
+    var cxAll = (D.complexes || []).filter(function (c) { return agPlaceOk(c) && AG_Y - c.y >= 30; });
+    var cxN = AG_CX.map(function (b) { return cxAll.filter(function (c) { var a = AG_Y - c.y; return a >= b.lo && a < b.hi; }).length; });
+    if (!cxN[AG.cx]) AG.cx = cxN[0] ? 0 : cxN[1] ? 1 : 2;
+    var cb = AG_CX[AG.cx], cx = cxAll.filter(function (c) { var a = AG_Y - c.y; return a >= cb.lo && a < cb.hi; });
+    var oldest = (D.complexes || []).reduce(function (m, c) { return Math.min(m, c.y); }, 9999);
+    if (AG.pick && !groups[AG.pick]) AG.pick = "";
 
-    var facts = [
-      "<li><b>" + nf(tot.n) + "동</b> 사용승인 연도가 기록된 " + (AG.kind === "all" ? "주 건물" : kindName) + (tot.unknown ? " <span class=\"result\">(연도 없음 " + nf(tot.unknown) + "동 별도)</span>" : "") + "</li>",
-      "<li><b>" + pct(tot.old, tot.n) + "%</b> 지은 지 30년 이상 (" + cut + "년 이전 사용승인, " + nf(tot.old) + "동)" +
-        (state.place !== "all" && city.n ? ' <span class="result">청주 전체는 ' + pct(city.old, city.n) + "%</span>" : "") + "</li>",
-      topDec ? "<li><b>" + topDec + "</b> 가장 많이 지어진 시기 (" + pct(tot.dec[topDec], tot.n) + "%)</li>" : "",
-      AG.kind === "all" || AG.kind === "apt" ? "<li><b>" + nf(cx.length) + "곳</b> 지은 지 30년이 지난 20세대 이상 공동주택 단지</li>" : ""
-    ].join("");
-    var levelName = state.place === "all" ? "동네별" : GU_LIST.indexOf(state.place) >= 0 ? state.place + " 동네별" : state.place + " 마을별";
-    var shownG = AG.all ? gl : gl.slice(0, 15);
+    function bar(k, rank) {
+      var g = groups[k];
+      return { k: (rank ? rank + ". " : "") + k, label: "<b>" + pct(agOld(g), g.n) + "%</b> · " + nf(g.n) + "동",
+        segs: g.b.map(function (v, i) { return [v / g.n * 100, AG_BANDS[i].c]; }).reverse() };
+    }
     var html =
-      '<article class="card"><div class="ctlrow"><span class="flabel">건물 종류</span><div class="seg" role="group" aria-label="건물 종류">' +
-        AG_KINDS.map(function (k) { return '<button type="button" data-agk="' + k.v + '" aria-pressed="' + (AG.kind === k.v) + '">' + k.t + "</button>"; }).join("") +
-      '</div></div><ul class="facts">' + facts + "</ul></article>" +
-      '<article class="card"><div class="card-head"><h3>' + esc(levelName) + " 30년 이상 된 건물 비율</h3></div>" +
-        '<p class="card-desc">오래된 건물 비율이 높은 순서입니다. 막대는 건물 나이별 구성이고, 건물이 ' + MIN + "동 미만인 곳" + (small ? "(" + small + "곳)" : "") + "은 뺐습니다.</p>" +
+      '<article class="card">' +
+        '<div class="ctlrow"><span class="flabel">기준</span>' + seg("data-agth", AG_TH.map(function (t) { return { v: t, t: t + "년 이상" }; }), th) + "</div>" +
+        '<div class="ctlrow"><span class="flabel">건물 종류</span>' + seg("data-agk", AG_KINDS, AG.kind) + "</div>" +
+        '<div class="agbig"><span class="agpct" style="color:var(--ag' + (th === 30 ? 2 : th === 40 ? 3 : 4) + '-ink)">' + pct(agOld(tot), tot.n) + '%</span><span>' + esc(pl) + "의 " + (AG.kind === "all" ? "건물" : kindName) + " " + nf(tot.n) + "동 중 <b>" + nf(agOld(tot)) + "동</b>이 지은 지 " + th + "년 이상 (" + cut + "년 이전 사용승인)" +
+          (state.place !== "all" ? '<br><span class="result">청주 전체는 ' + pct(agOld(city), city.n) + "%</span>" : "") + "</span></div>" +
+        '<div class="agsteps">' + AG_TH.map(function (t) { return '<span' + (t === th ? ' class="on"' : "") + ">" + t + "년↑ <b>" + pct(tot["a" + t], tot.n) + "%</b></span>"; }).join("") +
+          (tot.unknown ? '<span class="result">연도 없음 ' + nf(tot.unknown) + "동 별도</span>" : "") + "</div>" +
+      "</article>" +
+      '<article class="card"><div class="card-head"><h3>' + th + "년 이상 된 건물 비율이 높은 " + esc(levelName) + " TOP 5</h3></div>" +
+        '<p class="card-desc">건물이 ' + MIN + "동 이상인 " + nf(gl.length) + "곳 중 순위입니다. 막대는 건물 나이별 구성입니다.</p>" +
         '<div class="fbars" id="ag-bars"></div>' +
-        (gl.length > 15 ? '<button type="button" class="linkbtn" id="ag-all" style="margin-top:10px">' + (AG.all ? "15곳만 보기" : "모두 보기 (" + gl.length + "곳)") + "</button>" : "") +
-        '<div class="agkey">' + AG_BANDS.map(function (b) { return '<span><i style="background:' + b.c + '"></i>' + b.t + "</span>"; }).join("") + "</div></article>" +
+        '<div class="agfind"><label for="ag-pick">다른 ' + esc(levelName) + " 찾기</label><select class=\"sel\" id=\"ag-pick\"><option value=\"\">선택하세요</option>" +
+          gl.slice().sort(function (a, b) { return a.localeCompare(b, "ko"); }).map(function (k) { return '<option value="' + esc(k) + '"' + (k === AG.pick ? " selected" : "") + ">" + esc(k) + "</option>"; }).join("") + "</select></div>" +
+        '<div class="fbars" id="ag-one"></div>' +
+        '<div class="agkey">' + AG_BANDS.slice().reverse().map(function (b) { return '<span><i style="background:' + b.c + '"></i>' + b.t + "</span>"; }).join("") + "</div></article>" +
       '<article class="card"><div class="card-head"><h3>지도로 보기</h3></div>' +
-        '<p class="card-desc">점 색이 진할수록 30년 이상 된 건물 비율이 높고, 점이 클수록 건물이 많습니다. 점을 누르면 숫자가 나와요.</p>' +
+        '<p class="card-desc">색이 빨갈수록 ' + th + "년 이상 된 건물 비율이 높고, 점이 클수록 건물이 많습니다. 점을 누르면 숫자가 나와요.</p>" +
         '<div class="agmap"><div id="ag-map"></div><div class="mapmsg" id="agmsg">지도를 불러오는 중입니다.</div></div>' +
         '<div class="agkey">' + ["20% 미만", "20~39%", "40~59%", "60~79%", "80% 이상"].map(function (t, i) { return '<span><i style="background:var(--ag' + i + ')"></i>' + t + "</span>"; }).join("") + "</div></article>" +
-      '<article class="card"><div class="card-head"><h3>지어진 시기 (' + esc(pl) + ")</h3></div>" +
-        '<p class="card-desc">사용승인 연도를 10년 단위로 묶은 건물 수입니다.</p><div class="bars" id="ag-dec"></div></article>' +
       (AG.kind === "all" || AG.kind === "apt" ?
-        '<article class="card"><div class="card-head"><h3>지은 지 30년이 지난 공동주택 단지</h3><span class="meta">20세대 이상 · ' + cut + "년 이전</span></div>" +
+        '<article class="card"><div class="card-head"><h3>지은 지 오래된 공동주택 단지</h3><span class="meta">20세대 이상</span></div>' +
+        '<div class="ctlrow">' + seg("data-agcx", AG_CX.map(function (b, i) { return { v: i, t: b.t + " " + nf(cxN[i]), off: !cxN[i] }; }), AG.cx) + "</div>" +
+        (!cxN[2] ? '<p class="card-desc" style="margin:0 0 10px">청주에는 50년 넘은 20세대 이상 단지가 아직 없어요 (가장 오래된 단지 ' + oldest + "년 사용승인).</p>" : "") +
         (cx.length ? '<div class="mtable-wrap"><table class="mtable ag"><thead><tr><th>단지</th><th>동네</th><th>사용승인</th><th>세대</th></tr></thead><tbody>' +
           cx.slice(0, AG.shown).map(function (c) {
             return "<tr><td>" + esc(c.name || "이름 없음") + "<small>" + esc(c.addr.replace(/^충청북도 청주시 /, "")) + (c.lots > 1 ? " 외 " + (c.lots - 1) + "필지" : "") + "</small></td><td>" + esc(c.place) + "</td><td>" + c.y + "년<small>" + (AG_Y - c.y) + "년 차</small></td><td>" + nf(c.hh) + "</td></tr>";
@@ -2915,17 +2939,12 @@ button.nrow:hover .nk { color: var(--accent); }
           (cx.length > AG.shown ? '<button type="button" class="linkbtn" id="ag-more" style="margin-top:10px">더 보기 (' + nf(cx.length - AG.shown) + "곳 남음)</button>" : "")
           : '<p class="empty" style="padding:0">' + esc(pl) + "에는 해당하는 단지가 없어요.</p>") + "</article>" : "");
     box.innerHTML = html;
-    fbars(document.getElementById("ag-bars"), shownG.map(function (k) {
-      var g = groups[k];
-      return { k: k, label: pct(g.old, g.n) + "% · " + nf(g.n) + "동", segs: g.b.map(function (v, i) { return [v / g.n * 100, AG_BANDS[i].c]; }).reverse() };
-    }));
-    var maxDec = Math.max.apply(null, decs.map(function (d) { return tot.dec[d]; }).concat([1]));
-    bars(document.getElementById("ag-dec"), decs.map(function (d) {
-      var age = AG_Y - (+d.slice(0, 4) + 5);
-      return { k: d, label: nf(tot.dec[d]) + "동", segs: [[tot.dec[d], age >= 30 ? "var(--ag3)" : "var(--ag1)"]] };
-    }), maxDec);
+    fbars(document.getElementById("ag-bars"), gl.slice(0, 5).map(function (k, i) { return bar(k, i + 1); }));
+    if (AG.pick) fbars(document.getElementById("ag-one"), [bar(AG.pick, gl.indexOf(AG.pick) + 1)]);
     box.querySelectorAll("[data-agk]").forEach(function (b) { b.onclick = function () { AG.kind = b.getAttribute("data-agk"); AG.shown = 20; drawAging(); }; });
-    var all = document.getElementById("ag-all"); if (all) all.onclick = function () { AG.all = !AG.all; drawAging(); };
+    box.querySelectorAll("[data-agth]").forEach(function (b) { b.onclick = function () { AG.th = +b.getAttribute("data-agth"); try { localStorage.setItem("dr:agth", AG.th); } catch (e) {} drawAging(); }; });
+    box.querySelectorAll("[data-agcx]").forEach(function (b) { b.onclick = function () { AG.cx = +b.getAttribute("data-agcx"); AG.shown = 20; drawAging(); }; });
+    document.getElementById("ag-pick").onchange = function () { AG.pick = this.value; drawAging(); };
     var more = document.getElementById("ag-more"); if (more) more.onclick = function () { AG.shown += 20; drawAging(); };
     AG.map = null; AG.ov = [];
     drawAgMap(groups);
@@ -2940,12 +2959,12 @@ button.nrow:hover .nk { color: var(--accent); }
     Object.keys(groups).forEach(function (k) { if (groups[k].n > maxN) maxN = groups[k].n; });
     Object.keys(groups).forEach(function (k) {
       var g = groups[k]; if (!g.w || !g.n) return;
-      var ll = new kakao.maps.LatLng(g.lat / g.w, g.lng / g.w), sh = g.old / g.n;
+      var ll = new kakao.maps.LatLng(g.lat / g.w, g.lng / g.w), sh = agOld(g) / g.n;
       var size = Math.round(12 + 26 * Math.sqrt(g.n / maxN));
       var d = document.createElement("div");
       d.className = "agdot";
       d.style.cssText = "width:" + size + "px;height:" + size + "px;background:" + (g.n < 30 ? "var(--ag-na)" : "var(--ag" + agColorIdx(sh) + ")");
-      d.title = k + " · 30년 이상 " + pct(g.old, g.n) + "% · " + nf(g.n) + "동";
+      d.title = k + " · " + AG.th + "년 이상 " + pct(agOld(g), g.n) + "% · " + nf(g.n) + "동";
       d.onclick = function () {
         if (tip) tip.setMap(null);
         var t = document.createElement("div"); t.className = "agtip"; t.textContent = d.title;
@@ -3270,7 +3289,7 @@ button.nrow:hover .nk { color: var(--accent); }
     if (soon) parts.push("예상 시점이 지나 곧 끝날 것으로 보이는 곳 " + nf(soon) + "곳");
     if (late) parts.push("비슷한 건물보다 늦어지는 곳 " + nf(late) + "곳");
     return "<p>" + esc(placeLabel()) + "에서 착공한 뒤 아직 사용승인 전인 새 건물은 <b>" + nf(list.length) + "곳</b>이에요. 청주에서 비슷한 규모의 건물이 걸린 기간으로 추정하면 이래요.</p><p>" + parts.join("<br>") + "</p>" +
-      "<p>건축주의 공식 일정이 아니라 통계로 낸 추정이에요.</p>" + '<a class="go" href="#supply">공급 예고에서 자세히 →</a>';
+      "<p>건축주의 공식 일정이 아니라 통계로 낸 추정이에요.</p>" + '<a class="go" href="#supply">완공 예상에서 자세히 →</a>';
   }
   function chipFlow() {
     var cut2 = shift(END, -2);
@@ -3397,13 +3416,18 @@ button.nrow:hover .nk { color: var(--accent); }
 
   // ---------- 화면 전환: 주소(#home #map #supply #analysis #stall #p=번호)가 화면을 정한다. 뒤로 가기도 그대로 된다.
   var screen = "";
-  var TITLES = { home: "터놓고", map: "개발지도", supply: "공급 예고", analysis: "지역 분석", ask: "AI 질문" };
+  var TITLES = { home: "터놓고", map: "개발지도", analysis: "지역 분석", ask: "AI 질문" };
+  // 공급 전망·지역 분석·동네 진단은 한 화면(scr-analysis)을 나눠 쓰고, 묶음마다 보이는 탭이 다르다
+  var GRP = { flow: "outlook", supply: "outlook", stall: "outlook", stats: "analysis", compare: "analysis", trade: "analysis", aging: "town", near: "town", quality: "none" };
+  var GRP_T = { outlook: "공급 전망", analysis: "지역 분석", town: "동네 진단", none: "자료 상태" };
+  var GRP_LAST = { outlook: "flow", analysis: "stats", town: "aging" };
+  var grp = "analysis";
   function route() {
     var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h), target = h, sharedItem = null;
     if (m) { sharedItem = byPk[decodeURIComponent(m[1])] || null; target = "map"; }
     if (target === "list") target = "map";
-    if (target === "stats" || target === "flow" || target === "compare" || target === "trade" || target === "stall" || target === "quality" || target === "aging" || target === "near") { sub = target; target = "analysis"; }
-    else if (target === "analysis") sub = "stats";
+    if (GRP[target]) { sub = target; grp = GRP[target]; if (GRP_LAST[grp]) GRP_LAST[grp] = sub; target = "analysis"; }
+    else if (GRP_LAST[target]) { grp = target; sub = GRP_LAST[grp]; target = "analysis"; }
     if (!TITLES[target]) target = "home";
     var moved = target !== screen;
     if (moved) closeSheet();
@@ -3411,12 +3435,13 @@ button.nrow:hover .nk { color: var(--accent); }
     document.body.setAttribute("data-screen", screen);
     Object.keys(TITLES).forEach(function (k) {
       document.getElementById("scr-" + k).hidden = k !== screen;
-      document.querySelectorAll('[data-nav="' + k + '"]').forEach(function (a) {
-        if (k === screen) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
-      });
+    });
+    var navKey = screen === "analysis" ? grp : screen;
+    document.querySelectorAll("[data-nav]").forEach(function (a) {
+      if (a.getAttribute("data-nav") === navKey) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
     setTitle();
-    document.title = screen === "home" ? "터놓고 - 청주 건축·개발 정보 지도" : TITLES[screen] + " · 터놓고";
+    document.title = screen === "home" ? "터놓고 - 청주 건축·개발 정보 지도" : (screen === "analysis" ? GRP_T[grp] : TITLES[screen]) + " · 터놓고";
     if (moved) window.scrollTo(0, 0);
     if (screen === "home") drawHome();
     if (screen === "map") {
@@ -3426,7 +3451,6 @@ button.nrow:hover .nk { color: var(--accent); }
       if (f) { M.focus = f; M.dirty = true; openDetail(f); }
       if (M.dirty || !M.map) drawMap(); else M.map.relayout();
     }
-    if (screen === "supply") drawSupply();
     if (screen === "analysis") drawAnalysis();
     if (screen === "ask") drawAsk();
   }
@@ -3464,7 +3488,6 @@ button.nrow:hover .nk { color: var(--accent); }
     M.dirty = true;
     if (screen === "home") drawHome();
     if (screen === "map") { drawStagebar(); drawList(); drawMap(); }
-    if (screen === "supply") drawSupply();
     if (screen === "analysis") drawAnalysis();
     if (screen === "ask") drawAsk();
     drawFilterSheet();
