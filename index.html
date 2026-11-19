@@ -126,7 +126,11 @@ h1, h2, h3 { text-wrap: balance; }
 @media (max-width: 560px) { .place { flex: 1 1 120px; max-width: none; } .appbar-in { flex-wrap: wrap; column-gap: 8px; } .appbar-in .favstar { order: 2; } }
 .favstar { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 40px; min-width: 40px; justify-content: center; border: 1px solid var(--rule-2); border-radius: var(--r-ctl); background: var(--surface); color: var(--ink-3); cursor: pointer; padding: 0 9px; font-size: 14px; font-weight: 500; }
 .favstar svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
-.favstar[aria-pressed="true"] { color: #F2A900; border-color: #F5C842; background: #FFF8E1; }
+.favstar.lab[aria-pressed="false"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.favstar.lab[aria-pressed="false"]:hover { background: var(--surface); }
+.favstar[aria-pressed="true"] { color: #B37A00; border-color: #F5C842; background: #FFF8E1; }
+.favstar[aria-pressed="true"] svg { color: #F2A900; }
+@media (max-width: 560px) { .favstar.lab { padding: 0 8px; font-size: 13px; } }
 .favstar[aria-pressed="true"] svg { fill: currentColor; }
 .favstar.big { height: 36px; }
 .favbar { display: flex; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-top: 7px; padding-bottom: 8px; border-top: 1px solid var(--rule); }
@@ -772,7 +776,7 @@ button.nrow:hover .nk { color: var(--accent); }
       <a href="#ask" data-nav="ask">AI 질문</a>
     </nav>
     <select class="sel place" id="f-place" aria-label="동네"></select>
-    <button type="button" class="favstar" id="fav-star" aria-pressed="false" aria-label="관심 동네로 등록" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.5l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/></svg></button>
+    <button type="button" class="favstar lab" id="fav-star" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.5l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/></svg><span class="fs-t">관심 동네</span></button>
   </div>
   <div class="wrap favbar" id="favbar" hidden></div>
 </header>
@@ -793,7 +797,7 @@ button.nrow:hover .nk { color: var(--accent); }
         <form class="searchbox" id="home-search" role="search">
           <div class="field">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
-            <input type="search" id="home-q" placeholder="동네, 지번, 건물 이름 (예: 여천리, 내덕동 650)" aria-label="동네, 지번, 건물 이름으로 찾기">
+            <input type="search" id="home-q" placeholder="동네 이름은 동네 리포트로, 지번·건물은 지도로 (예: 율량동, 내덕동 650)" aria-label="동네, 지번, 건물 이름으로 찾기">
           </div>
           <button type="submit">검색</button>
         </form>
@@ -1708,6 +1712,20 @@ button.nrow:hover .nk { color: var(--accent); }
   document.getElementById("home-search").addEventListener("submit", function (e) {
     e.preventDefault();
     var v = document.getElementById("home-q").value.trim();
+    // 동네 이름만 넣으면(예: 율량동, 율량, 오창읍) 지도 대신 그 동네 리포트를 연다
+    var key = v.replace(/\s+/g, ""), hit = null;
+    if (key) [].concat(GU_LIST, areas).some(function (a) {
+      var b = a.replace(/\s+/g, "");
+      if (b === key || b === key + "동" || b === key + "읍" || b === key + "면" || b === "청주시" + key) { hit = a; return true; }
+      return false;
+    });
+    if (hit) {
+      document.getElementById("home-q").value = "";
+      if (state.place !== hit) { state.place = hit; changed(); }
+      location.hash = "#report";
+      if (FAVP.indexOf(hit) < 0) setTimeout(function () { toast("별표를 누르면 " + hit + "을(를) 관심 동네로 넣을 수 있어요"); }, 400);
+      return;
+    }
     state.q = v; state.ev = "all"; document.getElementById("q").value = v; state.openM = null; remember(); M.dirty = true;
     location.hash = "#map";
   });
@@ -3410,7 +3428,6 @@ button.nrow:hover .nk { color: var(--accent); }
     var st = document.getElementById("fav-star"), on = FAVP.indexOf(state.place) >= 0;
     st.hidden = state.place === "all";
     st.setAttribute("aria-pressed", String(on));
-    st.setAttribute("aria-label", on ? "관심 동네에서 빼기" : "관심 동네로 등록");
     st.title = on ? "관심 동네에서 빼기" : "관심 동네로 등록";
     var bar = document.getElementById("favbar");
     bar.hidden = !FAVP.length;
@@ -3501,7 +3518,7 @@ button.nrow:hover .nk { color: var(--accent); }
     function more(go, t) { return '<a class="rmore" href="#' + go + '" data-go="' + go + '" data-p="' + esc(p) + '">' + t + CHEV + "</a>"; }
     function stat(v, l) { return '<div class="rstat"><b>' + v + "</b><span>" + l + "</span></div>"; }
     var html =
-      '<div class="rhead"><h2 class="sec">' + esc(p) + ' 동네 리포트</h2><button type="button" class="favstar big" id="rp-star" aria-pressed="' + on + '">' + STAR + "<span>" + (on ? "관심 동네" : "관심 동네로 등록") + "</span></button></div>" +
+      '<div class="rhead"><h2 class="sec">' + esc(p) + ' 동네 리포트</h2><button type="button" class="favstar lab big" id="rp-star" aria-pressed="' + on + '">' + STAR + "<span>" + (on ? "관심 동네" : "관심 동네로 등록") + "</span></button></div>" +
       '<p class="panel-note">사이트의 모든 기능에서 ' + esc(p) + " 정보만 모았어요. 항목을 누르면 이 동네가 선택된 채로 자세한 화면으로 넘어가요.</p>" +
       '<div class="rgrid">' +
       // 개발 현황
