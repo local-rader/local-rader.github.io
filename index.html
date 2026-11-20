@@ -367,12 +367,12 @@ h2.sec { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; 
 .card .group > .item:first-child { border-top: 0; }
 .item > button {
   width: 100%; text-align: left; background: none; border: 0; padding: 12px 4px 12px 14px;
-  display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 2px 12px; cursor: pointer; position: relative; align-items: start;
+  display: grid; grid-template-columns: minmax(52px, max-content) minmax(0, 1fr) auto; gap: 2px 12px; cursor: pointer; position: relative; align-items: start;
 }
 .item > button::before { content: ""; position: absolute; left: 0; top: 13px; bottom: 13px; width: 3px; border-radius: 2px; background: var(--cat, var(--c-none)); }
 .item > button:hover { background: var(--surface-2); }
 .item > button[aria-current="true"] { background: var(--accent-soft); }
-.item .d { color: var(--ink-3); font-size: 13px; padding-top: 2px; }
+.item .d { color: var(--ink-3); font-size: 13px; padding-top: 2px; white-space: nowrap; }
 .item .t { font-weight: 500; font-size: 15px; min-width: 0; }
 .item .t small { display: block; font-weight: 400; color: var(--ink-2); font-size: 13px; }
 .item .s { grid-column: 2 / 4; color: var(--ink-2); font-size: 13.5px; }
@@ -638,7 +638,7 @@ html.touch {
 /* ---------- 작은 화면 */
 @media (max-width: 480px) {
   .card { padding: 14px; }
-  .item > button { grid-template-columns: 46px minmax(0, 1fr) auto; }
+  .item > button { grid-template-columns: minmax(46px, max-content) minmax(0, 1fr) auto; }
   .kpi .kv { font-size: 25px; }
   .seg button { padding-inline: 11px; }
   .brand span { font-size: 24px; }
