@@ -1584,7 +1584,7 @@ button.nrow:hover .nk { color: var(--accent); }
       if (dong.length) h += '<optgroup label="동">' + dong.map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
       if (town.length) h += '<optgroup label="읍·면">' + town.map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
     }
-    if (FAVP.length) h = opt("all", REGION + " 전체", total) + '<optgroup label="관심 동네">' + FAVP.map(function (p) { return opt(p, "★ " + p, gcnt[p] || cnt[p]); }).join("") + "</optgroup>" + h.slice(opt("all", REGION + " 전체", total).length);
+    if (FAVP.length) h = opt("all", REGION + " 전체", total) + '<optgroup label="관심 동네">' + FAVP.map(function (p) { return opt(p, p, gcnt[p] || cnt[p]); }).join("") + "</optgroup>" + h.slice(opt("all", REGION + " 전체", total).length);
     sel.innerHTML = h; sel.value = state.place;
     if (typeof drawFavUI === "function" && document.getElementById("favbar")) drawFavUI();
   }
