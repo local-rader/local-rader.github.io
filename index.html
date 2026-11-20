@@ -158,6 +158,8 @@ h1, h2, h3 { text-wrap: balance; }
 .favrow small { font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .favrow b { font-size: 16px; }
 @media (max-width: 720px) { .favrow { grid-template-columns: repeat(2, minmax(0, 1fr)); } .favrow .fname { grid-column: 1 / -1; padding: 2px 4px; } }
+.racts { display: flex; gap: 8px; align-items: center; }
+.racts .btn { min-height: 36px; padding: 0 12px; }
 .rhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 6px; }
 .rgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 @media (min-width: 860px) { .rgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -1153,7 +1155,7 @@ button.nrow:hover .nk { color: var(--accent); }
   <section class="screen" id="scr-ask" aria-labelledby="ask-h" hidden>
     <div class="wrap narrow screen-pad">
       <div class="sec-head"><h2 class="sec" id="ask-h"><span class="teo">터</span>놓고 물어보기</h2><span id="ask-asof"></span></div>
-      <p class="panel-note">청주 건축 인허가 자료로만 답해요. <b>질문 버튼</b>은 사이트 자료로 바로 계산해서 답하고 횟수 제한이 없어요. <b>직접 쓰는 질문</b>은 AI(Claude)가 같은 자료를 보고 답하고, 무료로 한 주에 2번 쓸 수 있어요.</p>
+      <p class="panel-note">청주 건축 인허가·실거래·건축물대장(노후도) 자료로만 답해요. <b>질문 버튼</b>은 사이트 자료로 바로 계산해서 답하고 횟수 제한이 없어요. <b>직접 쓰는 질문</b>은 AI(Claude)가 같은 자료를 보고 답하고, 무료로 한 주에 2번 쓸 수 있어요.</p>
       <article class="card chat">
         <div class="chat-log" id="chat-log" aria-live="polite"></div>
         <p class="chat-chips-h" id="chat-chips-h"></p>
@@ -3519,7 +3521,7 @@ button.nrow:hover .nk { color: var(--accent); }
     function more(go, t) { return '<a class="rmore" href="#' + go + '" data-go="' + go + '" data-p="' + esc(p) + '">' + t + CHEV + "</a>"; }
     function stat(v, l) { return '<div class="rstat"><b>' + v + "</b><span>" + l + "</span></div>"; }
     var html =
-      '<div class="rhead"><h2 class="sec">' + esc(p) + ' 동네 리포트</h2><button type="button" class="favstar lab big" id="rp-star" aria-pressed="' + on + '">' + STAR + "<span>" + (on ? "관심 동네" : "관심 동네로 등록") + "</span></button></div>" +
+      '<div class="rhead"><h2 class="sec">' + esc(p) + ' 동네 리포트</h2><div class="racts"><button type="button" class="btn" id="rp-share">링크 공유</button><button type="button" class="favstar lab big" id="rp-star" aria-pressed="' + on + '">' + STAR + "<span>" + (on ? "관심 동네" : "관심 동네로 등록") + "</span></button></div></div>" +
       '<p class="panel-note">사이트의 모든 기능에서 ' + esc(p) + " 정보만 모았어요. 항목을 누르면 이 동네가 선택된 채로 자세한 화면으로 넘어가요.</p>" +
       '<div class="rgrid">' +
       // 개발 현황
@@ -3555,6 +3557,12 @@ button.nrow:hover .nk { color: var(--accent); }
     }));
     bindItems(box); bindGo(box);
     document.getElementById("rp-star").onclick = function () { toggleFavP(p); };
+    document.getElementById("rp-share").onclick = function () {
+      var url = location.origin + location.pathname + "#report/" + encodeURIComponent(p), title = p + " 동네 리포트 · 터놓고";
+      if (navigator.share) { navigator.share({ title: title, text: p + "의 개발·공급·실거래·노후도를 한 화면에", url: url }).catch(function () {}); return; }
+      if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { toast("링크를 복사했어요. 받은 사람도 " + p + " 리포트가 바로 열려요"); }, function () { prompt("이 링크를 복사하세요", url); });
+      else prompt("이 링크를 복사하세요", url);
+    };
     document.getElementById("rp-near").onclick = function () {
       var btn = this; btn.disabled = true; btn.textContent = "위치를 찾는 중…";
       loadSDK(function () {
@@ -3646,6 +3654,22 @@ button.nrow:hover .nk { color: var(--accent); }
       "<p>규모가 큰 곳이에요.</p><div class=\"group\">" + big.map(function (r) { return itemHtml(r, ym2(r.stall.since), r.stall.note); }).join("") + "</div>" +
       "<p>기록이 늦게 입력됐거나 빠진 경우도 섞여 있어요.</p>" + '<a class="go" href="#stall">장기 미진행에서 자세히 →</a>';
   }
+  function chipAging() {
+    if (!AG.data) { loadAging(function () {}); return "<p>노후도 자료를 불러오는 중이에요. 잠시 뒤 다시 눌러 주세요.</p>"; }
+    var p = state.place, o = townSummary(p), pl = placeLabel();
+    if (!o.ag || !o.ag.n) return "<p>" + esc(pl) + "의 건축물대장 자료가 없어요.</p>";
+    var h = "<p>" + esc(pl) + "에서 사용승인 연도가 기록된 건물 " + nf(o.ag.n) + "동 중 <b>지은 지 30년 넘은 곳은 " + pct(o.ag.a30, o.ag.n) + "%</b>예요. 40년 넘은 곳은 " + pct(o.ag.a40, o.ag.n) + "%, 50년 넘은 곳은 " + pct(o.ag.a50, o.ag.n) + "%예요." +
+      (p !== "all" ? " 청주 전체는 30년 넘은 곳이 " + pct(o.agCity.a30, o.agCity.n) + "%예요." : "") + "</p>";
+    if (p === "all" || GU_LIST.indexOf(p) >= 0) {
+      var g = {};
+      AG.data.places.forEach(function (x) { if (!agPlaceOkP(x, p)) return; var k = x.place.split(" ")[0]; var t = g[k] || (g[k] = { n: 0, a: 0 }); ["house", "apt", "etc"].forEach(function (kk) { var ys = (x.y || {})[kk] || {}; Object.keys(ys).forEach(function (y) { t.n += ys[y]; if (AG_Y - +y >= 30) t.a += ys[y]; }); }); });
+      var top = Object.keys(g).filter(function (k) { return g[k].n >= 30; }).sort(function (a, b) { return g[b].a / g[b].n - g[a].a / g[a].n; }).slice(0, 3);
+      if (top.length) h += "<p>오래된 건물 비율이 높은 동네예요.<br>" + top.map(function (k, i) { return (i + 1) + ". " + esc(k) + " " + pct(g[k].a, g[k].n) + "%"; }).join("<br>") + "</p>";
+    }
+    h += "<p>지은 지 30년 지난 20세대 이상 공동주택 단지는 " + nf(o.cx) + "곳이에요" + (o.cxOld ? ". 가장 오래된 곳은 " + esc(o.cxOld.name || "이름 없는 단지") + "(" + o.cxOld.y + "년, " + esc(o.cxOld.place) + ")예요." : ".") + "</p>" +
+      "<p>30년은 재건축 연한으로 자주 쓰는 기준일 뿐, 재건축이 되는지와는 별개예요.</p>" + '<a class="go" href="#aging">노후도에서 자세히 →</a>';
+    return h;
+  }
   function chipRank() {
     var a = fromN(3), lv = placeLevel(), c = {};
     rows.forEach(function (r) { if (r.known && placeOk(r) && since(r.pms, a)) { var k = lv === 0 ? r.place.split(" ")[0] : groupKey(r, lv); c[k] = (c[k] || 0) + 1; } });
@@ -3669,6 +3693,7 @@ button.nrow:hover .nk { color: var(--accent); }
     { t: "공사 중인 곳은 언제 끝나?", f: chipSupply },
     { t: "허가받으면 다 지어져?", f: chipFlow },
     { t: "오래 멈춘 공사 있어?", f: chipStall },
+    { t: "건물은 얼마나 오래됐어?", f: chipAging },
     { t: "허가가 많은 동네는?", f: chipRank },
     { t: "이번 달 브리핑", f: chipBrief }
   ];
@@ -3704,6 +3729,7 @@ button.nrow:hover .nk { color: var(--accent); }
   }
   function drawAsk() {
     document.getElementById("ask-asof").textContent = "자료 기준일 " + dot(END);
+    if (!AG.data && !AG.loading) loadAging(function () {});
     document.getElementById("chat-chips-h").textContent = "질문 버튼 · " + placeLabel() + " 기준 (맨 위에서 동네를 바꿀 수 있어요)";
     var box = document.getElementById("chat-chips"); box.innerHTML = "";
     CHIPS.forEach(function (c) {
@@ -3764,6 +3790,13 @@ button.nrow:hover .nk { color: var(--accent); }
     var h = location.hash.slice(1), m = /^p=(.+)$/.exec(h), target = h, sharedItem = null;
     if (m) { sharedItem = byPk[decodeURIComponent(m[1])] || null; target = "map"; }
     if (target === "list") target = "map";
+    // '#report/율량동'처럼 화면 이름 뒤에 동네를 붙이면 그 동네로 연다 (공유 링크)
+    var sp = !m && h.indexOf("/") > 0 ? h.indexOf("/") : -1;
+    if (sp > 0) {
+      var want = ""; try { want = decodeURIComponent(h.slice(sp + 1)); } catch (e) {}
+      target = h.slice(0, sp);
+      if (validPlace(want) && want !== state.place) { state.place = want; changed(); }
+    }
     if (GRP[target]) { sub = target; grp = GRP[target]; if (GRP_LAST[grp]) GRP_LAST[grp] = sub; target = "analysis"; }
     else if (GRP_LAST[target]) { grp = target; sub = GRP_LAST[grp]; target = "analysis"; }
     if (!TITLES[target]) target = "home";
@@ -3791,6 +3824,16 @@ button.nrow:hover .nk { color: var(--accent); }
     }
     if (screen === "analysis") drawAnalysis();
     if (screen === "ask") drawAsk();
+    syncHash();
+  }
+  function validPlace(p) { return p === "all" || GU_LIST.indexOf(p) >= 0 || areas.indexOf(p) >= 0; }
+  // 지금 보는 화면과 동네를 주소에 남겨 둔다 (주소를 복사하면 같은 화면이 열림). 화면 전환은 일으키지 않는다.
+  function syncHash() {
+    if (screen !== "analysis" && screen !== "map") return;
+    if (/^#p=/.test(location.hash)) return;
+    var want = "#" + (screen === "analysis" ? sub : "map") + (state.place !== "all" ? "/" + encodeURIComponent(state.place) : "");
+    var cur = location.hash; try { cur = "#" + encodeURIComponent(decodeURIComponent(location.hash.slice(1))).replace(/%2F/g, "/"); } catch (e) {}
+    if (cur !== want) try { history.replaceState(null, "", location.pathname + location.search + want); } catch (e) {}
   }
   window.addEventListener("hashchange", route);
   // PC는 위 메뉴가 화면 이름을 보여주므로 서비스 이름을, 휴대폰은 화면 이름을 위 바에 쓴다
@@ -3829,6 +3872,7 @@ button.nrow:hover .nk { color: var(--accent); }
     if (screen === "analysis") drawAnalysis();
     if (screen === "ask") drawAsk();
     drawFilterSheet();
+    if (typeof syncHash === "function") syncHash();
   }
 
   // 목록이 길어지면 위로 버튼

@@ -815,9 +815,76 @@ def ai_context(out):
         ctx["tradesComplete"] = ts.get("complete")
         ctx["definitions"]["실거래"] = (ts.get("기준", "") + " 출처: 국토교통부 실거래가 공개 자료(매매). "
                                      "종류별(아파트·토지 등) 거래 건수와 ㎡당 가격 중앙값(근사). 시세 전망이나 투자 판단 근거가 아님")
+    add_aging(ctx, places)
     with open(AI_CONTEXT, "w", encoding="utf-8") as f:
         json.dump(ctx, f, ensure_ascii=False, separators=(",", ":"))
     print(f"ai-context.json 저장: 지역 {len(places)}곳")
+
+
+def add_aging(ctx, places):
+    """aging.json(건축물대장 사용승인 연도 집계)이 있으면 동네마다 노후도 요약을 붙인다."""
+    ag = load(os.path.join(HERE, "aging.json"), None)
+    if not ag or not ag.get("places"):
+        return
+    year = now_kst().year
+
+    def agg(ps):
+        t = {"n": 0, 30: 0, 40: 0, 50: 0}
+        for p in ps:
+            for ys in (p.get("y") or {}).values():
+                for y, c in ys.items():
+                    age = year - int(y)
+                    t["n"] += c
+                    for th in (30, 40, 50):
+                        if age >= th:
+                            t[th] += c
+        return t
+
+    def pct(a, n):
+        return round(100 * a / n) if n else None
+
+    cx_all = ag.get("complexes") or []
+
+    def summary(ps, test):
+        t = agg(ps)
+        if not t["n"]:
+            return None
+        cx = sorted([c for c in cx_all if test(c) and year - c["y"] >= 30], key=lambda c: (c["y"], -c["hh"]))
+        return {"사용승인연도있는건물": t["n"], "30년이상비율": pct(t[30], t["n"]), "40년이상비율": pct(t[40], t["n"]),
+                "50년이상비율": pct(t[50], t["n"]), "30년지난공동주택단지수": len(cx),
+                "오래된공동주택단지": [{"이름": c["name"] or "이름 없음", "동네": c["place"], "사용승인연도": c["y"], "세대": c["hh"]} for c in cx[:3]]}
+
+    allp = ag["places"]
+    city = summary(allp, lambda c: True)
+    if city:
+        places.setdefault("청주시 전체", {"level": "시"})["노후도"] = city
+    groups = {}
+    for p in allp:
+        groups.setdefault(("gu", p["gu"]), []).append(p)
+        groups.setdefault(("area", p["place"].split(" ")[0], p["gu"]), []).append(p)
+    rank = []
+    for key, ps in groups.items():
+        if key[0] == "gu":
+            name, test = key[1], (lambda c, g=key[1]: c["gu"] == g)
+        else:
+            name, test = key[1], (lambda c, a=key[1]: c["place"].split(" ")[0] == a)
+        s = summary(ps, test)
+        if not s:
+            continue
+        if name not in places:
+            places[name] = {"level": "구" if key[0] == "gu" else ("읍면" if re.search(r"[읍면]$", name) else "동")}
+            if key[0] == "area":
+                places[name]["gu"] = key[2]
+        places[name]["노후도"] = s
+        if key[0] == "area" and s["사용승인연도있는건물"] >= 30:
+            rank.append({"동네": name, "30년이상비율": s["30년이상비율"], "건물": s["사용승인연도있는건물"]})
+    rank.sort(key=lambda x: -x["30년이상비율"])
+    ctx.setdefault("rankings", {})["노후도_30년이상비율_상위"] = rank[:10]
+    ctx["definitions"]["노후도"] = ("국토교통부 건축물대장(표제부)의 사용승인 연도로 센 주 건물(부속건물 제외)의 나이. "
+                                  f"{year}년 기준. 사용승인일이 빈 건물은 빠짐. 30년은 재건축 연한으로 자주 쓰이는 기준일 뿐 "
+                                  "재건축 가능 여부가 아님. 공동주택 단지는 같은 지번 공동주택을 묶은 20세대 이상만")
+    ctx["definitions"]["생활권"] = "위치마다 달라 이 자료에는 없음. 사이트 '동네 진단 > 생활권'에서 주소를 넣으면 걸어서 5·10·15분 안 시설을 볼 수 있음"
+    ctx["agingAsof"] = (ag.get("meta") or {}).get("newest")
 
 
 def main(argv):
