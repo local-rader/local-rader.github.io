@@ -1505,6 +1505,7 @@ button.nrow:hover .nk { color: var(--accent); }
   }
 
   function openDetail(r) {
+    trackEv("detail");
     var house = r.cat === "house" && r.fmly;
     var key = [["주용도", r.use], ["공사 종류", r.gb ? plainGb(r.gb) : "기록 없음"], ["연면적", area(r.area)],
       r.jiga ? ["개별공시지가 (㎡당)", nf(r.jiga) + "원"] : house ? ["가구수", r.fmly + "가구"] : ["대지면적", area(r.plat)]];
@@ -1536,7 +1537,7 @@ button.nrow:hover .nk { color: var(--accent); }
       if (screen === "map") { focusOnMap(r); scrollToMap(); }
       else { M.focus = r; location.hash = "#map"; }
     };
-    document.getElementById("sh-share").onclick = function () { share(r, this); };
+    document.getElementById("sh-share").onclick = function () { trackEv("share"); share(r, this); };
     document.getElementById("sh-fav").onclick = function () { toggleFav(r, this); };
     document.getElementById("sh-near-btn").onclick = function () { nearForRecord(r, document.getElementById("sh-near")); };
   }
@@ -1722,6 +1723,7 @@ button.nrow:hover .nk { color: var(--accent); }
       if (b === key || b === key + "동" || b === key + "읍" || b === key + "면" || b === "청주시" + key) { hit = a; return true; }
       return false;
     });
+    trackEv("search");
     if (hit) {
       document.getElementById("home-q").value = "";
       if (state.place !== hit) { state.place = hit; changed(); }
@@ -3292,6 +3294,7 @@ button.nrow:hover .nk { color: var(--accent); }
     });
   }
   function nearForRecord(r, box) {
+    trackEv("near");
     box.innerHTML = '<h3>주변 생활권</h3><p class="result" style="margin:0">찾는 중입니다…</p>';
     loadSDK(function () {
       geocode(r, function (ll) {
@@ -3354,6 +3357,7 @@ button.nrow:hover .nk { color: var(--accent); }
   document.getElementById("nr-form").onsubmit = function (e) {
     e.preventDefault();
     var q = document.getElementById("nr-q").value.trim(); if (!q) return;
+    trackEv("near");
     var out = document.getElementById("nr-out");
     out.innerHTML = '<article class="card"><p class="result">위치를 찾는 중입니다…</p></article>';
     loadSDK(function () {
@@ -3418,7 +3422,7 @@ button.nrow:hover .nk { color: var(--accent); }
     var i = FAVP.indexOf(p);
     if (i >= 0) { FAVP.splice(i, 1); toast(p + "을(를) 관심 동네에서 뺐어요"); }
     else if (FAVP.length >= 5) { toast("관심 동네는 5곳까지 넣을 수 있어요"); return; }
-    else { FAVP.push(p); toast(p + "을(를) 관심 동네에 넣었어요"); }
+    else { FAVP.push(p); toast(p + "을(를) 관심 동네에 넣었어요"); trackEv("fav"); }
     saveFavP(); drawFavUI();
     if (screen === "home") drawHomeFav();
     if (screen === "analysis" && sub === "report") drawReport();
@@ -3558,6 +3562,7 @@ button.nrow:hover .nk { color: var(--accent); }
     bindItems(box); bindGo(box);
     document.getElementById("rp-star").onclick = function () { toggleFavP(p); };
     document.getElementById("rp-share").onclick = function () {
+      trackEv("share");
       var url = location.origin + location.pathname + "#report/" + encodeURIComponent(p), title = p + " 동네 리포트 · 터놓고";
       if (navigator.share) { navigator.share({ title: title, text: p + "의 개발·공급·실거래·노후도를 한 화면에", url: url }).catch(function () {}); return; }
       if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { toast("링크를 복사했어요. 받은 사람도 " + p + " 리포트가 바로 열려요"); }, function () { prompt("이 링크를 복사하세요", url); });
@@ -3600,6 +3605,41 @@ button.nrow:hover .nk { color: var(--accent); }
       if (navigator.sendBeacon) navigator.sendBeacon(AI.url + "/hit", new Blob([body], { type: "text/plain" }));
       else fetch(AI.url + "/hit", { method: "POST", body: body, keepalive: true });
     } catch (e) {}
+  })();
+  // ---------- 기능 이용 통계: 화면별로 머문 시간과 주요 버튼 사용 횟수만, 화면을 떠날 때 한 번에 보낸다
+  // 검색어·주소·동네 이름은 보내지 않는다. ?me=1로 뺀 기기는 보내지 않는다.
+  var USE = { acc: {}, ev: {}, cur: null, since: 0, sent: 0, on: false };
+  function trackEv(k) { if (USE.on) USE.ev[k] = (USE.ev[k] || 0) + 1; }
+  (function usage() {
+    try { if (!AI.url || localStorage.getItem("dr:notrack")) return; } catch (e) { return; }
+    USE.on = true; USE.vis = document.visibilityState !== "hidden";
+    function viewKey() { return screen === "analysis" ? sub : screen; }
+    function flush() {
+      if (USE.cur && USE.since && USE.vis) {
+        var s = (Date.now() - USE.since) / 1000; if (s > 0) USE.acc[USE.cur] = (USE.acc[USE.cur] || 0) + Math.min(s, 1800);
+      }
+      USE.since = Date.now();
+    }
+    function mark() { flush(); USE.cur = viewKey(); USE.since = Date.now(); }
+    function send() {
+      var tot = 0; Object.keys(USE.acc).forEach(function (k) { tot += USE.acc[k]; });
+      if (tot < 3 || USE.sent >= 3) return;
+      USE.sent++;
+      var v = {}; Object.keys(USE.acc).forEach(function (k) { v[k] = Math.round(USE.acc[k]); });
+      var body = JSON.stringify({ v: v, e: USE.ev }); USE.acc = {}; USE.ev = {};
+      try {
+        if (navigator.sendBeacon) navigator.sendBeacon(AI.url + "/use", new Blob([body], { type: "text/plain" }));
+        else fetch(AI.url + "/use", { method: "POST", body: body, keepalive: true });
+      } catch (e) {}
+    }
+    window.addEventListener("hashchange", function () { setTimeout(mark, 0); });
+    // 이 이벤트는 화면이 이미 가려진 뒤에 오므로, 직전까지 보였는지는 따로 기억해 둔 값(USE.vis)으로 판단한다
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") { flush(); USE.vis = false; send(); }
+      else { USE.vis = true; USE.since = Date.now(); }
+    });
+    window.addEventListener("pagehide", function () { flush(); send(); });
+    setTimeout(mark, 0);
   })();
   // '최근 n달' 시작일 (사이트의 기간 버튼과 같은 계산)
   function fromN(n) {
@@ -3736,7 +3776,7 @@ button.nrow:hover .nk { color: var(--accent); }
       var b = document.createElement("button");
       b.type = "button"; b.className = "chip"; b.textContent = c.t;
       b.onclick = function () {
-        chatAdd("me", esc(placeLabel() + " · " + c.t));
+        chatAdd("me", esc(placeLabel() + " · " + c.t)); trackEv("chip");
         chatAdd("bot", '<span class="tag">자료로 바로 답변 · 횟수 차감 없음</span>' + c.f());
       };
       box.appendChild(b);
@@ -3753,7 +3793,7 @@ button.nrow:hover .nk { color: var(--accent); }
     e.preventDefault();
     var inp = document.getElementById("chat-q"), q = inp.value.replace(/\s+/g, " ").trim();
     if (!AI.url || AI.busy || q.length < 2) return;
-    chatAdd("me", esc(q));
+    chatAdd("me", esc(q)); trackEv("askai");
     if (AI.quota && AI.quota.remaining <= 0) {
       chatAdd("bot", '<span class="tag">안내</span><p>' + (AI.quota.per === "day" ? "오늘" : "이번 주") + " AI 질문을 다 썼어요. " + (AI.quota.per === "day" ? "내일" : "다음 주 월요일") + "에 다시 생겨요. 질문 버튼은 횟수 제한 없이 쓸 수 있어요.</p>", "err");
       return;

@@ -57,6 +57,7 @@ export default {
     if (!ok) return json({ error: "origin", message: "터놓고 사이트에서만 쓸 수 있어요." }, 403);
     if (!env.QUOTA) return json({ error: "config", message: "서버 설정이 끝나지 않았어요. (KV)" }, 500);
     if (url.pathname === "/hit" && request.method === "POST") return hit(request, env, cors, ectx);
+    if (url.pathname === "/use" && request.method === "POST") return useLog(request, env, cors, ectx);
 
     const who = await identity(request, env);
     const plan = await planOf(request, env);
@@ -224,6 +225,33 @@ async function hit(request, env, cors, ctx) {
   const meta = { s: sourceOf(String(body.r || "").slice(0, 100), ua), d: deviceOf(ua) };
   const key = `h:${periodKey("day")}:${now.toString(36)}${Math.random().toString(36).slice(2, 8)}`;
   const p = env.QUOTA.put(key, "1", { metadata: meta, expirationTtl: 400 * 86400 }).catch(() => {});
+  if (ctx && ctx.waitUntil) ctx.waitUntil(p); else await p;
+  return done;
+}
+// ---------- 기능 이용 통계 ----------
+// 사이트가 화면을 떠날 때(창을 닫거나 다른 앱으로 갈 때) 한 번 보낸다: 화면별로 머문 초, 주요 버튼을 누른 횟수, 기기 종류.
+// 기기 번호·IP·주소·검색어는 남기지 않는다. 방문 하나가 KV 기록 하나가 되도록 묶어서 받는다. 400일 뒤 자동 삭제.
+const USE_VIEWS = ["home", "map", "flow", "supply", "stall", "stats", "compare", "trade", "report", "aging", "near", "quality", "ask"];
+const USE_ACTS = ["search", "fav", "share", "near", "detail", "chip", "askai"];
+const USES = new Map();
+async function useLog(request, env, cors, ctx) {
+  const done = new Response(null, { status: 204, headers: cors });
+  let b = {};
+  try { const t = await request.text(); if (t.length <= 1500) b = JSON.parse(t || "{}") || {}; } catch (e) {}
+  const ua = request.headers.get("User-Agent") || "";
+  if (/bot|crawl|spider|slurp|headless|preview|facebookexternalhit|curl|wget|python/i.test(ua)) return done;
+  const ip = request.headers.get("CF-Connecting-IP") || "", now = Date.now();
+  if (ip) {
+    const h = USES.get(ip);
+    if (h && now - h.t < 600e3) { if (++h.n > 20) return done; } else USES.set(ip, { t: now, n: 1 });
+    if (USES.size > 5000) USES.clear();
+  }
+  const v = b.v && typeof b.v === "object" ? b.v : {}, e = b.e && typeof b.e === "object" ? b.e : {};
+  const u = USE_VIEWS.map((k) => [k, Math.min(1800, Math.round(+v[k] || 0))]).filter((x) => x[1] > 0).map((x) => x[0] + ":" + x[1]).join(",");
+  if (!u) return done;
+  const ev = USE_ACTS.map((k) => [k, Math.min(50, Math.round(+e[k] || 0))]).filter((x) => x[1] > 0).map((x) => x[0] + ":" + x[1]).join(",");
+  const key = `u:${periodKey("day")}:${now.toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  const p = env.QUOTA.put(key, "1", { metadata: { d: deviceOf(ua), u, e: ev }, expirationTtl: 400 * 86400 }).catch(() => {});
   if (ctx && ctx.waitUntil) ctx.waitUntil(p); else await p;
   return done;
 }

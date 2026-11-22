@@ -64,13 +64,26 @@ async function adminStats(request, env) {
       const kind = (meta && meta.k) || "ok"; x[kind] = (x[kind] || 0) + 1;
     })) || truncated;
   }
+  // 기능 이용: 최근 30일·7일 합계 (방문 하나 = 기록 하나)
+  const use = { d30: { n: 0, secs: 0, v: {}, e: {} }, d7: { n: 0, secs: 0, v: {}, e: {} } };
+  const d7 = days.slice(-7);
+  for (const m of [...new Set(days.map((d) => d.slice(0, 7)))]) {
+    truncated = (await listAll(env.QUOTA, `u:${m}`, (k, meta) => {
+      const day = k.slice(2, 12); if (days.indexOf(day) < 0 || !meta || !meta.u) return;
+      [use.d30].concat(d7.indexOf(day) >= 0 ? [use.d7] : []).forEach((t) => {
+        t.n++;
+        String(meta.u).split(",").forEach((x) => { const [a, sec] = x.split(":"); const s2 = +sec || 0; const o = t.v[a] || (t.v[a] = { n: 0, s: 0 }); o.n++; o.s += s2; t.secs += s2; });
+        String(meta.e || "").split(",").filter(Boolean).forEach((x) => { const [a, c] = x.split(":"); t.e[a] = (t.e[a] || 0) + (+c || 0); });
+      });
+    })) || truncated;
+  }
   const today = days[days.length - 1];
   const todayAsked = +(await env.QUOTA.get(`all:${today}`)) || 0;
   let data;
   try { data = await siteMeta(env); } catch (e) { data = { error: String((e && e.message) || e) }; }
   const now = kst().toISOString().slice(0, 16).replace("T", " ");
   return new Response(JSON.stringify({
-    now, today, dailyCap: +env.DAILY_CAP || 200, todayAsked, truncated, data,
+    now, today, dailyCap: +env.DAILY_CAP || 200, todayAsked, truncated, data, use,
     days: days.map((d) => ({ day: d, ...visits[d], ai: ai[d] })),
   }), { headers });
 }
@@ -154,6 +167,13 @@ form button{background:var(--ink);color:#fff;border-color:var(--ink);border-radi
 <section class="card"><h2>유입 경로<small>최근 30일</small></h2><div id="src"></div></section>
 <section class="card"><h2>기기<small>최근 30일</small></h2><div id="dev"></div></section>
 </div>
+<section class="card"><h2>많이 쓰는 기능<small>화면을 떠날 때 보낸 기록 기준</small></h2>
+<div class="tools" style="justify-content:flex-start;margin:0 0 10px"><button type="button" id="u-30" aria-pressed="true">최근 30일</button><button type="button" id="u-7" aria-pressed="false">최근 7일</button></div>
+<div class="kpis"><div class="kpi"><small>기록된 방문</small><b id="u-n">-</b></div><div class="kpi"><small>방문당 이용 시간</small><b id="u-avg">-</b></div></div>
+<div id="u-views"></div>
+<h3 style="font-size:14px;margin:16px 0 6px">버튼 사용</h3><div id="u-ev"></div>
+<p class="mut">막대는 그 화면에 머문 시간의 합이에요. '본 방문'은 그 화면을 한 번이라도 연 방문 수, '평균'은 그 방문들이 그 화면에 머문 평균 시간이에요. 화면이 보이는 동안만 세고, 한 화면에 30분이 넘으면 30분으로 잘라요. 내 기기는 ?me=1로 빼 두세요.</p>
+</section>
 <section class="card"><h2>AI 질문</h2>
 <div class="kpis"><div class="kpi"><small>오늘 답변 / 하루 상한</small><b id="a-today">-</b></div><div class="kpi"><small>최근 7일 답변</small><b id="a-ok">-</b></div><div class="kpi"><small>최근 7일 실패</small><b id="a-fail">-</b></div><div class="kpi"><small>최근 7일 횟수 초과</small><b id="a-lim">-</b></div></div>
 <div class="bars sm" id="a-bars" role="img" aria-label="최근 30일 일별 AI 답변 수"></div>
@@ -232,7 +252,28 @@ form button{background:var(--ink);color:#fff;border-color:var(--ink);border-radi
       $("d-fail").className = (d.failed || d.unfinished) ? "bad" : "";
     }
     $("trunc").hidden = !j.truncated;
+    UJ = j.use; drawUse();
   }
+  var UJ = null, UP = "d30";
+  var VL = { home: "홈", map: "개발지도", flow: "진행 흐름", supply: "완공 예상", stall: "장기 미진행", stats: "지역 통계", compare: "지역 비교", trade: "실거래", report: "동네 리포트", aging: "노후도", near: "생활권", quality: "자료 상태", ask: "AI 질문" };
+  var EL = { search: "홈 검색", fav: "관심 동네 등록", share: "링크 공유", near: "생활권 보기", detail: "건물 상세 열기", chip: "질문 버튼", askai: "AI 직접 질문" };
+  function dur(s) { s = Math.round(s); return s >= 60 ? Math.floor(s / 60) + "분 " + (s % 60) + "초" : s + "초"; }
+  function drawUse() {
+    if (!UJ) return;
+    var t = UJ[UP] || { n: 0, secs: 0, v: {}, e: {} };
+    $("u-30").setAttribute("aria-pressed", String(UP === "d30")); $("u-7").setAttribute("aria-pressed", String(UP === "d7"));
+    $("u-n").textContent = n(t.n); $("u-avg").textContent = t.n ? dur(t.secs / t.n) : "-";
+    var ks = Object.keys(t.v).sort(function (a, b) { return t.v[b].s - t.v[a].s; });
+    var mx = Math.max(1, ks.length ? t.v[ks[0]].s : 1);
+    $("u-views").innerHTML = ks.length ? ks.map(function (k) {
+      var o = t.v[k];
+      return '<div class="row"><span>' + (VL[k] || k) + '</span><em><i style="width:' + Math.round(o.s / mx * 100) + '%"></i></em><b>' + n(o.n) + "번 · 평균 " + dur(o.s / o.n) + "</b></div>";
+    }).join("") : '<p class="mut">아직 기록이 없어요. 사이트에 이 기능을 넣은 뒤부터 쌓여요.</p>';
+    var es = Object.keys(t.e).sort(function (a, b) { return t.e[b] - t.e[a]; });
+    $("u-ev").innerHTML = es.length ? es.map(function (k) { return '<div class="row"><span>' + (EL[k] || k) + '</span><em></em><b>' + n(t.e[k]) + "번</b></div>"; }).join("") : '<p class="mut">아직 기록이 없어요.</p>';
+  }
+  $("u-30").onclick = function () { UP = "d30"; drawUse(); };
+  $("u-7").onclick = function () { UP = "d7"; drawUse(); };
   function load() {
     var k = getKey();
     if (!k) { show("login"); setTimeout(function () { $("pw").focus(); }, 0); return; }
