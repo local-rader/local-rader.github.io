@@ -1,4 +1,5 @@
-# 생활권 분석용 공공데이터: 시내버스 정류소(busstops.json), 공원·도서관(pois.json). 한 달에 한 번.
+# 생활권 분석용 공공데이터: 시내버스 정류소(busstops.json), 공원·도서관·전통시장·경로당(pois.json). 한 달에 한 번.
+# 받은 뒤 터놓고 생활권 점수(life.json)를 다시 계산한다. 인구(population.json)는 매달 손으로 넣는다.
 name: 생활시설 갱신
 
 on:
@@ -39,12 +40,16 @@ jobs:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
           MODE: ${{ inputs.mode }}
         run: python pois.py "${MODE:-update}"
+      - name: 생활권 점수 다시 계산
+        continue-on-error: true
+        if: ${{ inputs.mode != 'probe' }}
+        run: python life.py build
       - name: 저장
         if: ${{ !cancelled() && inputs.mode != 'probe' }}
         run: |
           git config user.name "dongne-radar-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for f in busstops.json pois.json; do if [ -f "$f" ]; then git add "$f"; fi; done
+          for f in busstops.json pois.json life.json; do if [ -f "$f" ]; then git add "$f"; fi; done
           if git diff --cached --quiet; then echo "바뀐 자료가 없습니다."; else
             git commit -m "버스정류소 갱신 $(TZ=Asia/Seoul date +%F)"
             git pull --rebase -X theirs origin main

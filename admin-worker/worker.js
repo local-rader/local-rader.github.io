@@ -255,8 +255,8 @@ form button{background:var(--ink);color:#fff;border-color:var(--ink);border-radi
     UJ = j.use; drawUse();
   }
   var UJ = null, UP = "d30";
-  var VL = { home: "홈", map: "개발지도", flow: "진행 흐름", supply: "완공 예상", stall: "장기 미진행", stats: "지역 통계", compare: "지역 비교", trade: "실거래", report: "동네 리포트", aging: "노후도", near: "생활권", quality: "자료 상태", ask: "AI 질문" };
-  var EL = { search: "홈 검색", fav: "관심 동네 등록", share: "링크 공유", near: "생활권 보기", detail: "건물 상세 열기", chip: "질문 버튼", askai: "AI 직접 질문" };
+  var VL = { home: "홈", map: "개발지도", flow: "진행 흐름", supply: "완공 예상", stall: "장기 미진행", stats: "지역 통계", compare: "지역 비교", trade: "실거래", report: "동네 리포트", aging: "노후도", near: "생활권", life: "생활권 점수", quality: "자료 상태", ask: "AI 질문" };
+  var EL = { search: "홈 검색", fav: "관심 동네 등록", share: "링크 공유", near: "생활권 보기", detail: "건물 상세 열기", chip: "질문 버튼", askai: "AI 직접 질문", lifepick: "생활권 점수 동네 고르기" };
   function dur(s) { s = Math.round(s); return s >= 60 ? Math.floor(s / 60) + "분 " + (s % 60) + "초" : s + "초"; }
   function drawUse() {
     if (!UJ) return;

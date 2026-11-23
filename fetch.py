@@ -816,9 +816,38 @@ def ai_context(out):
         ctx["definitions"]["실거래"] = (ts.get("기준", "") + " 출처: 국토교통부 실거래가 공개 자료(매매). "
                                      "종류별(아파트·토지 등) 거래 건수와 ㎡당 가격 중앙값(근사). 시세 전망이나 투자 판단 근거가 아님")
     add_aging(ctx, places)
+    add_life(ctx, places)
     with open(AI_CONTEXT, "w", encoding="utf-8") as f:
         json.dump(ctx, f, ensure_ascii=False, separators=(",", ":"))
     print(f"ai-context.json 저장: 지역 {len(places)}곳")
+
+
+def add_life(ctx, places):
+    """life.json(터놓고 생활권 점수, 행정동 단위)이 있으면 동네마다 점수를 붙인다."""
+    lf = load(os.path.join(HERE, "life.json"), None)
+    if not lf or not lf.get("units"):
+        return
+    names = dict(lf["meta"]["kinds"])
+    by = {u["name"]: u for u in lf["units"]}
+
+    def brief(u):
+        return {"행정동": u["name"], "점수": u["score"], "순위": f"{len(lf['units'])}곳 중 {u['rank']}위",
+                "면적당점수": u["sa"], "인구당점수": u["sp"], "인구": u["pop"],
+                "시설수": {names[k]: v for k, v in u["n"].items()}}
+    for place, unit in (lf.get("places") or {}).items():
+        key = place.split(" ")[0]
+        if key in places and unit in by:
+            places[key]["생활권점수"] = brief(by[unit])
+    for u in lf["units"]:
+        if u["name"] in places:
+            places[u["name"]]["생활권점수"] = brief(u)
+    ctx.setdefault("rankings", {})["생활권점수_상위"] = [{"행정동": u["name"], "점수": u["score"]} for u in lf["units"][:10]]
+    ctx.setdefault("rankings", {})["생활권점수_하위"] = [{"행정동": u["name"], "점수": u["score"]} for u in lf["units"][-5:]]
+    ctx["definitions"]["생활권점수"] = ("터놓고가 정한 자체 기준(공식 지표 아님). 행정동 37곳(한 법정동이 나뉜 행정동은 합침)마다 "
+                                    "버스정류소·공원·도서관·전통시장·경로당 수를 1㎢당(면적당)과 주민 1천 명당(인구당)으로 바꿔 "
+                                    "청주 동네끼리 백분위로 비교하고, 10개 백분위를 평균한 100점 만점 점수. 동네끼리 상대 비교라 "
+                                    "높을수록 시설이 촘촘하고 넉넉한 편이라는 뜻일 뿐 살기 좋은 정도의 판정이 아님. "
+                                    f"인구 {lf['meta'].get('pop_month', '')} 기준. 도서관은 공공도서관만, 공원은 일부 빠진 동네가 있음")
 
 
 def add_aging(ctx, places):
@@ -883,7 +912,7 @@ def add_aging(ctx, places):
     ctx["definitions"]["노후도"] = ("국토교통부 건축물대장(표제부)의 사용승인 연도로 센 주 건물(부속건물 제외)의 나이. "
                                   f"{year}년 기준. 사용승인일이 빈 건물은 빠짐. 30년은 재건축 연한으로 자주 쓰이는 기준일 뿐 "
                                   "재건축 가능 여부가 아님. 공동주택 단지는 같은 지번 공동주택을 묶은 20세대 이상만")
-    ctx["definitions"]["생활권"] = "위치마다 달라 이 자료에는 없음. 사이트 '동네 진단 > 생활권'에서 주소를 넣으면 걸어서 5·10·15분 안 시설을 볼 수 있음"
+    ctx["definitions"]["생활권"] = "주소마다 다른 '걸어서 갈 수 있는 시설'은 이 자료에 없음. 사이트 '동네 진단 > 생활권'에서 주소를 넣으면 걸어서 5·10·15분 안 시설을 볼 수 있음. 동네 단위 비교는 '생활권점수' 참고"
     ctx["agingAsof"] = (ag.get("meta") or {}).get("newest")
 
 

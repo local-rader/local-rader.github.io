@@ -724,6 +724,19 @@ body.agmap-open { overflow: hidden; }
 @media (max-width: 720px) { .agmap { height: 380px; } }
 .agdot { border-radius: 50%; border: 1.5px solid rgba(255,255,255,.85); box-shadow: 0 0 0 1px rgba(0,0,0,.18); cursor: pointer; }
 .agtip { background: var(--surface); color: var(--ink); border: 1px solid var(--rule-2); border-radius: 6px; padding: 4px 8px; font-size: 12.5px; white-space: nowrap; }
+:root { --lf0: #E3EEFB; --lf1: #B5D5F7; --lf2: #7DB7F0; --lf3: #3F92E3; --lf4: #1668C4; }
+.lfbig { display: flex; align-items: center; gap: 16px; padding: 4px 0 14px; border-bottom: 1px solid var(--rule); font-size: 14.5px; color: var(--ink-2); line-height: 1.5; }
+.lfbig b { color: var(--ink); }
+.lfscore { flex: none; font-size: 48px; font-weight: 700; letter-spacing: -1.5px; line-height: 1; color: var(--brand); }
+.lfscore small { font-size: 17px; font-weight: 600; letter-spacing: 0; margin-left: 2px; color: var(--ink-2); }
+.lfsplit { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 10px 0 2px; font-size: 13.5px; color: var(--ink-3); }
+.lfsplit b { color: var(--ink); font-weight: 600; }
+.lfh4 { margin: 16px 0 4px; font-size: 14px; font-weight: 600; }
+.lfmap { height: 520px; }
+@media (max-width: 720px) { .lfmap { height: 420px; } }
+.lftip { background: var(--surface); color: var(--ink); border: 1px solid var(--rule-2); border-radius: 6px; padding: 5px 9px; font-size: 13px; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.lftip b { color: var(--brand); }
+.fbars .fb.on .k { color: var(--brand); font-weight: 700; }
 .near-sum { font-size: 15px; margin: 0 0 12px; }
 .near-sum b { font-weight: 600; }
 .near-list { margin: 0; padding: 0; list-style: none; }
@@ -938,6 +951,7 @@ button.nrow:hover .nk { color: var(--accent); }
         <button type="button" role="tab" id="sub-report" aria-controls="pane-report" data-sub="report" data-grp="town">동네 리포트</button>
         <button type="button" role="tab" id="sub-aging" aria-controls="pane-aging" data-sub="aging" data-grp="town">노후도</button>
         <button type="button" role="tab" id="sub-near" aria-controls="pane-near" data-sub="near" data-grp="town">생활권</button>
+        <button type="button" role="tab" id="sub-life" aria-controls="pane-life" data-sub="life" data-grp="town">생활권 점수</button>
         <button type="button" role="tab" id="sub-quality" aria-controls="pane-quality" data-sub="quality" data-grp="none" hidden>자료 상태</button>
       </div>
 
@@ -1119,7 +1133,19 @@ button.nrow:hover .nk { color: var(--accent); }
         <div class="disclaimer">
           <p>시내버스 정류소·전통시장·경로당·공원·공공도서관은 공공데이터(국토교통부 버스정류소정보, 행정안전부 표준데이터 등) 위치로, 나머지는 카카오 지도에 등록된 장소로 셉니다. 카카오 장소는 빠지거나 문을 닫은 곳이 섞여 있을 수 있습니다. 항목을 누르면 해당하는 곳 목록이 나옵니다. 거리는 <b>직선거리</b>이고, 1분에 80m 걷는다고 보고 시간을 계산했습니다. 실제로 걷는 길은 이보다 깁니다.</p>
           <p>시설은 교통, 장보기·생활, 건강·돌봄, 교육, 여가 다섯 가지 생활 기능으로 묶었습니다. 한 기능 안에 시설이 하나라도 걸어서 갈 거리에 있으면 ‘있음’입니다. 일자리는 믿을 만한 위치 자료가 없어 넣지 않았습니다.</p>
-          <p>시설 수는 많고 적음을 보여줄 뿐, 살기 좋은 정도를 점수로 매긴 것이 아닙니다.</p>
+          <p>이 화면의 시설 수는 많고 적음을 보여줄 뿐 점수가 아닙니다. 동네끼리 비교한 점수는 ‘생활권 점수’ 탭에서 볼 수 있어요.</p>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-life" role="tabpanel" aria-labelledby="sub-life" hidden>
+        <div class="sec-head"><h2 class="sec" id="lf-h">터놓고 생활권 점수</h2><span id="lf-asof"></span></div>
+        <p class="panel-note">버스정류소·공원·도서관·전통시장·경로당이 동네에 얼마나 <b>촘촘하게</b>(면적당), 사람 수에 비해 얼마나 <b>넉넉하게</b>(인구당) 있는지를 청주 동네끼리 비교한 터놓고만의 점수예요. 100점에 가까울수록 다른 동네보다 생활 시설이 잘 갖춰진 편이에요.</p>
+        <div id="lf-body"><p class="result">생활권 점수를 불러오는 중입니다…</p></div>
+        <div class="disclaimer">
+          <p><b>계산 방법.</b> 동네(행정동)마다 다섯 가지 시설 수를 세어 1㎢당 개수와 주민 1천 명당 개수로 바꿉니다. 시설마다 이 두 값을 청주 동네끼리 비교해 순위를 0~100 사이 백분위로 바꾸고(가장 많은 동네 100, 가장 적은 동네 0), 10개 백분위(5가지 × 면적당·인구당)의 평균을 점수로 씁니다. 면적만 보면 시내가, 인구만 보면 읍·면이 유리해서 둘을 반씩 섞었습니다.</p>
+          <p>공식 지표가 아니라 터놓고가 공공데이터로 정한 기준입니다. 동네끼리 비교한 상대 점수라, 다른 동네가 바뀌면 내 동네 점수도 달라질 수 있습니다. 살기 좋은 정도를 판정하는 점수가 아닙니다.</p>
+          <p>버스정류소는 국토교통부 TAGO, 공원·도서관·전통시장·경로당은 전국 표준데이터 위치로 셉니다. 도서관은 공공도서관만 들어 있고(작은도서관 제외), 공원은 자료에 빠진 동네가 있습니다. 인구는 행정안전부 행정동별 주민등록 인구(매월 말일)입니다. 복대1·2동처럼 한 법정동이 나뉜 행정동은 합쳐서 한 동네로 봅니다.</p>
+          <p>위에서 고른 동네(법정동·리)는 그 동네가 속한 행정동 점수로 보여줍니다. 동네 경계는 통계청 행정동 경계를 정리한 공개 자료(vuski/admdongkor)를 단순하게 다듬은 것입니다.</p>
         </div>
       </div>
 
@@ -2682,7 +2708,7 @@ button.nrow:hover .nk { color: var(--accent); }
   // ---------- 지역 분석: 지역 통계와 멈춘 기록
   var sub = "stats";
   function drawAnalysis() {
-    ["stats", "flow", "supply", "compare", "trade", "stall", "report", "aging", "near", "quality"].forEach(function (k) {
+    ["stats", "flow", "supply", "compare", "trade", "stall", "report", "aging", "near", "life", "quality"].forEach(function (k) {
       document.getElementById("pane-" + k).hidden = k !== sub;
       var b = document.getElementById("sub-" + k);
       b.setAttribute("aria-selected", String(k === sub));
@@ -2691,7 +2717,7 @@ button.nrow:hover .nk { color: var(--accent); }
     document.querySelector("#scr-analysis .subtabs").hidden = grp === "none";
     document.getElementById("qlink").innerHTML = grp === "none" ? '<a href="#analysis">← 지역 분석으로</a>' : '<a href="#quality">자료 상태 보기</a> · 공공데이터에 빈칸이 얼마나 있는지 그대로 보여줍니다.';
     drawNext();
-    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else if (sub === "supply") drawSupply(); else if (sub === "report") drawReport(); else drawStall();
+    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else if (sub === "life") drawLife(); else if (sub === "supply") drawSupply(); else if (sub === "report") drawReport(); else drawStall();
   }
 
 
@@ -3133,6 +3159,120 @@ button.nrow:hover .nk { color: var(--accent); }
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && wrap.classList.contains("full")) set(false); });
   }
 
+  // ---------- 터놓고 생활권 점수: 행정동마다 생활시설 5가지를 면적당·인구당으로 동네끼리 비교 (life.json)
+  var LF = { data: null, loading: false, failed: false, pick: "", pickFor: null, all: false, map: null };
+  var LF_C = ["var(--lf0)", "var(--lf1)", "var(--lf2)", "var(--lf3)", "var(--lf4)"];
+  var LF_HEX = ["#E3EEFB", "#B5D5F7", "#7DB7F0", "#3F92E3", "#1668C4"];
+  var LF_BIN = [35, 45, 55, 65];
+  var LF_BIN_T = ["35점 미만", "35~44점", "45~54점", "55~64점", "65점 이상"];
+  // 받침에 따라 조사 고르기: jo("율량동", "이", "가") → "율량동이"
+  function jo(w, a, b) { var c = String(w).charCodeAt(String(w).length - 1) - 0xAC00; var f = c >= 0 && c <= 11171 ? c % 28 : 0; return w + (b === "로" ? (f && f !== 8 ? "으로" : "로") : (f ? a : b)); }
+  function lfIdx(s) { var i = 0; while (i < LF_BIN.length && s >= LF_BIN[i]) i++; return i; }
+  function loadLife(cb) {
+    if (LF.data || LF.loading) return LF.data && cb();
+    LF.loading = true;
+    fetch("life.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (d) { LF.data = d; LF.loading = false; LF.by = {}; d.units.forEach(function (u) { LF.by[u.name] = u; }); cb(); })
+      .catch(function () { LF.failed = true; LF.loading = false; cb(); });
+  }
+  // 위에서 고른 동네(법정동·리, 구, 전체) → 행정동 점수 단위
+  function lfUnitOf(p) {
+    if (!LF.data || !p || p === "all" || GU_LIST.indexOf(p) >= 0) return null;
+    var pl = LF.data.places || {}, n = pl[p];
+    if (!n) { var k = Object.keys(pl).filter(function (x) { return x.indexOf(p + " ") === 0; })[0]; n = k ? pl[k] : null; }
+    return n ? LF.by[n] : (LF.by[p] || null);
+  }
+  function lfKinds() { return (LF.data.meta.kinds || []).map(function (k) { return { k: k[0], t: k[1] }; }); }
+  function drawLife() {
+    var box = document.getElementById("lf-body");
+    if (!LF.data) {
+      if (LF.failed) { box.innerHTML = '<article class="card"><p class="empty" style="padding:0">생활권 점수를 준비하고 있어요.</p></article>'; return; }
+      loadLife(function () { if (screen === "analysis" && sub === "life") drawLife(); });
+      return;
+    }
+    var D = LF.data, U = D.units, N = U.length, p = state.place, isGu = GU_LIST.indexOf(p) >= 0;
+    if (LF.pickFor !== p) { LF.pick = ""; LF.pickFor = p; LF.all = false; }
+    var mine = lfUnitOf(p), cur = LF.pick ? LF.by[LF.pick] : mine;
+    var pm = D.meta.pop_month || "";
+    document.getElementById("lf-h").textContent = "터놓고 생활권 점수" + (p !== "all" ? " · " + p : "");
+    document.getElementById("lf-asof").textContent = pm ? "인구 " + pm.replace("-", ".") + " 기준" : "";
+    var scope = isGu ? U.filter(function (u) { return u.gu === p; }) : U;
+    var html = "";
+    if (cur) {
+      var avgK = lfKinds();
+      html += '<article class="card"><div class="card-head"><h3>' + esc(cur.name) + " <span class=\"meta\">" + esc(cur.gu) + "</span></h3>" +
+        (mine && cur === mine && mine.name !== p ? '<span class="meta">' + esc(jo(p, "이", "가")) + " 속한 행정동</span>" : (LF.pick && mine && cur !== mine ? '<button type="button" class="linkbtn" id="lf-back">' + esc(jo(mine.name, "", "로")) + " 돌아가기</button>" : "")) + "</div>" +
+        '<div class="lfbig"><span class="lfscore">' + cur.score + "<small>점</small></span><span>청주 " + N + "개 동네 중 <b>" + cur.rank + "위</b><br>주민 " + nf(cur.pop) + "명 · 면적 " + cur.area.toFixed(1) + "㎢</span></div>" +
+        '<div class="lfsplit"><span>촘촘함(면적당) <b>' + cur.sa + "점</b></span><span>넉넉함(인구당) <b>" + cur.sp + "점</b></span></div>" +
+        '<p class="lfh4">시설별로 보면</p><p class="card-desc" style="margin:0 0 6px">막대는 그 시설만 따로 본 점수예요 (면적당·인구당 평균).</p><div class="fbars" id="lf-kinds"></div></article>';
+    } else {
+      html += '<article class="card"><p class="result" style="margin:0">' + (isGu ? esc(p) + " 동네들의 점수예요. " : "") + "맨 위에서 동네를 고르거나, 아래 지도·순위에서 동네를 누르면 시설별 점수가 나와요.</p></article>";
+    }
+    html += '<article class="card"><div class="card-head"><h3>지도로 보기</h3></div>' +
+      '<p class="card-desc">색이 진할수록 점수가 높아요. 동네를 누르면 점수가 나오고, 위 칸에 자세히 보여드려요.</p>' +
+      '<div class="agmap lfmap"><div id="lf-map"></div><div class="mapmsg" id="lfmsg">지도를 불러오는 중입니다.</div></div>' +
+      '<div class="agkey">' + LF_BIN_T.map(function (t, i) { return '<span><i style="background:' + LF_C[i] + '"></i>' + t + "</span>"; }).join("") + "</div></article>";
+    html += '<article class="card"><div class="card-head"><h3>' + (isGu ? esc(p) + " 동네 순위" : "청주 동네 순위") + '</h3><span class="meta">' + nf(scope.length) + "곳</span></div>" +
+      '<div class="fbars" id="lf-rank"></div>' +
+      (scope.length > 10 ? '<button type="button" class="linkbtn" id="lf-more" style="margin-top:10px">' + (LF.all ? "10위까지만 보기" : "전체 " + scope.length + "곳 보기") + "</button>" : "") +
+      '<div class="agfind"><label for="lf-pick">다른 동네 보기</label><select class="sel" id="lf-pick"><option value="">선택하세요</option>' +
+        U.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "ko"); }).map(function (u) { return '<option value="' + esc(u.name) + '"' + (cur && cur.name === u.name ? " selected" : "") + ">" + esc(u.name) + " (" + esc(u.gu) + ")</option>"; }).join("") + "</select></div></article>";
+    box.innerHTML = html;
+    if (cur) fbars(document.getElementById("lf-kinds"), lfKinds().map(function (k) {
+      var v = Math.round((cur.pa[k.k] + cur.pp[k.k]) / 2), d = cur.n[k.k];
+      var perA = d / cur.area, perP = cur.pop ? d / cur.pop * 1000 : 0;
+      return { k: k.t + " " + nf(d) + "곳", label: "<b>" + v + "점</b> · 1㎢당 " + (perA >= 10 ? Math.round(perA) : perA.toFixed(perA >= 1 ? 1 : 2)) + " · 1천 명당 " + perP.toFixed(perP >= 10 ? 0 : perP >= 1 ? 1 : 2), segs: [[v, "var(--sky)"]] };
+    }));
+    var shown = LF.all ? scope : scope.slice(0, 10);
+    if (cur && scope.indexOf(cur) >= 10 && !LF.all) shown = shown.concat([cur]);
+    fbars(document.getElementById("lf-rank"), shown.map(function (u) {
+      return { k: u.rank + ". " + u.name, label: "<b>" + u.score + "점</b> · " + esc(u.gu), segs: [[u.score, cur && u === cur ? "var(--brand)" : "var(--sky)"]] };
+    }));
+    var rows2 = document.querySelectorAll("#lf-rank .fb");
+    shown.forEach(function (u, i) {
+      var el = rows2[i]; if (!el) return;
+      if (cur && u === cur) el.classList.add("on");
+      el.style.cursor = "pointer"; el.onclick = function () { lfPick(u.name); };
+    });
+    var more = document.getElementById("lf-more"); if (more) more.onclick = function () { LF.all = !LF.all; drawLife(); };
+    var back = document.getElementById("lf-back"); if (back) back.onclick = function () { lfPick(""); };
+    document.getElementById("lf-pick").onchange = function () { lfPick(this.value); };
+    drawLifeMap(scope, cur);
+  }
+  function lfPick(n) {
+    LF.pick = n; trackEv("lifepick"); drawLife();
+    var t = document.getElementById("lf-body"); if (n && t) t.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+  function drawLifeMap(scope, cur) {
+    if (M.sdk !== "ready") { if (M.sdk === "error") { msg("lfmsg", "지도를 불러오지 못했습니다."); return; } loadSDK(function () { if (screen === "analysis" && sub === "life") drawLifeMap(scope, cur); }); return; }
+    var el = document.getElementById("lf-map"); if (!el) return;
+    msg("lfmsg", "");
+    var map = LF.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(36.64, 127.47), level: 10, scrollwheel: false });
+    mapExtras(map, el.parentNode);
+    var bounds = new kakao.maps.LatLngBounds(), tip = null;
+    function show(u, ll) {
+      if (tip) tip.setMap(null);
+      var t = document.createElement("div"); t.className = "lftip";
+      t.innerHTML = esc(u.name) + " <b>" + u.score + "점</b> · " + u.rank + "위";
+      tip = new kakao.maps.CustomOverlay({ map: map, position: ll, content: t, yAnchor: 1.4, zIndex: 5 });
+    }
+    LF.data.units.forEach(function (u) {
+      var inScope = scope.indexOf(u) >= 0, sel = cur && cur === u;
+      u.polys.forEach(function (poly) {
+        var path = poly.map(function (ring) { return ring.map(function (pt) { return new kakao.maps.LatLng(pt[1], pt[0]); }); });
+        var pg = new kakao.maps.Polygon({ map: map, path: path, strokeWeight: sel ? 3 : 1, strokeColor: sel ? "#16325C" : "#FFFFFF", strokeOpacity: sel ? 1 : 0.9,
+          fillColor: LF_HEX[lfIdx(u.score)], fillOpacity: inScope ? (sel ? 0.85 : 0.7) : 0.25, zIndex: sel ? 3 : 1 });
+        kakao.maps.event.addListener(pg, "click", function (e) { show(u, e.latLng); if (!cur || cur.name !== u.name) setTimeout(function () { lfPick(u.name); }, 350); });
+        if (inScope) path[0].forEach(function (ll) { bounds.extend(ll); });
+      });
+    });
+    if (cur) {
+      var b2 = new kakao.maps.LatLngBounds();
+      cur.polys.forEach(function (poly) { poly[0].forEach(function (pt) { b2.extend(new kakao.maps.LatLng(pt[1], pt[0])); }); });
+      if (cur.area < 30) { map.setBounds(b2, 60, 60, 60, 60); if (map.getLevel() < 6) map.setLevel(6); } else map.setBounds(b2, 30, 30, 30, 30);
+    } else map.setBounds(bounds, 20, 20, 20, 20);
+  }
+
   // ---------- 생활권: 카카오 장소 검색으로 걸어서 갈 수 있는 거리 안의 생활 시설을 센다
   var WALK = 80; // 1분에 걷는 거리(m)
   var NR = { min: 10, at: null, label: "", token: 0, map: null, ov: [] };
@@ -3383,13 +3523,14 @@ button.nrow:hover .nk { color: var(--accent); }
     trade: ["실거래", "최근 매매 가격과 거래량"],
     aging: ["노후도", "건물이 지어진 지 얼마나 됐는지"],
     near: ["생활권", "걸어서 갈 수 있는 생활 시설"],
+    life: ["생활권 점수", "생활 시설이 얼마나 잘 갖춰졌는지 동네끼리"],
     map: ["개발지도", "허가·착공·완공 위치를 지도에서"],
     report: ["동네 리포트", "이 동네 정보를 한 화면에 모아서"]
   };
   var NEXT = {
     flow: ["supply", "stall", "map"], supply: ["stall", "trade", "map"], stall: ["flow", "map", "aging"],
     stats: ["report", "compare", "trade"], compare: ["report", "stats", "aging"], trade: ["report", "supply", "aging"],
-    aging: ["report", "near", "trade"], near: ["report", "aging", "map"], report: [], quality: []
+    aging: ["report", "life", "trade"], near: ["life", "report", "aging"], life: ["near", "report", "aging"], report: [], quality: []
   };
   var CHEV = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 5 5 5-5 5"/></svg>';
   function drawNext() {
@@ -3473,6 +3614,7 @@ button.nrow:hover .nk { color: var(--accent); }
       var cx = (AG.data.complexes || []).filter(function (x) { return agPlaceOkP(x, p) && AG_Y - x.y >= 30; });
       o.cx = cx.length; o.cxOld = cx.slice().sort(function (x, y) { return x.y - y.y; })[0] || null;
     }
+    if (LF.data) { o.lf = lfUnitOf(p); o.lfN = LF.data.units.length; }
     if (window.TRADES) {
       var T = window.TRADES, meta = T.meta || {}, full = meta.complete || "", aggP = ((T.agg || {}).apt || {})[p === "all" ? "all" : p] || {};
       var l3 = [addMonths(full, -2), addMonths(full, -1), full];
@@ -3488,6 +3630,7 @@ button.nrow:hover .nk { color: var(--accent); }
     function one() { if (--left === 0) cb(); }
     if (!AG.data && !AG.failed && !AG.loading) { left++; loadAging(one); }
     if (!window.TRADES && !TR.failed && !TR.loading) { left++; loadTrades(one); }
+    if (!LF.data && !LF.failed && !LF.loading) { left++; loadLife(one); }
   }
   function drawHomeFav() {
     var box = document.getElementById("home-fav");
@@ -3551,8 +3694,10 @@ button.nrow:hover .nk { color: var(--accent); }
           (o.cxOld ? '<p class="result" style="margin:0 0 6px">가장 오래된 단지: ' + esc(o.cxOld.name || "이름 없음") + " (" + o.cxOld.y + "년, " + nf(o.cxOld.hh) + "세대)</p>" : "") : '<p class="result">노후도 자료를 불러오는 중이에요.</p>') +
         more("aging", "노후도 보기") + "</article>" +
       // 생활권
-      '<article class="card"><div class="card-head"><h3>생활권</h3><span class="meta">동네 중심 기준</span></div>' +
-        '<p class="result" style="margin:0 0 10px">' + esc(p) + " 중심에서 걸어서 10분 안에 버스정류소·학교·병원·공원 같은 시설이 얼마나 있는지 봐요. 내 집 기준으로 보려면 생활권 화면에서 주소를 넣으세요.</p>" +
+      '<article class="card"><div class="card-head"><h3>생활권</h3><span class="meta">' + (o.lf ? "터놓고 생활권 점수" : "동네 중심 기준") + "</span></div>" +
+        (o.lf ? '<div class="rstats">' + stat(o.lf.score + "점", "생활권 점수 (" + o.lfN + "곳 중 " + o.lf.rank + "위)") + stat(o.lf.sa + "점", "촘촘함 (면적당)") + stat(o.lf.sp + "점", "넉넉함 (인구당)") + "</div>" +
+          (o.lf.name !== p ? '<p class="result" style="margin:0 0 6px">' + esc(jo(p, "이", "가")) + " 속한 행정동 " + esc(o.lf.name) + " 기준이에요.</p>" : "") + more("life", "생활권 점수 보기") : "") +
+        '<p class="result" style="margin:10px 0 10px">' + esc(p) + " 중심에서 걸어서 10분 안에 버스정류소·학교·병원·공원 같은 시설이 얼마나 있는지도 볼 수 있어요. 내 집 기준으로 보려면 생활권 화면에서 주소를 넣으세요.</p>" +
         '<button type="button" class="btn solid" id="rp-near">' + esc(p) + " 생활권 보기</button></article>" +
       "</div>";
     box.innerHTML = html;
@@ -3822,7 +3967,7 @@ button.nrow:hover .nk { color: var(--accent); }
   var screen = "";
   var TITLES = { home: "터놓고", map: "개발지도", analysis: "지역 분석", ask: "AI 질문" };
   // 공급 전망·지역 분석·동네 진단은 한 화면(scr-analysis)을 나눠 쓰고, 묶음마다 보이는 탭이 다르다
-  var GRP = { report: "town", flow: "outlook", supply: "outlook", stall: "outlook", stats: "analysis", compare: "analysis", trade: "analysis", aging: "town", near: "town", quality: "none" };
+  var GRP = { report: "town", flow: "outlook", supply: "outlook", stall: "outlook", stats: "analysis", compare: "analysis", trade: "analysis", aging: "town", near: "town", life: "town", quality: "none" };
   var GRP_T = { outlook: "공급 전망", analysis: "지역 분석", town: "동네 진단", none: "자료 상태" };
   var GRP_LAST = { outlook: "flow", analysis: "stats", town: "report" };
   var grp = "analysis";
