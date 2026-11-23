@@ -737,6 +737,17 @@ body.agmap-open { overflow: hidden; }
 .lftip { background: var(--surface); color: var(--ink); border: 1px solid var(--rule-2); border-radius: 6px; padding: 5px 9px; font-size: 13px; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
 .lftip b { color: var(--brand); }
 .fbars .fb.on .k { color: var(--brand); font-weight: 700; }
+:root { --po-dn: #D9483B; }
+.popchart { width: 100%; height: auto; display: block; margin-top: 4px; }
+.popchart .pg { stroke: var(--rule); stroke-width: 1; }
+.popchart .px { fill: var(--ink-3); font-size: 12px; }
+.popchart .pl { fill: none; stroke: var(--brand); stroke-width: 2.5; stroke-linejoin: round; }
+.popchart .pa { fill: var(--sky); opacity: .12; }
+.popchart .pd { fill: var(--brand); stroke: var(--surface); stroke-width: 2; }
+.popchart .pd0 { fill: var(--surface); stroke: var(--brand); stroke-width: 2; }
+.rgrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.rgrid2 > .card { margin: 0; }
+@media (max-width: 720px) { .rgrid2 { grid-template-columns: 1fr; gap: 0; } .rgrid2 > .card { margin: 0 0 16px; } }
 .near-sum { font-size: 15px; margin: 0 0 12px; }
 .near-sum b { font-weight: 600; }
 .near-list { margin: 0; padding: 0; list-style: none; }
@@ -948,6 +959,7 @@ button.nrow:hover .nk { color: var(--accent); }
         <button type="button" role="tab" id="sub-stats" aria-controls="pane-stats" data-sub="stats" data-grp="analysis">지역 통계</button>
         <button type="button" role="tab" id="sub-compare" aria-controls="pane-compare" data-sub="compare" data-grp="analysis">지역 비교</button>
         <button type="button" role="tab" id="sub-trade" aria-controls="pane-trade" data-sub="trade" data-grp="analysis">실거래</button>
+        <button type="button" role="tab" id="sub-popu" aria-controls="pane-popu" data-sub="popu" data-grp="analysis">인구</button>
         <button type="button" role="tab" id="sub-report" aria-controls="pane-report" data-sub="report" data-grp="town">동네 리포트</button>
         <button type="button" role="tab" id="sub-aging" aria-controls="pane-aging" data-sub="aging" data-grp="town">노후도</button>
         <button type="button" role="tab" id="sub-near" aria-controls="pane-near" data-sub="near" data-grp="town">생활권</button>
@@ -1046,6 +1058,17 @@ button.nrow:hover .nk { color: var(--accent); }
         <div class="disclaimer">
           <p>모든 숫자는 국토교통부 건축HUB 인허가 공개자료에 기록된 건을 센 것입니다. 착공·사용승인 기록이 늦게 들어오거나 빠진 경우가 있어, 기록이 적은 곳일수록 비율이 크게 흔들립니다.</p>
           <p>공시지가 중앙값은 그 지역 전체가 아니라 인허가가 있었던 필지만 모아 낸 값이라, 지역의 땅값 수준을 그대로 보여주지는 않습니다. 시세도 아닙니다.</p>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-popu" role="tabpanel" aria-labelledby="sub-popu" hidden>
+        <div class="sec-head"><h2 class="sec" id="po-h">인구</h2><span id="po-asof"></span></div>
+        <p class="panel-note">주민등록 인구로 동네(행정동)마다 사람이 늘었는지 줄었는지 봐요. 청주시와 청원군이 합쳐진 2014년 7월부터 매달의 기록이에요. 위에서 고른 동네가 반영돼요.</p>
+        <div id="po-body"><p class="result">인구 자료를 불러오는 중입니다…</p></div>
+        <div class="disclaimer">
+          <p>행정안전부 ‘행정동별 주민등록 인구 및 세대현황’(매월 말일 기준)입니다. 주민등록을 옮기지 않고 사는 사람(학생·외국인 등)은 빠지고, 실제로 그 동네에 사는 사람 수와 다를 수 있습니다.</p>
+          <p>복대1·2동처럼 한 법정동이 나뉜 행정동은 합쳐서 한 동네로 봅니다. 위에서 고른 동네(법정동·리)는 그 동네가 속한 행정동 숫자로 보여줍니다. 2014년 7월 이전 청원군 지역(오창·오송·내수 등)은 이 자료에 없어서 통합 이후만 비교합니다.</p>
+          <p>인구가 늘거나 줄어든 이유(아파트 입주, 재개발 철거 등)는 이 자료만으로 알 수 없습니다.</p>
         </div>
       </div>
 
@@ -2708,7 +2731,7 @@ button.nrow:hover .nk { color: var(--accent); }
   // ---------- 지역 분석: 지역 통계와 멈춘 기록
   var sub = "stats";
   function drawAnalysis() {
-    ["stats", "flow", "supply", "compare", "trade", "stall", "report", "aging", "near", "life", "quality"].forEach(function (k) {
+    ["stats", "flow", "supply", "compare", "trade", "popu", "stall", "report", "aging", "near", "life", "quality"].forEach(function (k) {
       document.getElementById("pane-" + k).hidden = k !== sub;
       var b = document.getElementById("sub-" + k);
       b.setAttribute("aria-selected", String(k === sub));
@@ -2717,7 +2740,7 @@ button.nrow:hover .nk { color: var(--accent); }
     document.querySelector("#scr-analysis .subtabs").hidden = grp === "none";
     document.getElementById("qlink").innerHTML = grp === "none" ? '<a href="#analysis">← 지역 분석으로</a>' : '<a href="#quality">자료 상태 보기</a> · 공공데이터에 빈칸이 얼마나 있는지 그대로 보여줍니다.';
     drawNext();
-    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else if (sub === "life") drawLife(); else if (sub === "supply") drawSupply(); else if (sub === "report") drawReport(); else drawStall();
+    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else if (sub === "life") drawLife(); else if (sub === "popu") drawPopu(); else if (sub === "supply") drawSupply(); else if (sub === "report") drawReport(); else drawStall();
   }
 
 
@@ -3273,6 +3296,123 @@ button.nrow:hover .nk { color: var(--accent); }
     } else map.setBounds(bounds, 20, 20, 20, 20);
   }
 
+  // ---------- 인구: 행정안전부 주민등록 인구, 2014년 7월(청주·청원 통합) 이후 월별 (population-trend.json)
+  var PO = { data: null, loading: false, failed: false, pick: "", pickFor: null, map: null };
+  var PO_BIN = [-30, -10, 10, 50];
+  var PO_HEX = ["#D9483B", "#F2A193", "#C9D3DE", "#8CC2F5", "#1668C4"];
+  var PO_T = ["30% 넘게 줄어듦", "10~30% 줄어듦", "비슷함 (±10%)", "10~50% 늘어남", "50% 넘게 늘어남"];
+  function poIdx(v) { var i = 0; while (i < PO_BIN.length && v >= PO_BIN[i]) i++; return i; }
+  function loadPop(cb) {
+    if (PO.data || PO.loading) return PO.data && cb();
+    PO.loading = true;
+    fetch("population-trend.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (d) { PO.data = d; PO.loading = false; cb(); })
+      .catch(function () { PO.failed = true; PO.loading = false; cb(); });
+  }
+  function ym(m) { var p = m.split("-"); return p[0] + "." + p[1]; }
+  function sgn(v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + nf(Math.abs(v)); }
+  function pctS(a, b) { if (!a) return "–"; var v = (b - a) / a * 100; return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(Math.abs(v) < 10 ? 1 : 0) + "%"; }
+  // 동네(행정동)·구·청주 전체 → {name, pop[], hh[]}
+  function poSeries(p, unitName) {
+    var D = PO.data, U = D.units;
+    if (unitName && U[unitName]) return { name: unitName, gu: U[unitName].gu, pop: U[unitName].pop, hh: U[unitName].hh, kind: "unit" };
+    if (GU_LIST.indexOf(p) >= 0) {
+      var n = D.months.length, s = { name: p, pop: new Array(n).fill(0), hh: new Array(n).fill(0), kind: "gu" };
+      Object.keys(U).forEach(function (k) { if (U[k].gu === p) for (var i = 0; i < n; i++) { s.pop[i] += U[k].pop[i]; s.hh[i] += U[k].hh[i]; } });
+      return s;
+    }
+    return { name: REGION + " 전체", pop: D.city.pop, hh: D.city.hh, kind: "city" };
+  }
+  function poChange(u) { var a = u.pop[0], b = u.pop[u.pop.length - 1]; return a ? (b - a) / a * 100 : 0; }
+  function poChart(s, city) {
+    var D = PO.data, M = D.months, n = M.length, W = 640, H = 220, pl = 54, pr = 14, pt = 14, pb = 28;
+    var lo = Math.min.apply(null, s.pop), hi = Math.max.apply(null, s.pop), pad = Math.max(1, (hi - lo) * 0.12);
+    lo = Math.max(0, lo - pad); hi += pad;
+    function X(i) { return pl + (W - pl - pr) * i / (n - 1); }
+    function Y(v) { return pt + (H - pt - pb) * (1 - (v - lo) / (hi - lo)); }
+    var d = s.pop.map(function (v, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); }).join("");
+    var g = "", yrs = {};
+    M.forEach(function (m, i) { var y = m.slice(0, 4); if (!yrs[y] && m.slice(5) === "01" && (+y % 2 === 0)) { yrs[y] = 1; g += '<line x1="' + X(i) + '" x2="' + X(i) + '" y1="' + pt + '" y2="' + (H - pb) + '" class="pg"/><text x="' + X(i) + '" y="' + (H - 8) + '" class="px" text-anchor="middle">' + y + "</text>"; } });
+    [lo, (lo + hi) / 2, hi].forEach(function (v) { g += '<text x="' + (pl - 8) + '" y="' + (Y(v) + 4) + '" class="px" text-anchor="end">' + (v >= 10000 ? (v / 10000).toFixed(v >= 100000 ? 0 : 1) + "만" : nf(Math.round(v / 100) * 100)) + "</text>"; });
+    var last = s.pop[n - 1];
+    return '<svg viewBox="0 0 ' + W + " " + H + '" class="popchart" role="img" aria-label="' + esc(s.name) + " 인구 추이 " + ym(M[0]) + " " + nf(s.pop[0]) + "명에서 " + ym(M[n - 1]) + " " + nf(last) + '명">' + g +
+      '<path d="' + d + 'L' + X(n - 1) + " " + (H - pb) + "L" + X(0) + " " + (H - pb) + 'Z" class="pa"/><path d="' + d + '" class="pl"/>' +
+      '<circle cx="' + X(0) + '" cy="' + Y(s.pop[0]) + '" r="4" class="pd0"/><circle cx="' + X(n - 1) + '" cy="' + Y(last) + '" r="5" class="pd"/></svg>';
+  }
+  function drawPopu() {
+    var box = document.getElementById("po-body");
+    if (!PO.data || !LF.data) {
+      if (PO.failed || LF.failed) { box.innerHTML = '<article class="card"><p class="empty" style="padding:0">인구 자료를 준비하고 있어요.</p></article>'; return; }
+      loadPop(function () { loadLife(function () { if (screen === "analysis" && sub === "popu") drawPopu(); }); });
+      return;
+    }
+    var D = PO.data, M = D.months, n = M.length, p = state.place, isGu = GU_LIST.indexOf(p) >= 0;
+    if (PO.pickFor !== p) { PO.pick = ""; PO.pickFor = p; }
+    var mine = lfUnitOf(p), unitName = PO.pick || (mine ? mine.name : "");
+    var s = poSeries(p, unitName), city = poSeries("all");
+    var names = Object.keys(D.units), y1 = Math.max(0, n - 13);
+    var rankNow = names.slice().sort(function (a, b) { return D.units[b].pop[n - 1] - D.units[a].pop[n - 1]; });
+    document.getElementById("po-h").textContent = "인구" + (p !== "all" ? " · " + p : "");
+    document.getElementById("po-asof").textContent = "주민등록 " + ym(M[n - 1]) + " 기준";
+    var a = s.pop[0], b = s.pop[n - 1], dif = b - a, ch = a ? dif / a * 100 : 0;
+    var html = '<article class="card"><div class="card-head"><h3>' + esc(s.name) + (s.gu ? ' <span class="meta">' + esc(s.gu) + "</span>" : "") + "</h3>" +
+      (s.kind === "unit" && mine && s.name === mine.name && mine.name !== p ? '<span class="meta">' + esc(jo(p, "이", "가")) + " 속한 행정동</span>" : (PO.pick && mine && PO.pick !== mine.name ? '<button type="button" class="linkbtn" id="po-back">' + esc(jo(mine.name, "", "로")) + " 돌아가기</button>" : "")) + "</div>" +
+      '<div class="lfbig"><span class="lfscore" style="color:' + (dif >= 0 ? "var(--brand)" : "var(--po-dn)") + '">' + pctS(a, b) + "</span><span>" + ym(M[0]) + " " + nf(a) + "명 → <b>" + ym(M[n - 1]) + " " + nf(b) + "명</b><br>12년 동안 " + sgn(dif) + "명" + (s.kind === "unit" ? " · 지금 인구 " + names.length + "곳 중 " + (rankNow.indexOf(s.name) + 1) + "위" : "") + "</span></div>" +
+      '<div class="lfsplit"><span>최근 1년 <b>' + pctS(s.pop[y1], b) + "</b> (" + sgn(b - s.pop[y1]) + "명)</span><span>세대 <b>" + nf(s.hh[n - 1]) + "</b> (" + pctS(s.hh[0], s.hh[n - 1]) + ")</span>" +
+        (s.kind !== "city" ? "<span>" + esc(REGION) + " 전체 <b>" + pctS(city.pop[0], city.pop[n - 1]) + "</b></span>" : "") + "</div>" +
+      '<p class="lfh4">월별 인구</p>' + poChart(s, city) + "</article>";
+    // 늘어난·줄어든 동네
+    var ch12 = names.map(function (k) { return { k: k, gu: D.units[k].gu, v: poChange(D.units[k]), a: D.units[k].pop[0], b: D.units[k].pop[n - 1] }; });
+    var scope = isGu ? ch12.filter(function (x) { return x.gu === p; }) : ch12;
+    var up = scope.slice().sort(function (x, y) { return y.v - x.v; }).slice(0, 5), dn = scope.slice().sort(function (x, y) { return x.v - y.v; }).slice(0, 5);
+    html += '<article class="card"><div class="card-head"><h3>지도로 보기</h3><span class="meta">' + ym(M[0]) + " 대비 " + ym(M[n - 1]) + "</span></div>" +
+      '<p class="card-desc">12년 동안 인구가 늘어난 동네는 파랑, 줄어든 동네는 빨강이에요. 동네를 누르면 위 칸에 자세히 보여드려요.</p>' +
+      '<div class="agmap lfmap"><div id="po-map"></div><div class="mapmsg" id="pomsg">지도를 불러오는 중입니다.</div></div>' +
+      '<div class="agkey">' + PO_T.map(function (t, i) { return '<span><i style="background:' + PO_HEX[i] + '"></i>' + t + "</span>"; }).join("") + "</div></article>";
+    html += '<div class="rgrid2"><article class="card"><div class="card-head"><h3>가장 많이 늘어난 동네</h3></div><div class="fbars" id="po-up"></div></article>' +
+      '<article class="card"><div class="card-head"><h3>가장 많이 줄어든 동네</h3></div><div class="fbars" id="po-dn"></div></article></div>' +
+      '<article class="card"><div class="agfind" style="margin:0;padding:0;border:0"><label for="po-pick">다른 동네 보기</label><select class="sel" id="po-pick"><option value="">선택하세요</option>' +
+        names.slice().sort(function (x, y) { return x.localeCompare(y, "ko"); }).map(function (k) { return '<option value="' + esc(k) + '"' + (unitName === k ? " selected" : "") + ">" + esc(k) + " (" + esc(D.units[k].gu) + ")</option>"; }).join("") + "</select></div></article>";
+    box.innerHTML = html;
+    var maxUp = Math.max.apply(null, up.map(function (x) { return Math.abs(x.v); }).concat([1])), maxDn = Math.max.apply(null, dn.map(function (x) { return Math.abs(x.v); }).concat([1]));
+    function rows(el, list, mx, col) {
+      fbars(el, list.map(function (x, i) { return { k: (i + 1) + ". " + x.k, label: "<b>" + pctS(x.a, x.b) + "</b> · " + nf(x.a) + " → " + nf(x.b) + "명", segs: [[Math.abs(x.v) / mx * 100, col]] }; }));
+      el.querySelectorAll(".fb").forEach(function (r, i) { r.style.cursor = "pointer"; if (list[i].k === unitName) r.classList.add("on"); r.onclick = function () { poPick(list[i].k); }; });
+    }
+    rows(document.getElementById("po-up"), up.filter(function (x) { return x.v > 0; }), maxUp, "var(--sky)");
+    rows(document.getElementById("po-dn"), dn.filter(function (x) { return x.v < 0; }), maxDn, "var(--po-dn)");
+    var back = document.getElementById("po-back"); if (back) back.onclick = function () { poPick(""); };
+    document.getElementById("po-pick").onchange = function () { poPick(this.value); };
+    drawPopMap(ch12, unitName, isGu ? p : "");
+  }
+  function poPick(n) { PO.pick = n; trackEv("poppick"); drawPopu(); var t = document.getElementById("po-body"); if (n && t) t.scrollIntoView({ block: "start", behavior: "smooth" }); }
+  function drawPopMap(ch12, cur, gu) {
+    if (M.sdk !== "ready") { if (M.sdk === "error") { msg("pomsg", "지도를 불러오지 못했습니다."); return; } loadSDK(function () { if (screen === "analysis" && sub === "popu") drawPopMap(ch12, cur, gu); }); return; }
+    var el = document.getElementById("po-map"); if (!el) return;
+    msg("pomsg", "");
+    var map = PO.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(36.64, 127.47), level: 10, scrollwheel: false });
+    mapExtras(map, el.parentNode);
+    var byK = {}; ch12.forEach(function (x) { byK[x.k] = x; });
+    var bounds = new kakao.maps.LatLngBounds(), tip = null;
+    LF.data.units.forEach(function (u) {
+      var x = byK[u.name]; if (!x) return;
+      var inScope = !gu || u.gu === gu, sel = cur === u.name;
+      u.polys.forEach(function (poly) {
+        var path = poly.map(function (ring) { return ring.map(function (pt) { return new kakao.maps.LatLng(pt[1], pt[0]); }); });
+        var pg = new kakao.maps.Polygon({ map: map, path: path, strokeWeight: sel ? 3 : 1, strokeColor: sel ? "#16325C" : "#FFFFFF", strokeOpacity: sel ? 1 : 0.9,
+          fillColor: PO_HEX[poIdx(x.v)], fillOpacity: inScope ? (sel ? 0.9 : 0.72) : 0.25, zIndex: sel ? 3 : 1 });
+        kakao.maps.event.addListener(pg, "click", function (e) {
+          if (tip) tip.setMap(null);
+          var t = document.createElement("div"); t.className = "lftip"; t.innerHTML = esc(u.name) + " <b>" + pctS(x.a, x.b) + "</b> · " + nf(x.b) + "명";
+          tip = new kakao.maps.CustomOverlay({ map: map, position: e.latLng, content: t, yAnchor: 1.4, zIndex: 5 });
+          if (cur !== u.name) setTimeout(function () { poPick(u.name); }, 350);
+        });
+        if (inScope) path[0].forEach(function (ll) { bounds.extend(ll); });
+      });
+    });
+    map.setBounds(bounds, 20, 20, 20, 20);
+  }
+
   // ---------- 생활권: 카카오 장소 검색으로 걸어서 갈 수 있는 거리 안의 생활 시설을 센다
   var WALK = 80; // 1분에 걷는 거리(m)
   var NR = { min: 10, at: null, label: "", token: 0, map: null, ov: [] };
@@ -3524,12 +3664,13 @@ button.nrow:hover .nk { color: var(--accent); }
     aging: ["노후도", "건물이 지어진 지 얼마나 됐는지"],
     near: ["생활권", "걸어서 갈 수 있는 생활 시설"],
     life: ["생활권 점수", "생활 시설이 얼마나 잘 갖춰졌는지 동네끼리"],
+    popu: ["인구", "12년 동안 사람이 늘었는지 줄었는지"],
     map: ["개발지도", "허가·착공·완공 위치를 지도에서"],
     report: ["동네 리포트", "이 동네 정보를 한 화면에 모아서"]
   };
   var NEXT = {
     flow: ["supply", "stall", "map"], supply: ["stall", "trade", "map"], stall: ["flow", "map", "aging"],
-    stats: ["report", "compare", "trade"], compare: ["report", "stats", "aging"], trade: ["report", "supply", "aging"],
+    stats: ["report", "compare", "trade"], compare: ["report", "stats", "aging"], trade: ["report", "popu", "aging"], popu: ["report", "trade", "life"],
     aging: ["report", "life", "trade"], near: ["life", "report", "aging"], life: ["near", "report", "aging"], report: [], quality: []
   };
   var CHEV = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 5 5 5-5 5"/></svg>';
@@ -3615,6 +3756,7 @@ button.nrow:hover .nk { color: var(--accent); }
       o.cx = cx.length; o.cxOld = cx.slice().sort(function (x, y) { return x.y - y.y; })[0] || null;
     }
     if (LF.data) { o.lf = lfUnitOf(p); o.lfN = LF.data.units.length; }
+    if (PO.data && LF.data) { var pu = o.lf && PO.data.units[o.lf.name]; if (pu) { o.po = pu; o.poM = PO.data.months; o.poName = o.lf.name; } }
     if (window.TRADES) {
       var T = window.TRADES, meta = T.meta || {}, full = meta.complete || "", aggP = ((T.agg || {}).apt || {})[p === "all" ? "all" : p] || {};
       var l3 = [addMonths(full, -2), addMonths(full, -1), full];
@@ -3631,6 +3773,7 @@ button.nrow:hover .nk { color: var(--accent); }
     if (!AG.data && !AG.failed && !AG.loading) { left++; loadAging(one); }
     if (!window.TRADES && !TR.failed && !TR.loading) { left++; loadTrades(one); }
     if (!LF.data && !LF.failed && !LF.loading) { left++; loadLife(one); }
+    if (!PO.data && !PO.failed && !PO.loading) { left++; loadPop(one); }
   }
   function drawHomeFav() {
     var box = document.getElementById("home-fav");
@@ -3693,6 +3836,11 @@ button.nrow:hover .nk { color: var(--accent); }
         (o.ag && o.ag.n ? '<div class="rstats">' + stat(pct(o.ag.a30, o.ag.n) + "%", "30년 넘은 건물 (청주 " + pct(o.agCity.a30, o.agCity.n) + "%)") + stat(pct(o.ag.a40, o.ag.n) + "%", "40년 넘은 건물") + stat(nf(o.cx) + "곳", "30년 지난 공동주택 단지") + "</div>" +
           (o.cxOld ? '<p class="result" style="margin:0 0 6px">가장 오래된 단지: ' + esc(o.cxOld.name || "이름 없음") + " (" + o.cxOld.y + "년, " + nf(o.cxOld.hh) + "세대)</p>" : "") : '<p class="result">노후도 자료를 불러오는 중이에요.</p>') +
         more("aging", "노후도 보기") + "</article>" +
+      // 인구
+      (o.po ? '<article class="card"><div class="card-head"><h3>인구</h3><span class="meta">주민등록 ' + ym(o.poM[o.poM.length - 1]) + "</span></div>" +
+        '<div class="rstats">' + stat(nf(o.po.pop[o.po.pop.length - 1]) + "명", "지금 인구") + stat(pctS(o.po.pop[0], o.po.pop[o.po.pop.length - 1]), ym(o.poM[0]) + " 대비") + stat(pctS(o.po.pop[Math.max(0, o.po.pop.length - 13)], o.po.pop[o.po.pop.length - 1]), "최근 1년") + "</div>" +
+        (o.poName !== p ? '<p class="result" style="margin:0 0 6px">' + esc(jo(p, "이", "가")) + " 속한 행정동 " + esc(o.poName) + " 기준이에요.</p>" : "") +
+        more("popu", "인구 보기") + "</article>" : "") +
       // 생활권
       '<article class="card"><div class="card-head"><h3>생활권</h3><span class="meta">' + (o.lf ? "터놓고 생활권 점수" : "동네 중심 기준") + "</span></div>" +
         (o.lf ? '<div class="rstats">' + stat(o.lf.score + "점", "생활권 점수 (" + o.lfN + "곳 중 " + o.lf.rank + "위)") + stat(o.lf.sa + "점", "촘촘함 (면적당)") + stat(o.lf.sp + "점", "넉넉함 (인구당)") + "</div>" +
@@ -3967,7 +4115,7 @@ button.nrow:hover .nk { color: var(--accent); }
   var screen = "";
   var TITLES = { home: "터놓고", map: "개발지도", analysis: "지역 분석", ask: "AI 질문" };
   // 공급 전망·지역 분석·동네 진단은 한 화면(scr-analysis)을 나눠 쓰고, 묶음마다 보이는 탭이 다르다
-  var GRP = { report: "town", flow: "outlook", supply: "outlook", stall: "outlook", stats: "analysis", compare: "analysis", trade: "analysis", aging: "town", near: "town", life: "town", quality: "none" };
+  var GRP = { report: "town", flow: "outlook", supply: "outlook", stall: "outlook", stats: "analysis", compare: "analysis", trade: "analysis", popu: "analysis", aging: "town", near: "town", life: "town", quality: "none" };
   var GRP_T = { outlook: "공급 전망", analysis: "지역 분석", town: "동네 진단", none: "자료 상태" };
   var GRP_LAST = { outlook: "flow", analysis: "stats", town: "report" };
   var grp = "analysis";

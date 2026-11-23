@@ -817,9 +817,43 @@ def ai_context(out):
                                      "종류별(아파트·토지 등) 거래 건수와 ㎡당 가격 중앙값(근사). 시세 전망이나 투자 판단 근거가 아님")
     add_aging(ctx, places)
     add_life(ctx, places)
+    add_pop(ctx, places)
     with open(AI_CONTEXT, "w", encoding="utf-8") as f:
         json.dump(ctx, f, ensure_ascii=False, separators=(",", ":"))
     print(f"ai-context.json 저장: 지역 {len(places)}곳")
+
+
+def add_pop(ctx, places):
+    """population-trend.json(행정동 월별 주민등록 인구)이 있으면 동네마다 인구 변화를 붙인다."""
+    po = load(os.path.join(HERE, "population-trend.json"), None)
+    lf = load(os.path.join(HERE, "life.json"), None)
+    if not po or not po.get("units"):
+        return
+    ms = po["months"]
+    n = len(ms)
+
+    def pct(a, b):
+        return round((b - a) / a * 100, 1) if a else None
+
+    def brief(name, s):
+        p = s["pop"]
+        return {"행정동": name, "기준월": ms[-1], "인구": p[-1], "세대": s["hh"][-1],
+                f"{ms[0]}대비증감률": pct(p[0], p[-1]), f"{ms[0]}인구": p[0], "최근1년증감률": pct(p[max(0, n - 13)], p[-1])}
+    U = po["units"]
+    for place, unit in ((lf or {}).get("places") or {}).items():
+        key = place.split(" ")[0]
+        if key in places and unit in U:
+            places[key]["인구"] = brief(unit, U[unit])
+    for name, s in U.items():
+        if name in places:
+            places[name]["인구"] = brief(name, s)
+    if "청주시 전체" in places:
+        places["청주시 전체"]["인구"] = brief("청주시 전체", po["city"])
+    ch = sorted(({"행정동": k, "증감률": pct(v["pop"][0], v["pop"][-1]), "인구": v["pop"][-1]} for k, v in U.items()), key=lambda x: -x["증감률"])
+    ctx.setdefault("rankings", {})[f"인구증가율_상위({ms[0]}~{ms[-1]})"] = ch[:5]
+    ctx["rankings"][f"인구감소율_상위({ms[0]}~{ms[-1]})"] = ch[::-1][:5]
+    ctx["definitions"]["인구"] = (f"행정안전부 행정동별 주민등록 인구(매월 말일). {ms[0]}(청주·청원 통합)~{ms[-1]}. "
+                                "한 법정동이 나뉜 행정동은 합침. 주민등록 기준이라 실제 거주와 다를 수 있고, 늘고 준 이유는 자료에 없음")
 
 
 def add_life(ctx, places):

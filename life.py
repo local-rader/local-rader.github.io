@@ -7,7 +7,8 @@
 공식 지표가 아니라 터놓고가 공공데이터로 정한 기준이다.
 
 사용법
-  python life.py pop 파일.xlsx   # 행정안전부 '행정동별 주민등록 인구 및 세대현황' 엑셀 → population.json
+  python life.py pop 파일 [파일…]  # 행정안전부 '행정동별 주민등록 인구 및 세대현황'(엑셀·CSV, 여러 달 가능)
+                                 #  → population-history.json(월별 누적)과 population.json(가장 최근 달)
   python life.py build           # dongs.json·population.json·busstops.json·pois.json → life.json
 """
 import json
@@ -43,33 +44,110 @@ def save(name, obj):
     os.replace(tmp, P(name))
 
 
-def pop(path):
-    import openpyxl
-    wb = openpyxl.load_workbook(open(path, "rb"))  # 확장자가 .xls여도 실제 xlsx면 읽힘
-    ws = wb.active
-    month, rows = "", {}
-    for r in ws.iter_rows(values_only=True):
-        cells = [c for c in r if c is not None]
-        if not cells:
-            continue
-        for c in cells:
-            m = re.match(r"(\d{4})년\s*(\d{1,2})월", str(c))
-            if m and not month:
-                month = f"{m.group(1)}-{int(m.group(2)):02d}"
-        if len(r) < 3:
-            continue
-        code = str(r[0] or "").strip()
-        if re.fullmatch(r"\d{10}", code) and code[5:] != "00000":
-            try:
-                n = int(str(r[2]).replace(",", ""))
-            except (TypeError, ValueError):
+def norm_dong(name):
+    """'충청북도 청주시 흥덕구 강서제1동' → ('흥덕구', '강서1동'). 청주 읍면동이 아니면 None"""
+    m = re.match(r"충청북도 청주시 (\S+구) (.+?)\s*(\(\d+\))?$", str(name or "").strip())
+    if not m:
+        return None
+    gu, dong = m.group(1), m.group(2).strip().replace(".", "·")
+    if not dong or dong.startswith("("):
+        return None
+    dong = re.sub(r"제(\d)동$", r"\1동", dong)
+    if dong == "탑대성동":
+        dong = "탑·대성동"
+    return gu, dong
+
+
+def read_pop_file(path):
+    """행정안전부 내려받기 파일(엑셀 또는 CSV, 여러 달 가능) → {월: {(코드, 구, 동): (인구, 세대)}}"""
+    num = lambda v: int(str(v).replace(",", "").strip() or 0)
+    out = {}
+    if path.lower().endswith(".csv"):
+        import csv, io
+        raw = open(path, "rb").read()
+        try:
+            txt = raw.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            txt = raw.decode("cp949")
+        rows = list(csv.reader(io.StringIO(txt)))
+        head = rows[0]
+        cols = {}
+        for i, c in enumerate(head):
+            m = re.match(r"(\d{4})년(\d{2})월_(총인구수|총 거주자수|세대수)", c)
+            if m:
+                cols.setdefault(f"{m.group(1)}-{m.group(2)}", {})["hh" if m.group(3) == "세대수" else "pop"] = i
+        for r in rows[1:]:
+            nd = norm_dong(r[0])
+            code = re.search(r"\((\d{10})\)", r[0])
+            if not nd:
                 continue
-            rows[code] = n
-    if len(rows) < 30:
-        sys.exit(f"행정동 인구가 {len(rows)}곳뿐입니다. 파일을 확인해 주세요.")
-    save("population.json", {"meta": {"source": "행정안전부 행정동별 주민등록 인구 및 세대현황", "month": month,
-                                      "note": "매월 말일 기준 총 거주자 수"}, "pop": rows})
-    print(f"population.json: {month}, 행정동 {len(rows)}곳, 합계 {sum(rows.values()):,}명")
+            for mo, c in cols.items():
+                out.setdefault(mo, {})[(code.group(1) if code else "",) + nd] = (num(r[c["pop"]]), num(r[c.get("hh", c["pop"])]))
+    else:
+        import openpyxl
+        ws = openpyxl.load_workbook(open(path, "rb")).active  # 확장자가 .xls여도 실제 xlsx면 읽힘
+        rows = list(ws.iter_rows(values_only=True))
+        months = {}
+        for i, c in enumerate(rows[1]):
+            m = re.match(r"(\d{4})년\s*(\d{1,2})월", str(c or ""))
+            if m:
+                months[i] = f"{m.group(1)}-{int(m.group(2)):02d}"
+        for r in rows[3:]:
+            nd = norm_dong(r[1])
+            if not nd:
+                continue
+            for i, mo in months.items():
+                out.setdefault(mo, {})[(str(r[0] or "").strip(),) + nd] = (num(r[i]), num(r[i + 1]))
+    return out
+
+
+def pop(paths):
+    """내려받은 인구 파일들을 population-history.json에 합치고(같은 달은 새 파일 값으로), 가장 최근 달로 population.json을 만든다."""
+    H = load("population-history.json", {"raw": {}})
+    got = {}
+    for p in paths:
+        for mo, rows in read_pop_file(p).items():
+            if sum(v[0] for v in rows.values()) <= 0:
+                continue  # 통합 전처럼 값이 비어 있는 달은 건너뛴다
+            got[mo] = rows
+    if not got:
+        sys.exit("청주 읍면동 인구가 들어 있는 달이 없습니다. 지역을 충청북도 → 청주시, 읍면동 단위로 받았는지 확인해 주세요.")
+    for mo, rows in got.items():
+        H["raw"][mo] = {f"{gu}|{dong}": [pv, hv] for (_, gu, dong), (pv, hv) in rows.items()}
+    last = max(got)
+    codes = {code: v[0] for (code, gu, dong), v in got[last].items() if re.fullmatch(r"\d{10}", code)}
+    if len(codes) >= 30 and last >= (load("population.json", {}) or {}).get("meta", {}).get("month", ""):
+        save("population.json", {"meta": {"source": "행정안전부 행정동별 주민등록 인구 및 세대현황", "month": last,
+                                          "note": "매월 말일 기준 총 거주자 수"}, "pop": codes})
+        print(f"population.json: {last}, 행정동 {len(codes)}곳, 합계 {sum(codes.values()):,}명")
+    build_hist(H)
+
+
+def build_hist(H=None):
+    """월별 행정동 인구 → 동네(합친 행정동)별 시계열. 사이트의 '인구' 화면이 읽는다."""
+    H = H or load("population-history.json", {"raw": {}})
+    months = sorted(m for m in H["raw"] if m >= "2014-07")  # 청주·청원 통합 이후만
+    units = {}
+    for i, mo in enumerate(months):
+        for key, (pv, hv) in H["raw"][mo].items():
+            gu, dong = key.split("|")
+            nm = MERGE.get(dong, dong)
+            u = units.setdefault(nm, {"gu": gu, "pop": [0] * len(months), "hh": [0] * len(months)})
+            if pv:
+                u["gu"] = gu  # 구가 바뀐 동네(2014년 구 개편)는 가장 최근 구로
+            u["pop"][i] += pv
+            u["hh"][i] += hv
+    H["meta"] = {"source": "행정안전부 행정동별 주민등록 인구 및 세대현황 (매월 말일)", "from": months[0], "to": months[-1],
+                 "note": "2014년 7월 청주·청원 통합 이후. 한 법정동이 나뉜 행정동(복대1·2동 등)은 합침"}
+    H["months"] = months
+    H["units"] = units
+    H["city"] = {"pop": [sum(u["pop"][i] for u in units.values()) for i in range(len(months))],
+                 "hh": [sum(u["hh"][i] for u in units.values()) for i in range(len(months))]}
+    save("population-history.json", H)
+    # 사이트가 읽는 가벼운 파일 (원자료 없이 동네별 시계열만)
+    save("population-trend.json", {k: H[k] for k in ("meta", "months", "units", "city")})
+    c = H["city"]["pop"]
+    print(f"population-history.json: {months[0]}~{months[-1]} ({len(months)}달), 동네 {len(units)}곳, 청주 {c[0]:,} → {c[-1]:,}명")
 
 
 def in_ring(x, y, ring):
@@ -199,6 +277,8 @@ def build():
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "build"
     if cmd == "pop":
-        pop(sys.argv[2])
+        pop(sys.argv[2:])
+    elif cmd == "hist":
+        build_hist()
     else:
         build()
