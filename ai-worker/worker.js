@@ -9,7 +9,7 @@
 //   Secrets  ANTHROPIC_API_KEY  Claude API 키 (필수)
 //            SALT               아무 긴 문자열 (기기·IP를 해시할 때 섞음, 필수 권장)
 //   KV       QUOTA              횟수를 세는 KV 네임스페이스 연결 (필수)
-//   Vars     ALLOWED_ORIGINS    기본 https://local-rader.github.io (쉼표로 여러 개)
+//   Vars     ALLOWED_ORIGINS    기본 https://turnoko.kr, https://www.turnoko.kr, https://local-rader.github.io (쉼표로 여러 개)
 //            CONTEXT_URL        기본 https://local-rader.github.io/ai-context.json
 //            MODEL              기본 claude-haiku-5-5
 //            DAILY_CAP          사이트 전체 하루 최대 질문 수, 기본 200 (비용 안전장치)
@@ -41,7 +41,7 @@ export default {
     const url = new URL(request.url);
 
     const origin = request.headers.get("Origin") || "";
-    const allowed = (env.ALLOWED_ORIGINS || "https://local-rader.github.io").split(",").map((s) => s.trim()).filter(Boolean);
+    const allowed = (env.ALLOWED_ORIGINS || "https://turnoko.kr,https://www.turnoko.kr,https://local-rader.github.io").split(",").map((s) => s.trim()).filter(Boolean);
     const ok = allowed.includes(origin);
     const cors = ok ? {
       "Access-Control-Allow-Origin": origin,
