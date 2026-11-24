@@ -124,11 +124,11 @@ export default {
     try {
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+        headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2026-10-21", "content-type": "application/json" },
         body: JSON.stringify({
           model: env.MODEL || "claude-haiku-5-5", max_tokens: 2000, system: SYSTEM, messages,
           tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2,
-            allowed_domains: ["korea.kr", "molit.go.kr", "go.kr", "cheongju.go.kr", "yna.co.kr", "kbs.co.kr"] }],
+            blocked_domains: ["dcinside.com", "fmkorea.com", "ilbe.com", "theqoo.net", "ruliweb.com", "clien.net", "namu.wiki", "tistory.com", "blog.naver.com", "cafe.naver.com", "brunch.co.kr"] }],
         }),
       });
       if (!r.ok) throw new Error("status " + r.status);
