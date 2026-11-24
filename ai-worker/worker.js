@@ -93,7 +93,7 @@ export default {
     const wk = periodKey("week"), day = periodKey("day");
     const ipKey = `ip:${wk}:${who.ip}`, allKey = `all:${day}`;
     const ipUsed = +(await env.QUOTA.get(ipKey)) || 0;
-    /* TEMP-TEST: 22:18 이후 10으로 되돌릴 것 */ if (ipUsed >= (+env.IP_WEEKLY_CAP || 100)) return json({ error: "limit", message: "이 인터넷 연결에서 이번 주 질문이 많아 잠시 막아 두었어요. 다음 주 월요일에 다시 열려요.", ...quota }, 429);
+    if (ipUsed >= (+env.IP_WEEKLY_CAP || 100)) // TEMP-TEST: 22:18 이후 10으로 되돌릴 것 return json({ error: "limit", message: "이 인터넷 연결에서 이번 주 질문이 많아 잠시 막아 두었어요. 다음 주 월요일에 다시 열려요.", ...quota }, 429);
     const allUsed = +(await env.QUOTA.get(allKey)) || 0;
     if (allUsed >= (+env.DAILY_CAP || 200)) return json({ error: "busy", message: "오늘 사이트 전체 질문 한도가 찼어요. 내일 다시 시도해 주세요. 질문 버튼은 계속 쓸 수 있어요.", ...quota }, 503);
     if (!env.ANTHROPIC_API_KEY) return json({ error: "config", message: "서버 설정이 끝나지 않았어요. (API 키)" }, 500);
