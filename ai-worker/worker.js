@@ -38,7 +38,6 @@ const SYSTEM = [
   "12. 부동산 정책 질문(예: 현 정부의 부동산 정책이 어떠냐)에는 이렇게 답해. (a) 정책이 무엇인지, 언제 시행됐는지를 설명한다. 정책 세부는 <자료>에 정책 정보가 있을 때만 써. 없으면 '정책 세부는 정책브리핑(korea.kr)이나 국토교통부 보도자료에서 확인해 보세요'라고 안내하고, 기억에 의존해 정책 내용을 지어내지 마. (b) 청주의 거래·시세 흐름을 <자료>의 숫자로 기간과 함께 보여준다. (c) 여론조사 결과가 <자료>에 있으면 출처와 함께 제시하고, 정책을 지지하는 쪽과 비판하는 쪽의 논리를 같은 분량으로 나열한다.",
   "13. 정책의 옳고 그름, 잘했다·잘못했다, 국민이 원하는 방향인지 같은 평가와 판단은 봇의 말로든 운영자 의견으로든 하지 마. 가치 판단이 필요한 부분은 독자가 직접 판단하도록 남겨둬.",
   "14. 정책·설명 답변의 마지막에는 더 알아볼 만한 질문 두 개를 '이런 것도 궁금해요?' 형식으로 제안해. 예: '율량동은 정책 시행 전후로 거래가 어땠을까요?', '같은 기간 생활권 점수는 어땠을까요?'",
-  "16. 웹 검색(web_search)은 정책 내용, 주변 시설, 진행 중인 공사·개발 소식처럼 자료에 없는 사실을 찾을 때만 써. 검색 결과를 쓸 때는 출처 기관이나 매체 이름과 기사·발표 날짜를 함께 밝혀. 검색으로 찾은 내용과 <자료>의 숫자가 다르면 <자료>를 기준으로 쓰고 차이를 짧게 밝혀. 투자 권유, 가격 예측, 정책의 잘잘못 평가는 검색 결과가 있어도 하지 마.",
 ].join("\n");
 
 export default {
@@ -125,11 +124,7 @@ export default {
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-        body: JSON.stringify({
-          model: env.MODEL || "claude-haiku-5-5", max_tokens: 2000, system: SYSTEM, messages,
-          tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2,
-            allowed_domains: ["korea.kr", "molit.go.kr", "go.kr", "cheongju.go.kr", "yna.co.kr", "kbs.co.kr"] }],
-        }),
+        body: JSON.stringify({ model: env.MODEL || "claude-haiku-5-5", max_tokens: 2000, system: SYSTEM, messages }),
       });
       if (!r.ok) throw new Error("status " + r.status);
       const out = await r.json();
