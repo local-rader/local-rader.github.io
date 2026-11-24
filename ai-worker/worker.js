@@ -127,8 +127,7 @@ export default {
         headers: { "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2026-10-21", "content-type": "application/json" },
         body: JSON.stringify({
           model: env.MODEL || "claude-haiku-5-5", max_tokens: 2000, system: SYSTEM, messages,
-          tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 2,
-            blocked_domains: ["dcinside.com", "fmkorea.com", "ilbe.com", "theqoo.net", "ruliweb.com", "clien.net", "namu.wiki", "tistory.com", "blog.naver.com", "cafe.naver.com", "brunch.co.kr"] }],
+          tools: [{ type: "web_search_20250305", name: "web_search" }],
         }),
       });
       if (!r.ok) throw new Error("status " + r.status);
