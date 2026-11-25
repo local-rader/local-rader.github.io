@@ -963,7 +963,6 @@ button.nrow:hover .nk { color: var(--accent); }
         <button type="button" role="tab" id="sub-report" aria-controls="pane-report" data-sub="report" data-grp="town">동네 리포트</button>
         <button type="button" role="tab" id="sub-aging" aria-controls="pane-aging" data-sub="aging" data-grp="town">노후도</button>
         <button type="button" role="tab" id="sub-near" aria-controls="pane-near" data-sub="near" data-grp="town">생활권</button>
-        <button type="button" role="tab" id="sub-life" aria-controls="pane-life" data-sub="life" data-grp="town">생활권 점수</button>
         <button type="button" role="tab" id="sub-quality" aria-controls="pane-quality" data-sub="quality" data-grp="none" hidden>자료 상태</button>
       </div>
 
@@ -1156,19 +1155,19 @@ button.nrow:hover .nk { color: var(--accent); }
         <div class="disclaimer">
           <p>시내버스 정류소·전통시장·경로당·공원·공공도서관은 공공데이터(국토교통부 버스정류소정보, 행정안전부 표준데이터 등) 위치로, 나머지는 카카오 지도에 등록된 장소로 셉니다. 카카오 장소는 빠지거나 문을 닫은 곳이 섞여 있을 수 있습니다. 항목을 누르면 해당하는 곳 목록이 나옵니다. 거리는 <b>직선거리</b>이고, 1분에 80m 걷는다고 보고 시간을 계산했습니다. 실제로 걷는 길은 이보다 깁니다.</p>
           <p>시설은 교통, 장보기·생활, 건강·돌봄, 교육, 여가 다섯 가지 생활 기능으로 묶었습니다. 한 기능 안에 시설이 하나라도 걸어서 갈 거리에 있으면 ‘있음’입니다. 일자리는 믿을 만한 위치 자료가 없어 넣지 않았습니다.</p>
-          <p>이 화면의 시설 수는 많고 적음을 보여줄 뿐 점수가 아닙니다. 동네끼리 비교한 점수는 ‘생활권 점수’ 탭에서 볼 수 있어요.</p>
+          <p>이 화면의 시설 수는 많고 적음을 보여줄 뿐 점수가 아닙니다. 아래 ‘터놓고 생활권 점수’에서는 동네끼리 비교합니다.</p>
         </div>
-      </div>
 
-      <div class="pane" id="pane-life" role="tabpanel" aria-labelledby="sub-life" hidden>
-        <div class="sec-head"><h2 class="sec" id="lf-h">터놓고 생활권 점수</h2><span id="lf-asof"></span></div>
-        <p class="panel-note">버스정류소·공원·도서관·전통시장·경로당·학교·병원·약국·슈퍼·편의점이 동네에 얼마나 <b>촘촘하게</b>(면적당), 사람 수에 비해 얼마나 <b>넉넉하게</b>(인구당) 있는지를 청주 동네끼리 비교한 터놓고만의 점수예요. 100점에 가까울수록 다른 동네보다 생활 시설이 잘 갖춰진 편이에요.</p>
-        <div id="lf-body"><p class="result">생활권 점수를 불러오는 중입니다…</p></div>
-        <div class="disclaimer">
-          <p><b>계산 방법.</b> 동네(행정동)마다 아홉 가지 시설 수를 세어 1㎢당 개수와 주민 1천 명당 개수로 바꿉니다. 시설마다 이 두 값을 청주 동네끼리 비교해 순위를 0~100 사이 백분위로 바꾸고(가장 많은 동네 100, 가장 적은 동네 0), 18개 백분위(9가지 × 면적당·인구당)의 평균을 점수로 씁니다. 면적만 보면 시내가, 인구만 보면 읍·면이 유리해서 둘을 반씩 섞었습니다.</p>
-          <p>공식 지표가 아니라 터놓고가 공공데이터로 정한 기준입니다. 동네끼리 비교한 상대 점수라, 다른 동네가 바뀌면 내 동네 점수도 달라질 수 있습니다. 살기 좋은 정도를 판정하는 점수가 아닙니다.</p>
-          <p>버스정류소는 국토교통부 TAGO, 공원·도서관·전통시장·경로당은 전국 표준데이터, 학교는 전국초중등학교위치 표준데이터 위치로 셉니다. 병원·의원·약국·슈퍼·편의점은 소상공인시장진흥공단 상가(상권)정보 좌표로 셉니다(치과·한의원 제외). 도서관은 공공도서관만 들어 있고(작은도서관 제외), 공원은 자료에 빠진 동네가 있습니다. 인구는 행정안전부 행정동별 주민등록 인구(매월 말일)입니다. 복대1·2동처럼 한 법정동이 나뉜 행정동은 합쳐서 한 동네로 봅니다.</p>
-          <p>위에서 고른 동네(법정동·리)는 그 동네가 속한 행정동 점수로 보여줍니다. 동네 경계는 통계청 행정동 경계를 정리한 공개 자료(vuski/admdongkor)를 단순하게 다듬은 것입니다.</p>
+        <div class="lifeblock">
+          <div class="sec-head"><h2 class="sec" id="lf-h">터놓고 생활권 점수</h2><span id="lf-asof"></span></div>
+          <p class="panel-note">버스정류소·공원·도서관·전통시장·경로당·학교·병원·약국·슈퍼·편의점이 동네에 얼마나 <b>촘촘하게</b>(면적당), 사람 수에 비해 얼마나 <b>넉넉하게</b>(인구당) 있는지를 청주 동네끼리 비교한 터놓고만의 점수예요. 100점에 가까울수록 다른 동네보다 생활 시설이 잘 갖춰진 편이에요.</p>
+          <div id="lf-body"><p class="result">생활권 점수를 불러오는 중입니다…</p></div>
+          <div class="disclaimer">
+            <p><b>계산 방법.</b> 동네(행정동)마다 아홉 가지 시설 수를 세어 1㎢당 개수와 주민 1천 명당 개수로 바꿉니다. 시설마다 이 두 값을 청주 동네끼리 비교해 순위를 0~100 사이 백분위로 바꾸고(가장 많은 동네 100, 가장 적은 동네 0), 18개 백분위(9가지 × 면적당·인구당)의 평균을 점수로 씁니다. 면적만 보면 시내가, 인구만 보면 읍·면이 유리해서 둘을 반씩 섞었습니다.</p>
+            <p>공식 지표가 아니라 터놓고가 공공데이터로 정한 기준입니다. 동네끼리 비교한 상대 점수라, 다른 동네가 바뀌면 내 동네 점수도 달라질 수 있습니다. 살기 좋은 정도를 판정하는 점수가 아닙니다.</p>
+            <p>버스정류소는 국토교통부 TAGO, 공원·도서관·전통시장·경로당은 전국 표준데이터, 학교는 전국초중등학교위치 표준데이터 위치로 셉니다. 병원·의원·약국·슈퍼·편의점은 소상공인시장진흥공단 상가(상권)정보 좌표로 셉니다(치과·한의원 제외). 도서관은 공공도서관만 들어 있고(작은도서관 제외), 공원은 자료에 빠진 동네가 있습니다. 인구는 행정안전부 행정동별 주민등록 인구(매월 말일)입니다. 복대1·2동처럼 한 법정동이 나뉜 행정동은 합쳐서 한 동네로 봅니다.</p>
+            <p>위에서 고른 동네(법정동·리)는 그 동네가 속한 행정동 점수로 보여줍니다. 동네 경계는 통계청 행정동 경계를 정리한 공개 자료(vuski/admdongkor)를 단순하게 다듬은 것입니다.</p>
+          </div>
         </div>
       </div>
 
@@ -2731,7 +2730,7 @@ button.nrow:hover .nk { color: var(--accent); }
   // ---------- 지역 분석: 지역 통계와 멈춘 기록
   var sub = "stats";
   function drawAnalysis() {
-    ["stats", "flow", "supply", "compare", "trade", "popu", "stall", "report", "aging", "near", "life", "quality"].forEach(function (k) {
+    ["stats", "flow", "supply", "compare", "trade", "popu", "stall", "report", "aging", "near", "quality"].forEach(function (k) {
       document.getElementById("pane-" + k).hidden = k !== sub;
       var b = document.getElementById("sub-" + k);
       b.setAttribute("aria-selected", String(k === sub));
@@ -2740,7 +2739,7 @@ button.nrow:hover .nk { color: var(--accent); }
     document.querySelector("#scr-analysis .subtabs").hidden = grp === "none";
     document.getElementById("qlink").innerHTML = grp === "none" ? '<a href="#analysis">← 지역 분석으로</a>' : '<a href="#quality">자료 상태 보기</a> · 공공데이터에 빈칸이 얼마나 있는지 그대로 보여줍니다.';
     drawNext();
-    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") drawNear(); else if (sub === "life") drawLife(); else if (sub === "popu") drawPopu(); else if (sub === "supply") drawSupply(); else if (sub === "report") drawReport(); else drawStall();
+    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") { drawNear(); drawLife(); } else if (sub === "popu") drawPopu(); else if (sub === "supply") drawSupply(); else if (sub === "report") drawReport(); else drawStall();
   }
 
 
@@ -3210,7 +3209,7 @@ button.nrow:hover .nk { color: var(--accent); }
     var box = document.getElementById("lf-body");
     if (!LF.data) {
       if (LF.failed) { box.innerHTML = '<article class="card"><p class="empty" style="padding:0">생활권 점수를 준비하고 있어요.</p></article>'; return; }
-      loadLife(function () { if (screen === "analysis" && sub === "life") drawLife(); });
+      loadLife(function () { if (screen === "analysis" && sub === "near") drawLife(); });
       return;
     }
     var D = LF.data, U = D.units, N = U.length, p = state.place, isGu = GU_LIST.indexOf(p) >= 0;
@@ -3267,7 +3266,7 @@ button.nrow:hover .nk { color: var(--accent); }
     var t = document.getElementById("lf-body"); if (n && t) t.scrollIntoView({ block: "start", behavior: "smooth" });
   }
   function drawLifeMap(scope, cur) {
-    if (M.sdk !== "ready") { if (M.sdk === "error") { msg("lfmsg", "지도를 불러오지 못했습니다."); return; } loadSDK(function () { if (screen === "analysis" && sub === "life") drawLifeMap(scope, cur); }); return; }
+    if (M.sdk !== "ready") { if (M.sdk === "error") { msg("lfmsg", "지도를 불러오지 못했습니다."); return; } loadSDK(function () { if (screen === "analysis" && sub === "near") drawLifeMap(scope, cur); }); return; }
     var el = document.getElementById("lf-map"); if (!el) return;
     msg("lfmsg", "");
     var map = LF.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(36.64, 127.47), level: 10, scrollwheel: false });
@@ -3670,8 +3669,8 @@ button.nrow:hover .nk { color: var(--accent); }
   };
   var NEXT = {
     flow: ["supply", "stall", "map"], supply: ["stall", "trade", "map"], stall: ["flow", "map", "aging"],
-    stats: ["report", "compare", "trade"], compare: ["report", "stats", "aging"], trade: ["report", "popu", "aging"], popu: ["report", "trade", "life"],
-    aging: ["report", "life", "trade"], near: ["life", "report", "aging"], life: ["near", "report", "aging"], report: [], quality: []
+    stats: ["report", "compare", "trade"], compare: ["report", "stats", "aging"], trade: ["report", "popu", "aging"], popu: ["report", "trade", "near"],
+    aging: ["report", "near", "trade"], near: [], life: [], report: [], quality: []
   };
   var CHEV = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 5 5 5-5 5"/></svg>';
   function drawNext() {
@@ -3844,7 +3843,7 @@ button.nrow:hover .nk { color: var(--accent); }
       // 생활권
       '<article class="card"><div class="card-head"><h3>생활권</h3><span class="meta">' + (o.lf ? "터놓고 생활권 점수" : "동네 중심 기준") + "</span></div>" +
         (o.lf ? '<div class="rstats">' + stat(o.lf.score + "점", "생활권 점수 (" + o.lfN + "곳 중 " + o.lf.rank + "위)") + stat(o.lf.sa + "점", "촘촘함 (면적당)") + stat(o.lf.sp + "점", "넉넉함 (인구당)") + "</div>" +
-          (o.lf.name !== p ? '<p class="result" style="margin:0 0 6px">' + esc(jo(p, "이", "가")) + " 속한 행정동 " + esc(o.lf.name) + " 기준이에요.</p>" : "") + more("life", "생활권 점수 보기") : "") +
+          (o.lf.name !== p ? '<p class="result" style="margin:0 0 6px">' + esc(jo(p, "이", "가")) + " 속한 행정동 " + esc(o.lf.name) + " 기준이에요.</p>" : "") + more("near", "생활권 보기") : "") +
         '<p class="result" style="margin:10px 0 10px">' + esc(p) + " 중심에서 걸어서 10분 안에 버스정류소·학교·병원·공원 같은 시설이 얼마나 있는지도 볼 수 있어요. 내 집 기준으로 보려면 생활권 화면에서 주소를 넣으세요.</p>" +
         '<button type="button" class="btn solid" id="rp-near">' + esc(p) + " 생활권 보기</button></article>" +
       "</div>";
@@ -4130,6 +4129,7 @@ button.nrow:hover .nk { color: var(--accent); }
       target = h.slice(0, sp);
       if (validPlace(want) && want !== state.place) { state.place = want; changed(); }
     }
+    if (target === "life") target = "near";
     if (GRP[target]) { sub = target; grp = GRP[target]; if (GRP_LAST[grp]) GRP_LAST[grp] = sub; target = "analysis"; }
     else if (GRP_LAST[target]) { grp = target; sub = GRP_LAST[grp]; target = "analysis"; }
     if (!TITLES[target]) target = "home";
