@@ -196,11 +196,6 @@ h1, h2, h3 { text-wrap: balance; }
 .searchbox { display: flex; gap: 8px; }
 .searchbox .field { position: relative; flex: 1; min-width: 0; }
 .searchbox .field svg { position: absolute; left: 12px; top: 50%; width: 18px; height: 18px; margin-top: -9px; color: var(--ink-3); pointer-events: none; }
-.suggest { position: absolute; left: 0; right: 0; top: 100%; margin: 6px 0 0; padding: 6px; list-style: none; z-index: 30; background: var(--surface); border: 1px solid var(--rule-2); border-radius: var(--r-ctl); box-shadow: 0 8px 24px rgba(15, 30, 51, .12); max-height: min(70vh, 560px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-.suggest[hidden] { display: none; }
-.searchbox .suggest button { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 12px; text-align: left; background: none; color: var(--ink); border: 0; border-radius: 6px; padding: 10px; min-height: 44px; font-size: 15px; font-weight: 400; cursor: pointer; }
-.searchbox .suggest button:hover, .searchbox .suggest button:focus-visible { background: var(--accent-soft); outline: none; }
-.searchbox .suggest small { color: var(--ink-3); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .searchbox input {
   width: 100%; border: 1px solid var(--rule-2); background: var(--surface); border-radius: var(--r-ctl);
   padding: 9px 12px 9px 38px; font-size: 15px; color: var(--ink); min-height: 44px;
@@ -1083,7 +1078,6 @@ button.nrow:hover .nk { color: var(--accent); }
           <div class="field">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
             <input type="search" id="tr-q" placeholder="동네 이름 검색 (예: 율량동, 상당구)" aria-label="실거래 동네 검색" autocomplete="off">
-            <ul class="suggest" id="tr-list" hidden></ul>
           </div>
           <button type="submit">보기</button>
         </form>
@@ -1140,8 +1134,7 @@ button.nrow:hover .nk { color: var(--accent); }
         <form class="searchbox" id="rp-form" role="search">
           <div class="field">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
-            <input type="search" id="rp-q" placeholder="동네·장소 검색 (예: 율량동, 청주시청)" aria-label="동네 또는 장소 검색" autocomplete="off">
-            <ul class="suggest" id="rp-list" hidden></ul>
+            <input type="search" id="rp-q" placeholder="동네 이름 검색 (예: 율량동, 상당구)" aria-label="동네 이름 검색" autocomplete="off">
           </div>
           <button type="submit">보기</button>
         </form>
@@ -1167,7 +1160,6 @@ button.nrow:hover .nk { color: var(--accent); }
             <div class="field">
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
               <input type="search" id="nr-q" placeholder="예: 청주시청, 율량동 산업단지로" aria-label="생활권을 볼 주소나 건물 이름" autocomplete="off">
-              <ul class="suggest" id="nr-list" hidden></ul>
             </div>
             <button type="submit">보기</button>
           </form>
@@ -3655,111 +3647,32 @@ button.nrow:hover .nk { color: var(--accent); }
       if (r) r.list.forEach(function (x) { mark(x.y, x.x, "pick", r.t + ": " + x.name, sel); });
     });
   }
-  // ---------- 검색 추천: 동네·구 이름은 바로, 장소는 카카오 장소 검색으로 붙여 보여준다
-  function suggestDongs(v) {
-    var all = GU_LIST.concat(areas);
-    var pre = all.filter(function (a) { return a.indexOf(v) === 0; }), mid = all.filter(function (a) { return a.indexOf(v) > 0; });
-    return pre.concat(mid).slice(0, 6).map(function (a) {
-      var g = GU_LIST.filter(function (gu) { return GU_LIST.indexOf(gu) >= 0 && (areasOf[gu] || []).indexOf(a) >= 0; })[0];
-      return { kind: "dong", name: a, sub: GU_LIST.indexOf(a) >= 0 ? "구 전체" : (g ? g + " · 동네" : "동네") };
-    });
-  }
-  function attachSuggest(input, list, o) {
-    var items = [], timer = 0, seq = 0;
-    function hide() { list.hidden = true; list.innerHTML = ""; items = []; }
-    function paint() {
-      if (!items.length) { list.hidden = true; list.innerHTML = ""; return; }
-      list.innerHTML = items.map(function (it, i) {
-        return '<li><button type="button" data-i="' + i + '"><span>' + esc(it.name) + "</span><small>" + esc(it.sub) + "</small></button></li>";
-      }).join("");
-      list.hidden = false;
-    }
-    function pick(i) {
-      var it = items[i]; if (!it) return;
-      hide(); input.value = "";
-      if (it.kind === "dong") o.onDong(it.name); else o.onPlace(it.lat, it.lng, it.name);
-    }
-    list.addEventListener("click", function (e) { var b = e.target.closest("button[data-i]"); if (b) pick(+b.getAttribute("data-i")); });
-    function showPlaces(got, v) {
-      var seen = {}, pre = [];
-      got.forEach(function (x) {
-        var key = x.id || (x.place_name + x.x + x.y);
-        if (seen[key] || !x.place_name) return; seen[key] = 1;
-        var it = { kind: "place", name: x.place_name, sub: x.road_address_name || x.address_name || "", lat: +x.y, lng: +x.x };
-        if (x.place_name.indexOf(v) === 0) pre.push(it);
-      });
-      pre.sort(function (a, b) { return a.name.length - b.name.length || a.name.localeCompare(b.name, "ko"); });
-      items = items.filter(function (it) { return it.kind === "dong"; }).concat(pre);
-      paint();
-    }
-    input.addEventListener("input", function () {
-      clearTimeout(timer); var v = input.value.trim(), my = ++seq;
-      items = v ? suggestDongs(v) : []; paint();
-      if (!o.places || v.length < 2) return;
-      timer = setTimeout(function () {
-        loadSDK(function () {
-          var kw = /청주/.test(v) ? v : "청주 " + v;
-          var got = [], left = 3;
-          // 한 번에 15곳씩 3쪽을 받아, 입력한 말로 시작하는 장소를 앞에 세운다 (청주 → 청주시청, 청주공항 …)
-          [1, 2, 3].forEach(function (pg) {
-            new kakao.maps.services.Places().keywordSearch(kw, function (d, st) {
-              if (st === kakao.maps.services.Status.OK && d) got = got.concat(d);
-              if (--left === 0 && my === seq) showPlaces(got, v);
-            }, { location: new kakao.maps.LatLng(36.6424, 127.489), radius: 20000, size: 15, page: pg });
-          });
-        });
-      }, 250);
-    });
-    document.addEventListener("pointerdown", function (e) { if (!input.parentNode.contains(e.target)) hide(); });
-    input.addEventListener("keydown", function (e) { if (e.key === "Escape") hide(); });
-    return { first: function () { return items[0] || null; }, pick: pick, hide: hide };
-  }
-  function goNear(lat, lng, name) {
-    NR.at = [lat, lng]; NR.label = name; NR.res = null;
-    if (location.hash === "#near") drawNear(); else location.hash = "#near";
-  }
-  // 동네 리포트 · 실거래 · 생활권 검색창
+  // 동네 리포트 · 실거래 검색: 동네 이름을 넣으면 그 동네 화면으로 간다 (정확한 이름, 또는 앞부분이 하나로 정해질 때)
   (function townSearches() {
-    function submitWith(form, input, sg, goDong) {
-      form.addEventListener("submit", function (e) {
+    function find(v) {
+      var all = GU_LIST.concat(areas);
+      if (all.indexOf(v) >= 0) return v;
+      var pre = all.filter(function (a) { return a.indexOf(v) === 0; });
+      return pre.length === 1 ? pre[0] : null;
+    }
+    function bind(formId, inputId, hash) {
+      var f = document.getElementById(formId), i = document.getElementById(inputId);
+      if (!f || !i) return;
+      f.addEventListener("submit", function (e) {
         e.preventDefault();
-        var v = input.value.trim(); if (!v) return;
-        if (validPlace(v)) { input.value = ""; sg.hide(); return goDong(v); }
-        var it = sg.first(); if (it) return sg.pick(0);
-        input.setAttribute("aria-invalid", "true"); input.placeholder = "동네 이름이나 장소를 입력해 주세요";
+        var v = i.value.trim(); if (!v) return;
+        var n = find(v);
+        if (!n) { i.setAttribute("aria-invalid", "true"); i.value = ""; i.placeholder = "동네 이름을 정확히 넣어 주세요 (예: 율량동)"; return; }
+        i.value = ""; i.removeAttribute("aria-invalid");
+        location.hash = hash + "/" + encodeURIComponent(n);
       });
     }
-    var rq = document.getElementById("rp-q"), rf = document.getElementById("rp-form");
-    if (rq && rf) {
-      var rsg = attachSuggest(rq, document.getElementById("rp-list"), {
-        places: true,
-        onDong: function (n) { location.hash = "#report/" + encodeURIComponent(n); },
-        onPlace: function (la, ln, n) { goNear(la, ln, n); }
-      });
-      submitWith(rf, rq, rsg, function (n) { location.hash = "#report/" + encodeURIComponent(n); });
-    }
-    var tq = document.getElementById("tr-q"), tf = document.getElementById("tr-form");
-    if (tq && tf) {
-      var tsg = attachSuggest(tq, document.getElementById("tr-list"), {
-        places: false,
-        onDong: function (n) { location.hash = "#trade/" + encodeURIComponent(n); },
-        onPlace: function () {}
-      });
-      submitWith(tf, tq, tsg, function (n) { location.hash = "#trade/" + encodeURIComponent(n); });
-    }
-    var nq = document.getElementById("nr-q");
-    if (nq) {
-      window.NRS = attachSuggest(nq, document.getElementById("nr-list"), {
-        places: true,
-        onDong: function (n) { location.hash = "#near/" + encodeURIComponent(n); },
-        onPlace: function (la, ln, n) { goNear(la, ln, n); }
-      });
-    }
+    bind("rp-form", "rp-q", "#report");
+    bind("tr-form", "tr-q", "#trade");
   })();
 
   document.getElementById("nr-form").onsubmit = function (e) {
     e.preventDefault();
-    if (window.NRS && NRS.first() && !document.getElementById("nr-list").hidden) return NRS.pick(0);
     var q = document.getElementById("nr-q").value.trim(); if (!q) return;
     trackEv("near");
     var out = document.getElementById("nr-out");
