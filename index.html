@@ -3681,6 +3681,19 @@ button.nrow:hover .nk { color: var(--accent); }
     }
     list.addEventListener("mousedown", function (e) { e.preventDefault(); });
     list.addEventListener("click", function (e) { var b = e.target.closest("button[data-i]"); if (b) pick(+b.getAttribute("data-i")); });
+    function showPlaces(got, v) {
+      var seen = {}, pre = [], rest = [];
+      got.forEach(function (x) {
+        var key = x.id || (x.place_name + x.x + x.y);
+        if (seen[key] || !x.place_name) return; seen[key] = 1;
+        var it = { kind: "place", name: x.place_name, sub: x.road_address_name || x.address_name || "", lat: +x.y, lng: +x.x };
+        (x.place_name.indexOf(v) === 0 ? pre : rest).push(it);
+      });
+      pre.sort(function (a, b) { return a.name.length - b.name.length || a.name.localeCompare(b.name, "ko"); });
+      items = items.filter(function (it) { return it.kind === "dong"; })
+        .concat(pre.slice(0, 10), pre.length < 4 ? rest.slice(0, 4 - pre.length) : []);
+      paint();
+    }
     input.addEventListener("input", function () {
       clearTimeout(timer); var v = input.value.trim(), my = ++seq;
       items = v ? suggestDongs(v) : []; paint();
@@ -3688,13 +3701,14 @@ button.nrow:hover .nk { color: var(--accent); }
       timer = setTimeout(function () {
         loadSDK(function () {
           var kw = /청주/.test(v) ? v : "청주 " + v;
-          new kakao.maps.services.Places().keywordSearch(kw, function (d, st) {
-            if (my !== seq || st !== kakao.maps.services.Status.OK) return;
-            items = items.concat(d.slice(0, 8).map(function (x) {
-              return { kind: "place", name: x.place_name, sub: x.road_address_name || x.address_name || "", lat: +x.y, lng: +x.x };
-            }));
-            paint();
-          }, { location: new kakao.maps.LatLng(36.6424, 127.489), radius: 20000 });
+          var got = [], left = 3;
+          // 한 번에 15곳씩 3쪽을 받아, 입력한 말로 시작하는 장소를 앞에 세운다 (청주 → 청주시청, 청주공항 …)
+          [1, 2, 3].forEach(function (pg) {
+            new kakao.maps.services.Places().keywordSearch(kw, function (d, st) {
+              if (st === kakao.maps.services.Status.OK && d) got = got.concat(d);
+              if (--left === 0 && my === seq) showPlaces(got, v);
+            }, { location: new kakao.maps.LatLng(36.6424, 127.489), radius: 20000, size: 15, page: pg });
+          });
         });
       }, 250);
     });
