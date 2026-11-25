@@ -196,11 +196,11 @@ h1, h2, h3 { text-wrap: balance; }
 .searchbox { display: flex; gap: 8px; }
 .searchbox .field { position: relative; flex: 1; min-width: 0; }
 .searchbox .field svg { position: absolute; left: 12px; top: 50%; width: 18px; height: 18px; margin-top: -9px; color: var(--ink-3); pointer-events: none; }
-.suggest { position: absolute; left: 0; right: 0; top: 100%; margin: 6px 0 0; padding: 6px; list-style: none; z-index: 30; background: var(--surface); border: 1px solid var(--rule-2); border-radius: var(--r-ctl); box-shadow: 0 8px 24px rgba(15, 30, 51, .12); max-height: 60vh; overflow-y: auto; }
+.suggest { position: absolute; left: 0; right: 0; top: 100%; margin: 6px 0 0; padding: 6px; list-style: none; z-index: 30; background: var(--surface); border: 1px solid var(--rule-2); border-radius: var(--r-ctl); box-shadow: 0 8px 24px rgba(15, 30, 51, .12); max-height: min(70vh, 560px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
 .suggest[hidden] { display: none; }
-.suggest button { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 12px; text-align: left; background: none; border: 0; padding: 10px; min-height: 44px; border-radius: 6px; font-size: 15px; color: var(--ink); cursor: pointer; }
-.suggest button:hover, .suggest button:focus-visible { background: var(--accent-soft); outline: none; }
-.suggest small { color: var(--ink-3); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.searchbox .suggest button { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 12px; text-align: left; background: none; color: var(--ink); border: 0; border-radius: 6px; padding: 10px; min-height: 44px; font-size: 15px; font-weight: 400; cursor: pointer; }
+.searchbox .suggest button:hover, .searchbox .suggest button:focus-visible { background: var(--accent-soft); outline: none; }
+.searchbox .suggest small { color: var(--ink-3); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .searchbox input {
   width: 100%; border: 1px solid var(--rule-2); background: var(--surface); border-radius: var(--r-ctl);
   padding: 9px 12px 9px 38px; font-size: 15px; color: var(--ink); min-height: 44px;
@@ -3679,19 +3679,17 @@ button.nrow:hover .nk { color: var(--accent); }
       hide(); input.value = "";
       if (it.kind === "dong") o.onDong(it.name); else o.onPlace(it.lat, it.lng, it.name);
     }
-    list.addEventListener("mousedown", function (e) { e.preventDefault(); });
     list.addEventListener("click", function (e) { var b = e.target.closest("button[data-i]"); if (b) pick(+b.getAttribute("data-i")); });
     function showPlaces(got, v) {
-      var seen = {}, pre = [], rest = [];
+      var seen = {}, pre = [];
       got.forEach(function (x) {
         var key = x.id || (x.place_name + x.x + x.y);
         if (seen[key] || !x.place_name) return; seen[key] = 1;
         var it = { kind: "place", name: x.place_name, sub: x.road_address_name || x.address_name || "", lat: +x.y, lng: +x.x };
-        (x.place_name.indexOf(v) === 0 ? pre : rest).push(it);
+        if (x.place_name.indexOf(v) === 0) pre.push(it);
       });
       pre.sort(function (a, b) { return a.name.length - b.name.length || a.name.localeCompare(b.name, "ko"); });
-      items = items.filter(function (it) { return it.kind === "dong"; })
-        .concat(pre.slice(0, 10), pre.length < 4 ? rest.slice(0, 4 - pre.length) : []);
+      items = items.filter(function (it) { return it.kind === "dong"; }).concat(pre);
       paint();
     }
     input.addEventListener("input", function () {
@@ -3712,7 +3710,7 @@ button.nrow:hover .nk { color: var(--accent); }
         });
       }, 250);
     });
-    input.addEventListener("blur", function () { setTimeout(hide, 150); });
+    document.addEventListener("pointerdown", function (e) { if (!input.parentNode.contains(e.target)) hide(); });
     input.addEventListener("keydown", function (e) { if (e.key === "Escape") hide(); });
     return { first: function () { return items[0] || null; }, pick: pick, hide: hide };
   }
