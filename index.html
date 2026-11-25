@@ -1124,6 +1124,14 @@ button.nrow:hover .nk { color: var(--accent); }
       </div>
 
       <div class="pane" id="pane-report" role="tabpanel" aria-labelledby="sub-report" hidden>
+        <form class="searchbox" id="rp-form" role="search">
+          <div class="field">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
+            <input type="search" id="rp-q" list="rp-dl" placeholder="동네 이름 검색 (예: 율량동, 상당구)" aria-label="동네 이름 검색">
+            <datalist id="rp-dl"></datalist>
+          </div>
+          <button type="submit">보기</button>
+        </form>
         <div id="rp-body"></div>
       </div>
 
@@ -1638,6 +1646,26 @@ button.nrow:hover .nk { color: var(--accent); }
     if (typeof drawFavUI === "function" && document.getElementById("favbar")) drawFavUI();
   }
   document.getElementById("f-place").onchange = function () { state.place = this.value; changed(); };
+
+  // 동네 리포트 상단 검색: 동네·구 이름을 고르면 그 동네 리포트로 간다
+  (function reportSearch() {
+    var f = document.getElementById("rp-form"), q = document.getElementById("rp-q"), dl = document.getElementById("rp-dl");
+    if (!f || !q || !dl) return;
+    var filled = false;
+    function fill() {
+      if (filled) return; filled = true;
+      dl.innerHTML = GU_LIST.concat(areas).map(function (a) { return '<option value="' + esc(a) + '"></option>'; }).join("");
+    }
+    q.addEventListener("focus", fill);
+    f.addEventListener("submit", function (e) {
+      e.preventDefault(); fill();
+      var v = q.value.trim();
+      if (!v) return;
+      if (!validPlace(v)) { q.setAttribute("aria-invalid", "true"); q.value = ""; q.placeholder = "목록에 있는 동네 이름을 골라 주세요"; return; }
+      q.value = ""; q.removeAttribute("aria-invalid");
+      location.hash = "#report/" + encodeURIComponent(v);
+    });
+  })();
 
   // ---------- 홈
   // 큰 사업: 같은 지번에 허가가 여러 번 난 경우(설계 변경 등)는 가장 큰 한 건만 남긴다
