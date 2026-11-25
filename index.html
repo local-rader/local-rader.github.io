@@ -196,6 +196,11 @@ h1, h2, h3 { text-wrap: balance; }
 .searchbox { display: flex; gap: 8px; }
 .searchbox .field { position: relative; flex: 1; min-width: 0; }
 .searchbox .field svg { position: absolute; left: 12px; top: 50%; width: 18px; height: 18px; margin-top: -9px; color: var(--ink-3); pointer-events: none; }
+.suggest { position: absolute; left: 0; right: 0; top: 100%; margin: 6px 0 0; padding: 6px; list-style: none; z-index: 30; background: var(--surface); border: 1px solid var(--rule-2); border-radius: var(--r-ctl); box-shadow: 0 8px 24px rgba(15, 30, 51, .12); max-height: 60vh; overflow-y: auto; }
+.suggest[hidden] { display: none; }
+.suggest button { display: flex; width: 100%; align-items: baseline; justify-content: space-between; gap: 12px; text-align: left; background: none; border: 0; padding: 10px; min-height: 44px; border-radius: 6px; font-size: 15px; color: var(--ink); cursor: pointer; }
+.suggest button:hover, .suggest button:focus-visible { background: var(--accent-soft); outline: none; }
+.suggest small { color: var(--ink-3); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .searchbox input {
   width: 100%; border: 1px solid var(--rule-2); background: var(--surface); border-radius: var(--r-ctl);
   padding: 9px 12px 9px 38px; font-size: 15px; color: var(--ink); min-height: 44px;
@@ -1074,6 +1079,14 @@ button.nrow:hover .nk { color: var(--accent); }
       <div class="pane" id="pane-trade" role="tabpanel" aria-labelledby="sub-trade" hidden>
         <div class="sec-head"><h2 class="sec" id="tr-h">실거래</h2><span id="tr-asof"></span></div>
         <p class="panel-note">국토교통부 실거래가 공개 자료로 본 매매 거래입니다. 계약일 기준이고, 해제(취소)된 거래는 뺐습니다. 동네는 맨 위에서 바꿀 수 있습니다.</p>
+        <form class="searchbox" id="tr-form" role="search" style="margin-bottom:14px">
+          <div class="field">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
+            <input type="search" id="tr-q" placeholder="동네 이름 검색 (예: 율량동, 상당구)" aria-label="실거래 동네 검색" autocomplete="off">
+            <ul class="suggest" id="tr-list" hidden></ul>
+          </div>
+          <button type="submit">보기</button>
+        </form>
         <div class="hscroll tkinds" id="tr-kinds" role="group" aria-label="부동산 종류"></div>
         <div id="tr-body"><p class="result">실거래 자료를 불러오는 중입니다…</p></div>
       </div>
@@ -1127,8 +1140,8 @@ button.nrow:hover .nk { color: var(--accent); }
         <form class="searchbox" id="rp-form" role="search">
           <div class="field">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
-            <input type="search" id="rp-q" list="rp-dl" placeholder="동네 이름 검색 (예: 율량동, 상당구)" aria-label="동네 이름 검색">
-            <datalist id="rp-dl"></datalist>
+            <input type="search" id="rp-q" placeholder="동네·장소 검색 (예: 율량동, 청주시청)" aria-label="동네 또는 장소 검색" autocomplete="off">
+            <ul class="suggest" id="rp-list" hidden></ul>
           </div>
           <button type="submit">보기</button>
         </form>
@@ -1153,7 +1166,8 @@ button.nrow:hover .nk { color: var(--accent); }
           <form class="searchbox" id="nr-form" role="search">
             <div class="field">
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
-              <input type="search" id="nr-q" placeholder="예: 청주시청, 율량동 산업단지로" aria-label="생활권을 볼 주소나 건물 이름">
+              <input type="search" id="nr-q" placeholder="예: 청주시청, 율량동 산업단지로" aria-label="생활권을 볼 주소나 건물 이름" autocomplete="off">
+              <ul class="suggest" id="nr-list" hidden></ul>
             </div>
             <button type="submit">보기</button>
           </form>
@@ -1646,26 +1660,6 @@ button.nrow:hover .nk { color: var(--accent); }
     if (typeof drawFavUI === "function" && document.getElementById("favbar")) drawFavUI();
   }
   document.getElementById("f-place").onchange = function () { state.place = this.value; changed(); };
-
-  // 동네 리포트 상단 검색: 동네·구 이름을 고르면 그 동네 리포트로 간다
-  (function reportSearch() {
-    var f = document.getElementById("rp-form"), q = document.getElementById("rp-q"), dl = document.getElementById("rp-dl");
-    if (!f || !q || !dl) return;
-    var filled = false;
-    function fill() {
-      if (filled) return; filled = true;
-      dl.innerHTML = GU_LIST.concat(areas).map(function (a) { return '<option value="' + esc(a) + '"></option>'; }).join("");
-    }
-    q.addEventListener("focus", fill);
-    f.addEventListener("submit", function (e) {
-      e.preventDefault(); fill();
-      var v = q.value.trim();
-      if (!v) return;
-      if (!validPlace(v)) { q.setAttribute("aria-invalid", "true"); q.value = ""; q.placeholder = "목록에 있는 동네 이름을 골라 주세요"; return; }
-      q.value = ""; q.removeAttribute("aria-invalid");
-      location.hash = "#report/" + encodeURIComponent(v);
-    });
-  })();
 
   // ---------- 홈
   // 큰 사업: 같은 지번에 허가가 여러 번 난 경우(설계 변경 등)는 가장 큰 한 건만 남긴다
@@ -3661,8 +3655,99 @@ button.nrow:hover .nk { color: var(--accent); }
       if (r) r.list.forEach(function (x) { mark(x.y, x.x, "pick", r.t + ": " + x.name, sel); });
     });
   }
+  // ---------- 검색 추천: 동네·구 이름은 바로, 장소는 카카오 장소 검색으로 붙여 보여준다
+  function suggestDongs(v) {
+    var all = GU_LIST.concat(areas);
+    var pre = all.filter(function (a) { return a.indexOf(v) === 0; }), mid = all.filter(function (a) { return a.indexOf(v) > 0; });
+    return pre.concat(mid).slice(0, 6).map(function (a) {
+      var g = GU_LIST.filter(function (gu) { return GU_LIST.indexOf(gu) >= 0 && (areasOf[gu] || []).indexOf(a) >= 0; })[0];
+      return { kind: "dong", name: a, sub: GU_LIST.indexOf(a) >= 0 ? "구 전체" : (g ? g + " · 동네" : "동네") };
+    });
+  }
+  function attachSuggest(input, list, o) {
+    var items = [], timer = 0, seq = 0;
+    function hide() { list.hidden = true; list.innerHTML = ""; items = []; }
+    function paint() {
+      if (!items.length) { list.hidden = true; list.innerHTML = ""; return; }
+      list.innerHTML = items.map(function (it, i) {
+        return '<li><button type="button" data-i="' + i + '"><span>' + esc(it.name) + "</span><small>" + esc(it.sub) + "</small></button></li>";
+      }).join("");
+      list.hidden = false;
+    }
+    function pick(i) {
+      var it = items[i]; if (!it) return;
+      hide(); input.value = "";
+      if (it.kind === "dong") o.onDong(it.name); else o.onPlace(it.lat, it.lng, it.name);
+    }
+    list.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    list.addEventListener("click", function (e) { var b = e.target.closest("button[data-i]"); if (b) pick(+b.getAttribute("data-i")); });
+    input.addEventListener("input", function () {
+      clearTimeout(timer); var v = input.value.trim(), my = ++seq;
+      items = v ? suggestDongs(v) : []; paint();
+      if (!o.places || v.length < 2) return;
+      timer = setTimeout(function () {
+        loadSDK(function () {
+          var kw = /청주/.test(v) ? v : "청주 " + v;
+          new kakao.maps.services.Places().keywordSearch(kw, function (d, st) {
+            if (my !== seq || st !== kakao.maps.services.Status.OK) return;
+            items = items.concat(d.slice(0, 8).map(function (x) {
+              return { kind: "place", name: x.place_name, sub: x.road_address_name || x.address_name || "", lat: +x.y, lng: +x.x };
+            }));
+            paint();
+          }, { location: new kakao.maps.LatLng(36.6424, 127.489), radius: 20000 });
+        });
+      }, 250);
+    });
+    input.addEventListener("blur", function () { setTimeout(hide, 150); });
+    input.addEventListener("keydown", function (e) { if (e.key === "Escape") hide(); });
+    return { first: function () { return items[0] || null; }, pick: pick, hide: hide };
+  }
+  function goNear(lat, lng, name) {
+    NR.at = [lat, lng]; NR.label = name; NR.res = null;
+    if (location.hash === "#near") drawNear(); else location.hash = "#near";
+  }
+  // 동네 리포트 · 실거래 · 생활권 검색창
+  (function townSearches() {
+    function submitWith(form, input, sg, goDong) {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var v = input.value.trim(); if (!v) return;
+        if (validPlace(v)) { input.value = ""; sg.hide(); return goDong(v); }
+        var it = sg.first(); if (it) return sg.pick(0);
+        input.setAttribute("aria-invalid", "true"); input.placeholder = "동네 이름이나 장소를 입력해 주세요";
+      });
+    }
+    var rq = document.getElementById("rp-q"), rf = document.getElementById("rp-form");
+    if (rq && rf) {
+      var rsg = attachSuggest(rq, document.getElementById("rp-list"), {
+        places: true,
+        onDong: function (n) { location.hash = "#report/" + encodeURIComponent(n); },
+        onPlace: function (la, ln, n) { goNear(la, ln, n); }
+      });
+      submitWith(rf, rq, rsg, function (n) { location.hash = "#report/" + encodeURIComponent(n); });
+    }
+    var tq = document.getElementById("tr-q"), tf = document.getElementById("tr-form");
+    if (tq && tf) {
+      var tsg = attachSuggest(tq, document.getElementById("tr-list"), {
+        places: false,
+        onDong: function (n) { location.hash = "#trade/" + encodeURIComponent(n); },
+        onPlace: function () {}
+      });
+      submitWith(tf, tq, tsg, function (n) { location.hash = "#trade/" + encodeURIComponent(n); });
+    }
+    var nq = document.getElementById("nr-q");
+    if (nq) {
+      window.NRS = attachSuggest(nq, document.getElementById("nr-list"), {
+        places: true,
+        onDong: function (n) { location.hash = "#near/" + encodeURIComponent(n); },
+        onPlace: function (la, ln, n) { goNear(la, ln, n); }
+      });
+    }
+  })();
+
   document.getElementById("nr-form").onsubmit = function (e) {
     e.preventDefault();
+    if (window.NRS && NRS.first() && !document.getElementById("nr-list").hidden) return NRS.pick(0);
     var q = document.getElementById("nr-q").value.trim(); if (!q) return;
     trackEv("near");
     var out = document.getElementById("nr-out");
