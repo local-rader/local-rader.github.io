@@ -4265,7 +4265,7 @@ button.nrow:hover .nk { color: var(--accent); }
   var noPlace = rows.filter(function (r) { return !r.lat || !r.lng; }).length, noAddr = rows.filter(function (r) { return !r.addr; }).length;
   document.getElementById("foot").textContent += "자료 점검: 지도 위치가 없는 기록 " + nf(noPlace) + "건, 주소가 없는 기록 " + nf(noAddr) + "건 (전체 " + nf(rows.length) + "건).";
   var pl =document.createElement("a"); pl.href = "privacy.html"; pl.textContent = "개인정보처리방침·면책 안내"; document.getElementById("foot").appendChild(pl);
-  var cr = document.createElement("span"); cr.className = "copy"; cr.textContent = "© 2026 터놓고. 사이트의 화면 구성, 디자인, 코드, 가공·분석 방식과 문구의 저작권은 터놓고에 있으며 무단 복제·배포를 금합니다. 원자료인 공공데이터는 각 출처의 이용조건을 따릅니다."; document.getElementById("foot").appendChild(cr);
+  var cr = document.createElement("span"); cr.className = "copy"; cr.textContent = "© 2026 터놓고. 사이트와 인스타그램(@turnoko.kr)의 영상·이미지·화면 구성·디자인·코드·분석 결과와 글의 저작권은 터놓고에 있습니다. 출처를 밝히면 개인적·비상업적 공유는 자유롭게 할 수 있지만, 출처 없이 복제·재배포하거나 상업적으로 이용하려면 미리 문의해 주세요. 원자료인 공공데이터는 각 출처의 이용조건을 따릅니다."; document.getElementById("foot").appendChild(cr);
 
   drawPlace(); drawPeriods(); filterSummary();
   route();
