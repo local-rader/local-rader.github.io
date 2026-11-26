@@ -273,13 +273,45 @@ def build():
     hh = {}
     for c in AG.get("complexes", []):
         hh[c.get("place")] = hh.get(c.get("place"), 0) + (c.get("hh") or 0)
+    # 아파트 단지 위치: 오픈스트리트맵의 이름 있는 아파트(newdata.json의 apts)와 건축물대장 단지 이름을 맞춤
+    #  (같은 법정동 대표 지점에서 4㎞ 안, 맞은 건물들의 중앙값). 못 맞춘 단지는 법정동·리 대표 지점에 남김
+    kx0, ky0 = 111.32 * math.cos(math.radians(36.64)), 110.57
+    at0 = {p["place"]: p["at"] for p in AG["places"] if p.get("at")}
+
+    def apt_norm(x):
+        x = re.sub(r"\(.*?\)", "", x or "")
+        x = re.sub(r"\d+\s*동$", "", x.strip())
+        x = re.sub(r"(아파트|APT|apt|단지|\s|·|-|\.)", "", x)
+        return re.sub(r"(청주|충북|흥덕|상당|서원|청원)", "", x).lower()
+    osm = {}
+    for nm, typ, la, lo in load("newdata.json", {}).get("apts", []):
+        k = apt_norm(nm)
+        if len(k) >= 2:
+            osm.setdefault(k, []).append((la, lo))
+    apt_pts, aph = [], {}
+    for c in AG.get("complexes", []):
+        k, base = apt_norm(c.get("name")), at0.get(c.get("place"))
+        cand = [q for key, qs in osm.items() if key == k or (len(k) >= 3 and (k in key or key in k)) for q in qs]
+        if base:
+            cand = [q for q in cand if math.hypot((q[1] - base[1]) * kx0, (q[0] - base[0]) * ky0) < 4]
+        if cand and c.get("hh"):
+            la, lo = sorted(q[0] for q in cand)[len(cand) // 2], sorted(q[1] for q in cand)[len(cand) // 2]
+            apt_pts.append((c["place"], la, lo, c["hh"]))
+            aph[c["place"]] = aph.get(c["place"], 0) + c["hh"]
+    apt_hh = sum(c.get("hh") or 0 for c in AG.get("complexes", []))
+    print(f"  아파트 단지 위치: {len(apt_pts)}/{len(AG.get('complexes', []))}곳, 세대 {sum(a[3] for a in apt_pts):,}/{apt_hh:,}")
+
     homes, ptof = [], {}
     for p in AG["places"]:
         if not p.get("at") or p["place"] not in places:
             continue
-        w = sum((p.get("y", {}).get("house") or {}).values()) + hh.get(p["place"], 0)
+        w = sum((p.get("y", {}).get("house") or {}).values()) + hh.get(p["place"], 0) - aph.get(p["place"], 0)
         homes.append((units[places[p["place"]]], p["at"][0], p["at"][1], max(1, w)))
         ptof[p["place"]] = (p["at"][0], p["at"][1], max(1, w))
+    for pl, la, lo, w in apt_pts:
+        u_ = find(la, lo) or (units.get(places.get(pl)) if places.get(pl) else None)
+        if u_:
+            homes.append((u_, la, lo, w))
 
     def addr_point(addr):
         """좌표 없는 시설: 주소 속 법정동·리의 대표점 (읍·면만 알면 그 읍·면에서 집이 가장 많은 곳)"""
@@ -402,6 +434,7 @@ def build():
             "kinds": KINDS,
             "categories": {c: [k for k in m if k in active] for c, m in CATEGORIES.items()},
             "rare": rare,
+            "apt_located": [len(apt_pts), len(AG.get("complexes", [])), sum(a[3] for a in apt_pts), apt_hh],
             "kind_weights": {c: {k: w for k, w in m.items() if k in active} for c, m in CATEGORIES.items()},
             "weights": {"area": W_AREA, "pop": W_POP},
             "new_got": ND.get("meta", {}).get("got", ""), "unmatched": miss,
