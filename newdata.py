@@ -217,6 +217,7 @@ def clean(addr):
     a = re.sub(r"^충북\s*", "충청북도 ", addr.strip())
     a = re.sub(r"(충청북도|청주시|상당구|서원구|흥덕구|청원구)(?=\S)", r"\1 ", a)  # '충북청주시상당구단재로293'
     a = re.sub(r"\(.*?\)", "", a).split(",")[0]
+    a = re.sub(r"(로|길)\s+(\d+번길)", r"\1\2", a)  # '충렬로 18번길' → '충렬로18번길' (도로명 표기)
     m = re.match(r"^(.*?\S(?:로|길))\s*(\d+(?:-\d+)?)(?!\d|-|번길)", a)
     return re.sub(r"\s+", " ", (m.group(1) + " " + m.group(2)) if m else a).strip()
 
@@ -268,11 +269,15 @@ def geocode(items):
                 got = geo_osm(a)
                 if got:
                     stat["osm"] += 1
-                elif road_only(it[2]):  # 건물 번호가 지도에 없으면 도로 가운데 좌표 (근사)
-                    got = geo_osm(road_only(it[2]))
-                    if got:
-                        stat["road"] = stat.get("road", 0) + 1
-                        print("  도로 기준 근사:", it[0], "|", road_only(it[2]))
+                else:  # 건물 번호가 지도에 없으면 도로(→ 큰길) 가운데 좌표로 근사
+                    r1 = road_only(it[2])
+                    r2 = re.sub(r"\d+번길$", "", r1) if r1 else None
+                    for r in [x for x in (r1, r2) if x]:
+                        got = geo_osm(r)
+                        if got:
+                            stat["road"] = stat.get("road", 0) + 1
+                            print("  도로 기준 근사:", it[0], "|", r)
+                            break
             except Exception as e:  # noqa: BLE001
                 print("  오픈스트리트맵 실패:", a, str(e)[:80])
         if got and BBOX[0] < got[0] < BBOX[1] and BBOX[2] < got[1] < BBOX[3]:
