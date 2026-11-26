@@ -215,9 +215,16 @@ def has_dong_hint(addr):
 
 def clean(addr):
     a = re.sub(r"^충북\s*", "충청북도 ", addr.strip())
-    a = re.sub(r"\(.*?\)", "", a)
+    a = re.sub(r"(충청북도|청주시|상당구|서원구|흥덕구|청원구)(?=\S)", r"\1 ", a)  # '충북청주시상당구단재로293'
+    a = re.sub(r"\(.*?\)", "", a).split(",")[0]
+    a = re.sub(r"(로|길)(\d)", r"\1 \2", a)
     m = re.match(r"^(.*?(로|길)\s*\d+(-\d+)?)", a)
     return re.sub(r"\s+", " ", (m.group(1) if m else a)).strip()
+
+
+def road_only(addr):
+    m = re.match(r"^(.*?\S+(로|길))\s*\d", clean(addr))
+    return m.group(1) if m else None
 
 
 def geo_vworld(addr, k):
@@ -262,6 +269,11 @@ def geocode(items):
                 got = geo_osm(a)
                 if got:
                     stat["osm"] += 1
+                elif road_only(it[2]):  # 건물 번호가 지도에 없으면 도로 가운데 좌표 (근사)
+                    got = geo_osm(road_only(it[2]))
+                    if got:
+                        stat["road"] = stat.get("road", 0) + 1
+                        print("  도로 기준 근사:", it[0], "|", road_only(it[2]))
             except Exception as e:  # noqa: BLE001
                 print("  오픈스트리트맵 실패:", a, str(e)[:80])
         if got and BBOX[0] < got[0] < BBOX[1] and BBOX[2] < got[1] < BBOX[3]:
@@ -312,6 +324,16 @@ def update():
     print("\n저장:", {k: len(v) for k, v in out["items"].items()})
 
 
+def geofix():
+    """이미 받은 newdata.json에서 좌표 없는 곳만 다시 찾는다"""
+    out = json.load(open(OUT, encoding="utf-8"))
+    for kind, rows in out["items"].items():
+        print(f" [{kind}]")
+        geocode(rows)
+    with open(OUT, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+
+
 def probe():
     for name, pid in FILES.items():
         print(f"\n## {name} ({pid})")
@@ -325,4 +347,4 @@ def probe():
 
 
 if __name__ == "__main__":
-    {"probe": probe, "update": update}[sys.argv[1] if len(sys.argv) > 1 else "probe"]()
+    {"probe": probe, "update": update, "geofix": geofix}[sys.argv[1] if len(sys.argv) > 1 else "probe"]()
