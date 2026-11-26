@@ -358,6 +358,28 @@ def geofix():
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
 
 
+def apts():
+    """주민 위치 보강용: 오픈스트리트맵의 이름 있는 아파트 단지·건물 중심점 → newdata.json의 apts"""
+    q = f"""[out:json][timeout:120];(
+      nwr["building"="apartments"]["name"]({BBOX[0]},{BBOX[2]},{BBOX[1]},{BBOX[3]});
+      nwr["landuse"="residential"]["name"]({BBOX[0]},{BBOX[2]},{BBOX[1]},{BBOX[3]});
+      nwr["place"~"neighbourhood|quarter"]["name"]({BBOX[0]},{BBOX[2]},{BBOX[1]},{BBOX[3]});
+    );out center tags;"""
+    j = json.loads(fetch("https://overpass-api.de/api/interpreter?" + urllib.parse.urlencode({"data": q}), timeout=150))
+    rows = []
+    for e in j.get("elements", []):
+        t = e.get("tags", {})
+        lat = e.get("lat") or (e.get("center") or {}).get("lat")
+        lng = e.get("lon") or (e.get("center") or {}).get("lon")
+        if lat and lng:
+            rows.append([t.get("name", ""), t.get("building") or t.get("landuse") or t.get("place", ""), round(lat, 6), round(lng, 6)])
+    out = json.load(open(OUT, encoding="utf-8"))
+    out["apts"] = rows
+    with open(OUT, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+    print("apts", len(rows), rows[:10])
+
+
 def probe():
     for name, pid in FILES.items():
         print(f"\n## {name} ({pid})")
@@ -371,4 +393,4 @@ def probe():
 
 
 if __name__ == "__main__":
-    {"probe": probe, "update": update, "geofix": geofix}[sys.argv[1] if len(sys.argv) > 1 else "probe"]()
+    {"probe": probe, "update": update, "geofix": geofix, "apts": apts}[sys.argv[1] if len(sys.argv) > 1 else "probe"]()
