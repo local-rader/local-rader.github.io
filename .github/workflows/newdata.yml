@@ -1,0 +1,43 @@
+# 생활권 점수 추가 자료(주차장·119·치안·요양기관·체육·문화 등) 받기. 손으로 실행.
+name: 생활권 추가 자료
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe 또는 update"
+        required: false
+        default: "probe"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: newdata
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 자료 받기
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          MODE: ${{ inputs.mode }}
+        run: python newdata.py "${MODE:-probe}"
+      - name: 저장
+        if: ${{ inputs.mode == 'update' }}
+        run: |
+          git config user.name "dongne-radar-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add newdata.json
+          if git diff --cached --quiet; then echo "바뀐 자료가 없습니다."; else
+            git commit -m "생활권 추가 자료 $(TZ=Asia/Seoul date +%F)"
+            git pull --rebase -X theirs origin "$GITHUB_REF_NAME"
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
