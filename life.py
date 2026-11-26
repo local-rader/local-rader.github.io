@@ -4,7 +4,7 @@
   · 면적당: 1㎢ 안에 몇 곳인지 (걸어서 닿기 쉬운지)
   · 인구당: 주민 1천 명당 몇 곳인지 (사람 수에 비해 넉넉한지)
 시설마다 두 값을 청주 동네끼리 비교해 백분위(0~100)로 바꾸고, 면적 60%·인구 40%로 합친다.
-분야 점수 = 분야 안 시설들의 평균, 종합 점수 = 4개 분야 평균.
+분야 점수 = 분야 안 시설들의 가중 평균(CATEGORIES), 종합 점수 = 4개 분야 평균.
 공식 지표가 아니라 터놓고가 공공데이터로 정한 기준이다.
 
 사용법
@@ -34,11 +34,11 @@ KINDS = [("bus", "버스정류소"), ("park", "공원"), ("lib", "도서관"), (
          ("care", "요양병원"), ("child", "어린이복지시설")]
 NEW_KINDS = ("parking", "safety", "sports", "culture", "care", "child")
 # 생활권 분야 (4개). 분야끼리 같은 비중, 분야 안 시설도 같은 비중. 자료를 못 받은 시설은 빼고 계산한다
-CATEGORIES = {
-    "교통·생활": ["bus", "parking", "market", "mart"],
-    "의료·안전": ["hospital", "pharmacy", "safety"],
-    "여가·문화": ["park", "lib", "sports", "culture"],
-    "돌봄·교육": ["senior", "school", "care", "child"],
+CATEGORIES = {   # 분야 안 시설 가중치 (합 1). 자료가 빠진 시설은 나머지로 다시 나눔
+    "교통·생활": {"bus": 0.35, "mart": 0.35, "market": 0.15, "parking": 0.15},
+    "의료·안전": {"hospital": 0.40, "pharmacy": 0.35, "safety": 0.25},
+    "여가·문화": {"park": 0.40, "lib": 0.25, "sports": 0.20, "culture": 0.15},   # 문화시설은 빠진 곳이 많아 작게
+    "돌봄·교육": {"school": 0.40, "child": 0.25, "senior": 0.20, "care": 0.15},
 }
 W_AREA, W_POP = 0.6, 0.4   # 면적당 60%, 인구당 40% (좁은 곳에 모여 있는 것을 더 높게 봄)
 
@@ -305,8 +305,8 @@ def build():
     for u in L:
         cats = {}
         for cat, members in CATEGORIES.items():
-            mm = [k for k in members if k in active]
-            cats[cat] = round(sum(W_AREA * u["pa"][k] + W_POP * u["pp"][k] for k in mm) / len(mm))
+            mm = {k: w for k, w in members.items() if k in active}
+            cats[cat] = round(sum(w * (W_AREA * u["pa"][k] + W_POP * u["pp"][k]) for k, w in mm.items()) / sum(mm.values()))
         u["cats"] = cats
         u["score"] = round(sum(cats.values()) / len(CATEGORIES))
         u["sa"] = round(sum(u["pa"].values()) / len(KINDS))   # 면적당만
@@ -323,6 +323,7 @@ def build():
             "bus_got": BM.get("got", ""), "poi_got": PM.get("got", "") if isinstance(PM, dict) else "",
             "kinds": KINDS,
             "categories": {c: [k for k in m if k in active] for c, m in CATEGORIES.items()},
+            "kind_weights": {c: {k: w for k, w in m.items() if k in active} for c, m in CATEGORIES.items()},
             "weights": {"area": W_AREA, "pop": W_POP},
             "new_got": ND.get("meta", {}).get("got", ""), "unmatched": miss,
             "sources": ["국토교통부 (TAGO) 버스정류소정보", "전국 도시공원·도서관·전통시장·마을회관및경로당 표준데이터",
