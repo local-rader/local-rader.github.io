@@ -1,15 +1,16 @@
 """터놓고 생활권 점수 → life.json
 
-동네(행정동)마다 생활시설 9가지(버스·공원·도서관·전통시장·경로당·학교·병원·약국·슈퍼·편의점 중 9개 묶음)가 얼마나 갖춰져 있는지를 두 가지로 잰다.
+동네(행정동)마다 생활시설 15가지를 4개 분야(교통·생활 / 의료·안전 / 여가·문화 / 돌봄·교육)로 묶어 얼마나 갖춰져 있는지를 두 가지로 잰다.
   · 면적당: 1㎢ 안에 몇 곳인지 (걸어서 닿기 쉬운지)
   · 인구당: 주민 1천 명당 몇 곳인지 (사람 수에 비해 넉넉한지)
-시설마다 두 값을 청주 동네끼리 비교해 백분위(0~100)로 바꾸고, 18개(9가지 × 2) 백분위의 평균을 점수로 쓴다.
+시설마다 두 값을 청주 동네끼리 비교해 백분위(0~100)로 바꾸고, 면적 60%·인구 40%로 합친다.
+분야 점수 = 분야 안 시설들의 평균, 종합 점수 = 4개 분야 평균.
 공식 지표가 아니라 터놓고가 공공데이터로 정한 기준이다.
 
 사용법
   python life.py pop 파일 [파일…]  # 행정안전부 '행정동별 주민등록 인구 및 세대현황'(엑셀·CSV, 여러 달 가능)
                                  #  → population-history.json(월별 누적)과 population.json(가장 최근 달)
-  python life.py build           # dongs.json·population.json·busstops.json·pois.json → life.json
+  python life.py build           # dongs.json·population.json·busstops.json·pois.json·facilities.json·newdata.json → life.json
 """
 import json
 import math
@@ -27,7 +28,19 @@ MERGE = {
     "수곡1동": "수곡동", "수곡2동": "수곡동", "봉명1동": "봉명·송정동", "봉명2·송정동": "봉명·송정동",
 }
 KINDS = [("bus", "버스정류소"), ("park", "공원"), ("lib", "도서관"), ("market", "전통시장"), ("senior", "경로당"),
-         ("school", "학교"), ("hospital", "병원·의원"), ("pharmacy", "약국"), ("mart", "슈퍼·편의점")]
+         ("school", "학교"), ("hospital", "병원·의원"), ("pharmacy", "약국"), ("mart", "슈퍼·편의점"),
+         # newdata.py (2026-11 추가)
+         ("parking", "주차장"), ("safety", "119·치안센터"), ("sports", "공공체육시설"), ("culture", "문화시설"),
+         ("care", "요양병원"), ("child", "어린이복지시설")]
+NEW_KINDS = ("parking", "safety", "sports", "culture", "care", "child")
+# 생활권 분야 (4개). 분야끼리 같은 비중, 분야 안 시설도 같은 비중. 자료를 못 받은 시설은 빼고 계산한다
+CATEGORIES = {
+    "교통·생활": ["bus", "parking", "market", "mart"],
+    "의료·안전": ["hospital", "pharmacy", "safety"],
+    "여가·문화": ["park", "lib", "sports", "culture"],
+    "돌봄·교육": ["senior", "school", "care", "child"],
+}
+W_AREA, W_POP = 0.6, 0.4   # 면적당 60%, 인구당 40% (좁은 곳에 모여 있는 것을 더 높게 봄)
 
 
 def load(name, default=None):
@@ -214,6 +227,36 @@ def build():
                     return u
         return None
 
+    # 법정동·리(사이트의 동네 이름) → 행정동: 건축물대장 집계의 동네 대표점으로 찾는다
+    places = {}
+    AG = load("aging.json", {"places": []})
+    for p in AG["places"]:
+        u = find(p["at"][0], p["at"][1]) if p.get("at") else None
+        if not u:
+            m = re.match(r"^(\S+[읍면])", p["place"])
+            u = units.get(m.group(1)) if m else units.get(p["place"])
+        if u:
+            places[p["place"]] = u["name"]
+
+    def by_addr(addr):
+        """주소 글자로 행정동 찾기: 읍·면 이름, 괄호 속 법정동 '(가경동', 지번 '사직동 119'"""
+        a = re.sub(r"\s+", " ", addr or "").replace("오송옵", "오송읍")
+        for nm, u in units.items():
+            if nm.endswith(("읍", "면")) and nm in a:
+                return u
+        for pat in (r"\(([^,()\s]+?(?:동|가))[,)\s]", r"\s([^\s()]+?(?:동|가))\s+(?:산\s?)?\d"):
+            for m in re.finditer(pat, a):
+                nm = m.group(1)
+                if nm in places:
+                    return units.get(places[nm])
+                if nm in units:
+                    return units[nm]
+        for m in re.finditer(r"\s([^\s()]+?리)\s+(?:산\s?)?\d", a):  # 읍·면 없이 '내수리 36-11'
+            hit = [v for k, v in places.items() if k.endswith(" " + m.group(1))]
+            if len(set(hit)) == 1:
+                return units.get(hit[0])
+        return None
+
     BS = load("busstops.json", {"stops": []})
     for s in BS["stops"]:
         u = find(s[1], s[2])
@@ -231,6 +274,25 @@ def build():
             u = find(s[1], s[2])
             if u:
                 u["n"][k] += 1
+    ND = load("newdata.json", {"items": {}, "meta": {}})   # newdata.py: 주소·좌표 [이름, 종류, 주소, 위도, 경도]
+    active = set(k for k, _ in KINDS if k not in NEW_KINDS)
+    miss = {}
+    for k in NEW_KINDS:
+        rows = ND.get("items", {}).get(k) or []
+        if not rows:
+            print(f"  {k}: 자료 없음 → 점수에서 뺌")
+            continue
+        active.add(k)
+        lost = []
+        for name, typ, addr, lat, lng in rows:
+            u = find(lat, lng) if lat is not None else None
+            u = u or by_addr(addr)
+            if u:
+                u["n"][k] += 1
+            else:
+                lost.append(name)
+        miss[k] = len(lost)
+        print(f"  {k}: {len(rows)}곳 중 동 못 찾음 {len(lost)}곳 {lost[:8]}")
 
     L = sorted(units.values(), key=lambda u: u["name"])
     for k, _ in KINDS:
@@ -239,24 +301,19 @@ def build():
         for u, a, b in zip(L, pa, pp):
             u.setdefault("pa", {})[k] = round(a)
             u.setdefault("pp", {})[k] = round(b)
+    # 4개 분야 × 면적(60%)·인구(40%) 가중. 분야끼리는 같은 비중(25%)
     for u in L:
-        u["score"] = round(sum(u["pa"].values()) / len(KINDS) / 2 + sum(u["pp"].values()) / len(KINDS) / 2)
+        cats = {}
+        for cat, members in CATEGORIES.items():
+            mm = [k for k in members if k in active]
+            cats[cat] = round(sum(W_AREA * u["pa"][k] + W_POP * u["pp"][k] for k in mm) / len(mm))
+        u["cats"] = cats
+        u["score"] = round(sum(cats.values()) / len(CATEGORIES))
         u["sa"] = round(sum(u["pa"].values()) / len(KINDS))   # 면적당만
         u["sp"] = round(sum(u["pp"].values()) / len(KINDS))   # 인구당만
     L.sort(key=lambda u: (-u["score"], u["name"]))
     for i, u in enumerate(L):
         u["rank"] = 1 + sum(1 for w in L if w["score"] > u["score"])
-
-    # 법정동·리(사이트의 동네 이름) → 행정동: 건축물대장 집계의 동네 대표점으로 찾는다
-    places = {}
-    AG = load("aging.json", {"places": []})
-    for p in AG["places"]:
-        u = find(p["at"][0], p["at"][1]) if p.get("at") else None
-        if not u:
-            m = re.match(r"^(\S+[읍면])", p["place"])
-            u = units.get(m.group(1)) if m else units.get(p["place"])
-        if u:
-            places[p["place"]] = u["name"]
 
     BM, PM = BS.get("meta", {}), PI.get("meta", {})
     out = {
@@ -265,13 +322,20 @@ def build():
             "pop_month": PO["meta"].get("month", ""),
             "bus_got": BM.get("got", ""), "poi_got": PM.get("got", "") if isinstance(PM, dict) else "",
             "kinds": KINDS,
+            "categories": {c: [k for k in m if k in active] for c, m in CATEGORIES.items()},
+            "weights": {"area": W_AREA, "pop": W_POP},
+            "new_got": ND.get("meta", {}).get("got", ""), "unmatched": miss,
             "sources": ["국토교통부 (TAGO) 버스정류소정보", "전국 도시공원·도서관·전통시장·마을회관및경로당 표준데이터",
                         "한국교육시설안전원 전국초중등학교위치표준데이터", "소상공인시장진흥공단 상가(상권)정보 (병원·의원·약국·슈퍼·편의점)",
+                        "전국주차장정보표준데이터", "소방청 119안전센터 현황", "경찰청 치안센터 주소(소방청·해양경찰청·경찰청 통합)",
+                        "충청북도 공공체육시설 현황", "청주시시설관리공단 운영 시설 위치 정보", "문화체육관광부 전국 문화기반시설 총람(2025)",
+                        "건강보험심사평가원 요양기관 개설 현황(요양병원)", "충청북도 어린이복지시설",
                         "행정안전부 행정동별 주민등록 인구", "행정동 경계 vuski/admdongkor (통계청 SGIS 기반)"],
         },
         "units": [{
             "name": u["name"], "gu": u["gu"], "codes": u["codes"], "pop": u["pop"], "area": round(u["area"], 2),
             "n": u["n"], "pa": u["pa"], "pp": u["pp"], "sa": u["sa"], "sp": u["sp"], "score": u["score"], "rank": u["rank"],
+            "cats": u["cats"],
             "polys": u["polys"],
         } for u in L],
         "places": places,

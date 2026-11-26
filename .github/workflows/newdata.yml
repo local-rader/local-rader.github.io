@@ -19,7 +19,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,10 +28,12 @@ jobs:
       - name: 자료 받기
         env:
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          VWORLD_KEY: ${{ secrets.VWORLD_KEY }}
+          VWORLD_DOMAIN: ${{ secrets.VWORLD_DOMAIN }}
           MODE: ${{ inputs.mode }}
         run: python newdata.py "${MODE:-probe}"
       - name: 저장
-        if: ${{ inputs.mode == 'update' }}
+        if: ${{ inputs.mode == 'update' || inputs.mode == 'geofix' }}
         run: |
           git config user.name "dongne-radar-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

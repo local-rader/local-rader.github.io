@@ -1174,12 +1174,12 @@ button.nrow:hover .nk { color: var(--accent); }
 
         <div class="lifeblock">
           <div class="sec-head"><h2 class="sec" id="lf-h">터놓고 생활권 점수</h2><span id="lf-asof"></span></div>
-          <p class="panel-note">버스정류소·공원·도서관·전통시장·경로당·학교·병원·약국·슈퍼·편의점이 동네에 얼마나 <b>촘촘하게</b>(면적당), 사람 수에 비해 얼마나 <b>넉넉하게</b>(인구당) 있는지를 청주 동네끼리 비교한 터놓고만의 점수예요. 100점에 가까울수록 다른 동네보다 생활 시설이 잘 갖춰진 편이에요.</p>
+          <p class="panel-note">생활 시설 15가지를 <b>교통·생활 / 의료·안전 / 여가·문화 / 돌봄·교육</b> 4개 분야로 묶어, 동네에 얼마나 <b>촘촘하게</b>(면적당), 사람 수에 비해 얼마나 <b>넉넉하게</b>(인구당) 있는지를 청주 동네끼리 비교한 터놓고만의 점수예요. 100점에 가까울수록 다른 동네보다 생활 시설이 잘 갖춰진 편이에요.</p>
           <div id="lf-body"><p class="result">생활권 점수를 불러오는 중입니다…</p></div>
           <div class="disclaimer">
-            <p><b>계산 방법.</b> 동네(행정동)마다 아홉 가지 시설 수를 세어 1㎢당 개수와 주민 1천 명당 개수로 바꿉니다. 시설마다 이 두 값을 청주 동네끼리 비교해 순위를 0~100 사이 백분위로 바꾸고(가장 많은 동네 100, 가장 적은 동네 0), 18개 백분위(9가지 × 면적당·인구당)의 평균을 점수로 씁니다. 면적만 보면 시내가, 인구만 보면 읍·면이 유리해서 둘을 반씩 섞었습니다.</p>
+            <p><b>계산 방법.</b> 동네(행정동)마다 시설 15가지의 수를 세어 1㎢당 개수와 주민 1천 명당 개수로 바꿉니다. 시설마다 이 두 값을 청주 동네끼리 비교해 순위를 0~100 사이 백분위로 바꾸고(가장 많은 동네 100, 가장 적은 동네 0), 면적당 60%·인구당 40%로 합칩니다. 좁은 곳에 시설이 모여 있어 걸어서 닿기 쉬운 것을 조금 더 높게 봤습니다. 이 시설 점수를 4개 분야로 묶어 평균 내고(교통·생활: 버스정류소·주차장·전통시장·슈퍼·편의점 / 의료·안전: 병원·의원·약국·119안전센터·치안센터 / 여가·문화: 공원·도서관·공공체육시설·문화시설 / 돌봄·교육: 경로당·학교·요양병원·어린이복지시설), 4개 분야 점수의 평균을 종합 점수로 씁니다. 면적을 더 높게 보기 때문에 넓은 읍·면은 시설이 있어도 점수가 낮게 나오기 쉽습니다.</p>
             <p>공식 지표가 아니라 터놓고가 공공데이터로 정한 기준입니다. 동네끼리 비교한 상대 점수라, 다른 동네가 바뀌면 내 동네 점수도 달라질 수 있습니다. 살기 좋은 정도를 판정하는 점수가 아닙니다.</p>
-            <p>버스정류소는 국토교통부 TAGO, 공원·도서관·전통시장·경로당은 전국 표준데이터, 학교는 전국초중등학교위치 표준데이터 위치로 셉니다. 병원·의원·약국·슈퍼·편의점은 소상공인시장진흥공단 상가(상권)정보 좌표로 셉니다(치과·한의원 제외). 도서관은 공공도서관만 들어 있고(작은도서관 제외), 공원은 자료에 빠진 동네가 있습니다. 인구는 행정안전부 행정동별 주민등록 인구(매월 말일)입니다. 복대1·2동처럼 한 법정동이 나뉜 행정동은 합쳐서 한 동네로 봅니다.</p>
+            <p>버스정류소는 국토교통부 TAGO, 공원·도서관·전통시장·경로당은 전국 표준데이터, 학교는 전국초중등학교위치 표준데이터 위치로 셉니다. 병원·의원·약국·슈퍼·편의점은 소상공인시장진흥공단 상가(상권)정보 좌표로 셉니다(치과·한의원 제외). 주차장은 전국주차장정보표준데이터, 119안전센터는 소방청, 치안센터는 경찰청 주소 자료, 공공체육시설은 충청북도와 청주시시설관리공단, 문화시설(박물관·미술관·문예회관·문화원·문화의집·생활문화센터)은 문화체육관광부 문화기반시설 총람(2025), 요양병원은 건강보험심사평가원 요양기관 개설 현황, 어린이복지시설(지역아동센터 등)은 충청북도 자료입니다. 주소만 있는 시설은 주소로 위치를 찾았고, 위치를 못 찾은 일부(주차장 6곳, 어린이복지시설 5곳 등)는 빠져 있습니다. 도서관은 공공도서관만 들어 있고(작은도서관 제외), 공원은 자료에 빠진 동네가 있습니다. 인구는 행정안전부 행정동별 주민등록 인구(매월 말일)입니다. 복대1·2동처럼 한 법정동이 나뉜 행정동은 합쳐서 한 동네로 봅니다.</p>
             <p>위에서 고른 동네(법정동·리)는 그 동네가 속한 행정동 점수로 보여줍니다. 동네 경계는 통계청 행정동 경계를 정리한 공개 자료(vuski/admdongkor)를 단순하게 다듬은 것입니다.</p>
           </div>
         </div>
@@ -3195,7 +3195,7 @@ button.nrow:hover .nk { color: var(--accent); }
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && wrap.classList.contains("full")) set(false); });
   }
 
-  // ---------- 터놓고 생활권 점수: 행정동마다 생활시설 9가지를 면적당·인구당으로 동네끼리 비교 (life.json)
+  // ---------- 터놓고 생활권 점수: 행정동마다 생활시설 15가지(4개 분야)를 면적당·인구당으로 동네끼리 비교 (life.json)
   var LF = { data: null, loading: false, failed: false, pick: "", pickFor: null, all: false, map: null };
   var LF_C = ["var(--lf0)", "var(--lf1)", "var(--lf2)", "var(--lf3)", "var(--lf4)"];
   var LF_HEX = ["#E3EEFB", "#B5D5F7", "#7DB7F0", "#3F92E3", "#1668C4"];
@@ -3218,7 +3218,13 @@ button.nrow:hover .nk { color: var(--accent); }
     if (!n) { var k = Object.keys(pl).filter(function (x) { return x.indexOf(p + " ") === 0; })[0]; n = k ? pl[k] : null; }
     return n ? LF.by[n] : (LF.by[p] || null);
   }
-  function lfKinds() { return (LF.data.meta.kinds || []).map(function (k) { return { k: k[0], t: k[1] }; }); }
+  function lfKinds() {
+    var M2 = LF.data.meta, all = (M2.kinds || []).map(function (k) { return { k: k[0], t: k[1] }; });
+    if (!M2.categories) return all;
+    var order = [].concat.apply([], Object.keys(M2.categories).map(function (c) { return M2.categories[c]; }));
+    return order.map(function (k) { return all.filter(function (x) { return x.k === k; })[0]; }).filter(Boolean);
+  }
+  function lfW() { return (LF.data && LF.data.meta.weights) || { area: 0.5, pop: 0.5 }; }
   function drawLife() {
     var box = document.getElementById("lf-body");
     if (!LF.data) {
@@ -3240,7 +3246,8 @@ button.nrow:hover .nk { color: var(--accent); }
         (mine && cur === mine && mine.name !== p ? '<span class="meta">' + esc(jo(p, "이", "가")) + " 속한 행정동</span>" : (LF.pick && mine && cur !== mine ? '<button type="button" class="linkbtn" id="lf-back">' + esc(jo(mine.name, "", "로")) + " 돌아가기</button>" : "")) + "</div>" +
         '<div class="lfbig"><span class="lfscore">' + cur.score + "<small>점</small></span><span>청주 " + N + "개 동네 중 <b>" + cur.rank + "위</b><br>주민 " + nf(cur.pop) + "명 · 면적 " + cur.area.toFixed(1) + "㎢</span></div>" +
         '<div class="lfsplit"><span>촘촘함(면적당) <b>' + cur.sa + "점</b></span><span>넉넉함(인구당) <b>" + cur.sp + "점</b></span></div>" +
-        '<p class="lfh4">시설별로 보면</p><p class="card-desc" style="margin:0 0 6px">막대는 그 시설만 따로 본 점수예요 (면적당·인구당 평균).</p><div class="fbars" id="lf-kinds"></div></article>';
+        (cur.cats ? '<p class="lfh4">분야별로 보면</p><div class="fbars" id="lf-cats"></div>' : "") +
+        '<p class="lfh4">시설별로 보면</p><p class="card-desc" style="margin:0 0 6px">막대는 그 시설만 따로 본 점수예요 (면적당 ' + Math.round(lfW().area * 100) + "%·인구당 " + Math.round(lfW().pop * 100) + '%).</p><div class="fbars" id="lf-kinds"></div></article>';
     } else {
       html += '<article class="card"><p class="result" style="margin:0">' + (isGu ? esc(p) + " 동네들의 점수예요. " : "") + "맨 위에서 동네를 고르거나, 아래 지도·순위에서 동네를 누르면 시설별 점수가 나와요.</p></article>";
     }
@@ -3254,8 +3261,11 @@ button.nrow:hover .nk { color: var(--accent); }
       '<div class="agfind"><label for="lf-pick">다른 동네 보기</label><select class="sel" id="lf-pick"><option value="">선택하세요</option>' +
         U.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "ko"); }).map(function (u) { return '<option value="' + esc(u.name) + '"' + (cur && cur.name === u.name ? " selected" : "") + ">" + esc(u.name) + " (" + esc(u.gu) + ")</option>"; }).join("") + "</select></div></article>";
     box.innerHTML = html;
-    if (cur) fbars(document.getElementById("lf-kinds"), lfKinds().map(function (k) {
-      var v = Math.round((cur.pa[k.k] + cur.pp[k.k]) / 2), d = cur.n[k.k];
+    if (cur && cur.cats) fbars(document.getElementById("lf-cats"), Object.keys(cur.cats).map(function (c) {
+      return { k: c, label: "<b>" + cur.cats[c] + "점</b>", segs: [[cur.cats[c], "var(--brand)"]] };
+    }));
+    if (cur) fbars(document.getElementById("lf-kinds"), lfKinds().filter(function (k) { return cur.pa[k.k] != null; }).map(function (k) {
+      var w = lfW(), v = Math.round(cur.pa[k.k] * w.area + cur.pp[k.k] * w.pop), d = cur.n[k.k];
       var perA = d / cur.area, perP = cur.pop ? d / cur.pop * 1000 : 0;
       return { k: k.t + " " + nf(d) + "곳", label: "<b>" + v + "점</b> · 1㎢당 " + (perA >= 10 ? Math.round(perA) : perA.toFixed(perA >= 1 ? 1 : 2)) + " · 1천 명당 " + perP.toFixed(perP >= 10 ? 0 : perP >= 1 ? 1 : 2), segs: [[v, "var(--sky)"]] };
     }));
