@@ -28,6 +28,13 @@ MERGE = {
 }
 KINDS = [("bus", "버스정류소"), ("park", "공원"), ("lib", "도서관"), ("market", "전통시장"), ("senior", "경로당"),
          ("school", "학교"), ("hospital", "병원·의원"), ("pharmacy", "약국"), ("mart", "슈퍼·편의점")]
+# 생활권 분야 (4개). 자료가 빠진 분야는 점수에서 빼고 계산하지 않는다 (지금은 9가지 모두 있음)
+CATEGORIES = {
+    "교통·생활": ["bus", "market", "mart"],
+    "의료": ["hospital", "pharmacy"],
+    "여가·문화": ["park", "lib"],
+    "돌봄·교육": ["senior", "school"],
+}
 
 
 def load(name, default=None):
@@ -239,8 +246,14 @@ def build():
         for u, a, b in zip(L, pa, pp):
             u.setdefault("pa", {})[k] = round(a)
             u.setdefault("pp", {})[k] = round(b)
+    # 4개 분야 × 면적(60%)·인구(40%) 가중. 분야끼리는 같은 비중(25%)
+    W_AREA, W_POP = 0.6, 0.4
     for u in L:
-        u["score"] = round(sum(u["pa"].values()) / len(KINDS) / 2 + sum(u["pp"].values()) / len(KINDS) / 2)
+        cats = {}
+        for cat, members in CATEGORIES.items():
+            cats[cat] = round(sum(W_AREA * u["pa"][k] + W_POP * u["pp"][k] for k in members) / len(members))
+        u["cats"] = cats
+        u["score"] = round(sum(cats.values()) / len(CATEGORIES))
         u["sa"] = round(sum(u["pa"].values()) / len(KINDS))   # 면적당만
         u["sp"] = round(sum(u["pp"].values()) / len(KINDS))   # 인구당만
     L.sort(key=lambda u: (-u["score"], u["name"]))
@@ -272,6 +285,7 @@ def build():
         "units": [{
             "name": u["name"], "gu": u["gu"], "codes": u["codes"], "pop": u["pop"], "area": round(u["area"], 2),
             "n": u["n"], "pa": u["pa"], "pp": u["pp"], "sa": u["sa"], "sp": u["sp"], "score": u["score"], "rank": u["rank"],
+            "cats": u["cats"],
             "polys": u["polys"],
         } for u in L],
         "places": places,
