@@ -184,6 +184,12 @@ def ring_km2(ring, lat0):
     return abs(s) / 2
 
 
+def pct_low(vals):
+    """작을수록 좋은 값(거리)의 백분위: 가장 가까운 동네 100, 가장 먼 동네 0"""
+    n = len(vals)
+    return [(sum(1 for w in vals if w > v) + (sum(1 for w in vals if w == v) - 1) / 2) / (n - 1) * 100 if n > 1 else 50 for v in vals]
+
+
 def pct_ranks(vals):
     """같은 값은 같은 백분위 (0 = 가장 적음, 100 = 가장 많음). 시설이 하나도 없으면 0."""
     n = len(vals)
@@ -257,51 +263,106 @@ def build():
                 return units.get(hit[0])
         return None
 
+    # 주민이 사는 곳: 건축물대장 법정동·리 대표점마다 단독주택 수 + 아파트 세대 수를 무게로 (aging.json)
+    hh = {}
+    for c in AG.get("complexes", []):
+        hh[c.get("place")] = hh.get(c.get("place"), 0) + (c.get("hh") or 0)
+    homes, ptof = [], {}
+    for p in AG["places"]:
+        if not p.get("at") or p["place"] not in places:
+            continue
+        w = sum((p.get("y", {}).get("house") or {}).values()) + hh.get(p["place"], 0)
+        homes.append((units[places[p["place"]]], p["at"][0], p["at"][1], max(1, w)))
+        ptof[p["place"]] = (p["at"][0], p["at"][1], max(1, w))
+
+    def addr_point(addr):
+        """좌표 없는 시설: 주소 속 법정동·리의 대표점 (읍·면만 알면 그 읍·면에서 집이 가장 많은 곳)"""
+        a = re.sub(r"\s+", " ", addr or "").replace("오송옵", "오송읍")
+        for pat in (r"\(([^,()\s]+?(?:동|가))[,)\s]", r"\s([^\s()]+?(?:동|가))\s+(?:산\s?)?\d"):
+            for m in re.finditer(pat, a):
+                if m.group(1) in ptof:
+                    return ptof[m.group(1)][:2]
+        for m in re.finditer(r"\s(\S+[읍면])\s?(\S+리)\b", a):
+            k = f"{m.group(1)} {m.group(2)}"
+            if k in ptof:
+                return ptof[k][:2]
+        for m in re.finditer(r"\s([^\s()]+?리)\s+(?:산\s?)?\d", a):
+            hit = [v for k, v in ptof.items() if k.endswith(" " + m.group(1))]
+            if len(hit) == 1:
+                return hit[0][:2]
+        for nm in units:
+            if nm.endswith(("읍", "면")) and nm in a:
+                c = [v for k, v in ptof.items() if k.startswith(nm + " ")]
+                if c:
+                    return max(c, key=lambda v: v[2])[:2]
+        return None
+
+    pts = {k: [] for k, _ in KINDS}   # 시설 위치 (거리 계산용)
+
+    def add(k, lat, lng, addr=""):
+        u = find(lat, lng) if lat is not None else None
+        u = u or (by_addr(addr) if addr else None)
+        pt = (lat, lng) if lat is not None else (addr_point(addr) if addr else None)
+        if pt:
+            pts[k].append(pt)
+        if u:
+            u["n"][k] += 1
+        return u
+
     BS = load("busstops.json", {"stops": []})
     for s in BS["stops"]:
-        u = find(s[1], s[2])
-        if u:
-            u["n"]["bus"] += 1
+        add("bus", s[1], s[2])
     PI = load("pois.json", {})
     for k in ("park", "lib", "market", "senior"):
         for s in PI.get(k, []):
-            u = find(s[1], s[2])
-            if u:
-                u["n"][k] += 1
+            add(k, s[1], s[2])
+    ND = load("newdata.json", {"items": {}, "meta": {}})   # newdata.py: 주소·좌표 [이름, 종류, 주소, 위도, 경도]
+    NDI = ND.get("items", {})
     FA = load("facilities.json", {})   # make_facilities.py: 학교·병원·약국·슈퍼·편의점 좌표
     for k in ("school", "hospital", "pharmacy", "mart"):
+        if NDI.get(k):
+            continue   # 병원·약국은 심평원 자료가 있으면 그것으로 셈 (상가정보는 의원이 많이 빠져 있음)
         for s in FA.get(k, []):
-            u = find(s[1], s[2])
-            if u:
-                u["n"][k] += 1
-    ND = load("newdata.json", {"items": {}, "meta": {}})   # newdata.py: 주소·좌표 [이름, 종류, 주소, 위도, 경도]
+            add(k, s[1], s[2])
     active = set(k for k, _ in KINDS if k not in NEW_KINDS)
     miss = {}
-    for k in NEW_KINDS:
-        rows = ND.get("items", {}).get(k) or []
+    for k in NEW_KINDS + ("hospital", "pharmacy"):
+        rows = NDI.get(k) or []
         if not rows:
-            print(f"  {k}: 자료 없음 → 점수에서 뺌")
+            if k in NEW_KINDS:
+                print(f"  {k}: 자료 없음 → 점수에서 뺌")
             continue
         active.add(k)
-        lost = []
-        for name, typ, addr, lat, lng in rows:
-            u = find(lat, lng) if lat is not None else None
-            u = u or by_addr(addr)
-            if u:
-                u["n"][k] += 1
-            else:
-                lost.append(name)
+        lost = [name for name, typ, addr, lat, lng in rows if not add(k, lat, lng, addr)]
         miss[k] = len(lost)
         print(f"  {k}: {len(rows)}곳 중 동 못 찾음 {len(lost)}곳 {lost[:8]}")
 
     L = sorted(units.values(), key=lambda u: u["name"])
+    # 드문 시설(절반 넘는 동에 하나도 없음): 동 안 개수 대신 '집에서 가장 가까운 시설까지 거리'(직선, 주민 수 가중 평균)
+    kx, ky = 111.32 * math.cos(math.radians(36.64)), 110.57
+    rare = [k for k, _ in KINDS if k in active and sum(1 for u in L if u["n"][k] == 0) > len(L) / 2]
+    for k in rare:
+        P = pts[k]
+        if not P:
+            continue
+        for u in L:
+            hs = [h for h in homes if h[0] is u]
+            if not hs:
+                continue
+            tot = sum(h[3] for h in hs)
+            d = sum(h[3] * min(math.hypot((h[2] - q[1]) * kx, (h[1] - q[0]) * ky) for q in P) for h in hs) / tot
+            u.setdefault("d", {})[k] = round(d, 2)
     for k, _ in KINDS:
-        pa = pct_ranks([u["n"][k] / u["area"] for u in L])
-        pp = pct_ranks([u["n"][k] / max(1, u["pop"]) * 1000 for u in L])
-        for u, a, b in zip(L, pa, pp):
-            u.setdefault("pa", {})[k] = round(a)
-            u.setdefault("pp", {})[k] = round(b)
-    # 4개 분야 × 면적(60%)·인구(40%) 가중. 분야끼리는 같은 비중(25%)
+        if k in rare:
+            sc = pct_low([u.get("d", {}).get(k, 99) for u in L])
+            pa = pp = sc
+        else:
+            pa = pct_ranks([u["n"][k] / u["area"] for u in L])
+            pp = pct_ranks([u["n"][k] / max(1, u["pop"]) * 1000 for u in L])
+        for u, x, y in zip(L, pa, pp):
+            u.setdefault("pa", {})[k] = round(x)
+            u.setdefault("pp", {})[k] = round(y)
+    # 4개 분야 × 면적·인구 가중. 분야끼리는 같은 비중(25%)
     for u in L:
         cats = {}
         for cat, members in CATEGORIES.items():
@@ -323,6 +384,7 @@ def build():
             "bus_got": BM.get("got", ""), "poi_got": PM.get("got", "") if isinstance(PM, dict) else "",
             "kinds": KINDS,
             "categories": {c: [k for k in m if k in active] for c, m in CATEGORIES.items()},
+            "rare": rare,
             "kind_weights": {c: {k: w for k, w in m.items() if k in active} for c, m in CATEGORIES.items()},
             "weights": {"area": W_AREA, "pop": W_POP},
             "new_got": ND.get("meta", {}).get("got", ""), "unmatched": miss,
@@ -336,7 +398,7 @@ def build():
         "units": [{
             "name": u["name"], "gu": u["gu"], "codes": u["codes"], "pop": u["pop"], "area": round(u["area"], 2),
             "n": u["n"], "pa": u["pa"], "pp": u["pp"], "sa": u["sa"], "sp": u["sp"], "score": u["score"], "rank": u["rank"],
-            "cats": u["cats"],
+            "cats": u["cats"], "d": u.get("d", {}),
             "polys": u["polys"],
         } for u in L],
         "places": places,
