@@ -217,13 +217,12 @@ def clean(addr):
     a = re.sub(r"^충북\s*", "충청북도 ", addr.strip())
     a = re.sub(r"(충청북도|청주시|상당구|서원구|흥덕구|청원구)(?=\S)", r"\1 ", a)  # '충북청주시상당구단재로293'
     a = re.sub(r"\(.*?\)", "", a).split(",")[0]
-    a = re.sub(r"(로|길)(\d)", r"\1 \2", a)
-    m = re.match(r"^(.*?(로|길)\s*\d+(-\d+)?)", a)
-    return re.sub(r"\s+", " ", (m.group(1) if m else a)).strip()
+    m = re.match(r"^(.*?\S(?:로|길))\s*(\d+(?:-\d+)?)(?!\d|-|번길)", a)
+    return re.sub(r"\s+", " ", (m.group(1) + " " + m.group(2)) if m else a).strip()
 
 
 def road_only(addr):
-    m = re.match(r"^(.*?\S+(로|길))\s*\d", clean(addr))
+    m = re.match(r"^(.*?\S(?:로|길)) \d+(?:-\d+)?$", clean(addr))
     return m.group(1) if m else None
 
 
