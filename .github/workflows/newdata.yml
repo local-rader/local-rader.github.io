@@ -33,7 +33,7 @@ jobs:
           MODE: ${{ inputs.mode }}
         run: python newdata.py "${MODE:-probe}"
       - name: 저장
-        if: ${{ inputs.mode == 'update' || inputs.mode == 'geofix' || inputs.mode == 'bigstore' }}
+        if: ${{ inputs.mode == 'update' || inputs.mode == 'geofix' }}
         run: |
           git config user.name "dongne-radar-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

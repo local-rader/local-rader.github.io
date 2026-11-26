@@ -30,11 +30,11 @@ MERGE = {
 KINDS = [("bus", "버스정류소"), ("park", "공원"), ("lib", "도서관"), ("market", "전통시장"), ("senior", "경로당"),
          ("school", "학교"), ("hospital", "병원·의원"), ("pharmacy", "약국"), ("mart", "슈퍼·편의점"),
          # newdata.py (2026-11 추가)
-         ("parking", "주차장"), ("safety", "119·치안센터"), ("sports", "공공체육시설"), ("culture", "문화시설"),
+         ("parking", "주차장"), ("safety", "119안전센터"), ("sports", "공공체육시설"), ("culture", "문화시설"),
          ("care", "요양병원"), ("child", "어린이복지시설"),
          # make_extra.py (상가정보)
          ("academy", "학원"), ("bigstore", "대형마트·백화점")]
-NEW_KINDS = ("parking", "safety", "sports", "culture", "care", "child", "bigstore")
+NEW_KINDS = ("parking", "safety", "sports", "culture", "care", "child")
 # 생활권 분야 (4개). 분야끼리 같은 비중, 분야 안 시설도 같은 비중. 자료를 못 받은 시설은 빼고 계산한다
 CATEGORIES = {   # 분야 안 시설 가중치. 지금은 같은 비중 (근거 없는 차등을 두지 않음). 자료가 빠진 시설은 빼고 다시 나눔
     "교통·생활": {"bus": 1, "mart": 1, "bigstore": 1, "market": 1, "parking": 1},
@@ -328,7 +328,7 @@ def build():
     ND = load("newdata.json", {"items": {}, "meta": {}})   # newdata.py: 주소·좌표 [이름, 종류, 주소, 위도, 경도]
     NDI = ND.get("items", {})
     FA = load("facilities.json", {})   # make_facilities.py: 학교·병원·약국·슈퍼·편의점 좌표
-    for k in ("school", "hospital", "pharmacy", "mart", "academy"):
+    for k in ("school", "hospital", "pharmacy", "mart"):
         if NDI.get(k):
             continue   # 병원·약국은 심평원 자료가 있으면 그것으로 셈 (상가정보는 의원이 많이 빠져 있음)
         for s in FA.get(k, []):
@@ -346,6 +346,8 @@ def build():
                 print(f"  {k}: 자료 없음 → 점수에서 뺌")
             continue
         active.add(k)
+        if k == "safety":   # 경찰 치안센터는 청주에 2곳(낭성·북이)뿐이라 거리 지표로 쓸 수 없어 119안전센터만 씀
+            rows = [r for r in rows if r[1] == "119안전센터"]
         lost = [name for name, typ, addr, lat, lng in rows if not add(k, lat, lng, addr, typ)]
         miss[k] = len(lost)
         print(f"  {k}: {len(rows)}곳 중 동 못 찾음 {len(lost)}곳 {lost[:8]}")
