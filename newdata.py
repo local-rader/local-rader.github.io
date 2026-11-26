@@ -9,7 +9,9 @@
   safety    소방청 119안전센터 현황 + 경찰청 치안센터 주소     의료·안전
   sports    충청북도 공공체육시설 + 청주시시설관리공단 체육시설 여가·문화
   culture   문화기반시설 총람(culture.json, 손으로 넣음)       여가·문화
-  care      건강보험심사평가원 요양기관 개설 현황 중 요양병원   돌봄·교육
+  hospital  건강보험심사평가원 요양기관 개설 현황: 병원·의원·보건소(치과·한방 제외) 의료·안전
+  pharmacy  같은 자료: 약국                                    의료·안전
+  care      같은 자료: 요양병원                                돌봄·교육
   child     충청북도 어린이복지시설                           돌봄·교육
 """
 import json
@@ -167,14 +169,26 @@ def get_sports():
     return out, culture, src
 
 
-def get_care():
+HOSP_TYPES = ("의원", "병원", "종합병원", "상급종합병원", "정신병원", "보건소", "보건지소", "보건진료소", "보건의료원")
+
+
+def get_hira():
+    """건강보험심사평가원 요양기관 개설 현황 → 병원·의원(치과·한방·조산원 제외), 약국, 요양병원"""
     t, rows = latest_with(FILES["care"], ["주소"])
-    out = [item(val(r, "요양기관명"), val(r, "요양종별"), val(r, "도로명주소"))
-           for r in rows if val(r, "시도명").startswith("충") and is_cj(val(r, "도로명주소")) and val(r, "요양종별") == "요양병원"]
+    out = {"hospital": [], "pharmacy": [], "care": []}
     kinds = {}
     for r in rows:
-        if is_cj(val(r, "도로명주소")):
-            kinds[val(r, "요양종별")] = kinds.get(val(r, "요양종별"), 0) + 1
+        a, typ = val(r, "도로명주소"), val(r, "요양종별")
+        if not is_cj(a):
+            continue
+        kinds[typ] = kinds.get(typ, 0) + 1
+        it = item(val(r, "요양기관명"), typ, a)
+        if typ in HOSP_TYPES:
+            out["hospital"].append(it)
+        elif typ == "약국":
+            out["pharmacy"].append(it)
+        elif typ == "요양병원":
+            out["care"].append(it)
     print("  청주 요양기관 종별:", kinds)
     return out, [t]
 
@@ -247,7 +261,7 @@ def geo_osm(addr):
     return (float(j[0]["lat"]), float(j[0]["lon"])) if j else None
 
 
-def geocode(items):
+def geocode(items, road=True):
     vk = os.environ.get("VWORLD_KEY", "").strip()
     stat = {"vworld": 0, "osm": 0, "fail": 0, "skip": 0}
     vworld_ok = bool(vk)
@@ -269,7 +283,7 @@ def geocode(items):
                 got = geo_osm(a)
                 if got:
                     stat["osm"] += 1
-                else:  # 건물 번호가 지도에 없으면 도로(→ 큰길) 가운데 좌표로 근사
+                elif road:  # 건물 번호가 지도에 없으면 도로(→ 큰길) 가운데 좌표로 근사
                     r1 = road_only(it[2])
                     r2 = re.sub(r"\d+번길$", "", r1) if r1 else None
                     for r in [x for x in (r1, r2) if x and re.search(r"\S(로|길)$", x)]:
@@ -296,7 +310,7 @@ def update():
         pass
     out = {"meta": {"got": datetime.now(KST).strftime("%Y-%m-%d"), "fields": ["name", "type", "addr", "lat", "lng"], "source": {}},
            "items": {}}
-    jobs = {"parking": get_parking, "safety": get_safety, "sports": get_sports, "care": get_care, "child": get_child}
+    jobs = {"parking": get_parking, "safety": get_safety, "sports": get_sports, "hira": get_hira, "child": get_child}
     for kind, fn in jobs.items():
         print(f"\n## {kind}")
         try:
@@ -304,6 +318,13 @@ def update():
             if kind == "sports":
                 rows, cul, src = res
                 out["items"]["culture_city"] = cul
+            elif kind == "hira":
+                parts, src = res
+                for k2, rows2 in parts.items():
+                    out["items"][k2] = rows2
+                    out["meta"]["source"][k2] = src
+                    print(f"  {k2}: 청주 {len(rows2)}곳")
+                continue
             else:
                 rows, src = res
             out["items"][kind] = rows
@@ -322,7 +343,7 @@ def update():
     print("\n## 주소 → 좌표")
     for kind, rows in out["items"].items():
         print(f" [{kind}]")
-        geocode(rows)
+        geocode(rows, road=kind not in ("hospital", "pharmacy"))
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     print("\n저장:", {k: len(v) for k, v in out["items"].items()})
@@ -333,7 +354,7 @@ def geofix():
     out = json.load(open(OUT, encoding="utf-8"))
     for kind, rows in out["items"].items():
         print(f" [{kind}]")
-        geocode(rows)
+        geocode(rows, road=kind not in ("hospital", "pharmacy"))
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
 
