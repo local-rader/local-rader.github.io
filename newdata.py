@@ -272,7 +272,7 @@ def geocode(items):
                 else:  # 건물 번호가 지도에 없으면 도로(→ 큰길) 가운데 좌표로 근사
                     r1 = road_only(it[2])
                     r2 = re.sub(r"\d+번길$", "", r1) if r1 else None
-                    for r in [x for x in (r1, r2) if x]:
+                    for r in [x for x in (r1, r2) if x and re.search(r"\S(로|길)$", x)]:
                         got = geo_osm(r)
                         if got:
                             stat["road"] = stat.get("road", 0) + 1

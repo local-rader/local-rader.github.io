@@ -30,7 +30,7 @@ MERGE = {
 KINDS = [("bus", "버스정류소"), ("park", "공원"), ("lib", "도서관"), ("market", "전통시장"), ("senior", "경로당"),
          ("school", "학교"), ("hospital", "병원·의원"), ("pharmacy", "약국"), ("mart", "슈퍼·편의점"),
          # newdata.py (2026-11 추가)
-         ("parking", "주차장"), ("safety", "119안전센터·치안센터"), ("sports", "공공체육시설"), ("culture", "문화시설"),
+         ("parking", "주차장"), ("safety", "119·치안센터"), ("sports", "공공체육시설"), ("culture", "문화시설"),
          ("care", "요양병원"), ("child", "어린이복지시설")]
 NEW_KINDS = ("parking", "safety", "sports", "culture", "care", "child")
 # 생활권 분야 (4개). 분야끼리 같은 비중, 분야 안 시설도 같은 비중. 자료를 못 받은 시설은 빼고 계산한다
