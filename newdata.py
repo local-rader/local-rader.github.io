@@ -219,6 +219,47 @@ def get_parking():
     return out, ["전국주차장정보표준데이터"]
 
 
+BIG = re.compile(r"이마트(?!\s?24|\s?에브리데이)|홈플러스(?!\s?익스프레스)|롯데마트|코스트코|트레이더스|백화점|아울렛|NC\s?(청주|백화점)|하나로클럽|롯데몰|스타필드")
+
+
+def get_bigstore():
+    """대형마트·백화점·아울렛: 오픈스트리트맵(Overpass)에서 청주 범위의 대형 매장 이름으로 찾음"""
+    q = f"""[out:json][timeout:60];(
+      nwr["shop"~"department_store|mall|supermarket|wholesale"]({BBOX[0]},{BBOX[2]},{BBOX[1]},{BBOX[3]});
+    );out center tags;"""
+    j = json.loads(fetch("https://overpass-api.de/api/interpreter?" + urllib.parse.urlencode({"data": q}), timeout=90))
+    out, seen = [], set()
+    for e in j.get("elements", []):
+        t = e.get("tags", {})
+        nm = t.get("name", "") or t.get("brand", "")
+        if not BIG.search(nm + " " + t.get("brand", "")):
+            continue
+        lat = e.get("lat") or (e.get("center") or {}).get("lat")
+        lng = e.get("lon") or (e.get("center") or {}).get("lon")
+        it = item(nm, t.get("shop", ""), t.get("addr:full", "") or t.get("addr:street", ""), lat, lng)
+        if it[3] is None:
+            continue
+        key = (re.sub(r"\s", "", nm), round(it[3], 3), round(it[4], 3))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(it)
+    for x in out:
+        print("   ", x[0], x[1], x[3], x[4])
+    return out, ["OpenStreetMap (대형마트·백화점·아울렛 이름 기준)"]
+
+
+def bigstore():
+    """이미 받은 newdata.json에 대형 매장만 새로 받아 넣음"""
+    out = json.load(open(OUT, encoding="utf-8"))
+    rows, src = get_bigstore()
+    out["items"]["bigstore"] = rows
+    out["meta"]["source"]["bigstore"] = src
+    with open(OUT, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+    print("bigstore", len(rows))
+
+
 # ---------- 주소 → 좌표 ----------
 def has_dong_hint(addr):
     """주소만으로 동을 알 수 있으면 True: '(가경동' 괄호, 지번 '사직동 119', '오창읍 ' 같은 읍면"""
@@ -309,7 +350,8 @@ def update():
         pass
     out = {"meta": {"got": datetime.now(KST).strftime("%Y-%m-%d"), "fields": ["name", "type", "addr", "lat", "lng"], "source": {}},
            "items": {}}
-    jobs = {"parking": get_parking, "safety": get_safety, "sports": get_sports, "hira": get_hira, "child": get_child}
+    jobs = {"parking": get_parking, "safety": get_safety, "sports": get_sports, "hira": get_hira, "child": get_child,
+            "bigstore": get_bigstore}
     for kind, fn in jobs.items():
         print(f"\n## {kind}")
         try:
@@ -371,4 +413,4 @@ def probe():
 
 
 if __name__ == "__main__":
-    {"probe": probe, "update": update, "geofix": geofix}[sys.argv[1] if len(sys.argv) > 1 else "probe"]()
+    {"probe": probe, "update": update, "geofix": geofix, "bigstore": bigstore}[sys.argv[1] if len(sys.argv) > 1 else "probe"]()

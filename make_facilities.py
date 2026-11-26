@@ -2,7 +2,7 @@
 
 입력 (직접 내려받은 표준데이터 파일)
   · 전국초중등학교위치표준데이터 CSV  → school (운영 중인 초·중·고, 소재지가 청주)
-  · 소상공인시장진흥공단 상가(상권)정보 CSV (충북) → hospital·pharmacy·mart (청주 업소)
+  · 소상공인시장진흥공단 상가(상권)정보 CSV (충북) → hospital·pharmacy·mart·academy (청주 업소)
     - hospital: 병원 대분류 전체 + 의원 대분류 중 치과·한의원 제외
     - pharmacy: 의약·화장품 소매 › 약국
     - mart: 종합 소매 › 슈퍼마켓·편의점
@@ -44,7 +44,7 @@ def school_points(path):
 
 
 def store_points(path):
-    pts = {"hospital": [], "pharmacy": [], "mart": []}
+    pts = {"hospital": [], "pharmacy": [], "mart": [], "academy": []}
     for r in read_csv(path):
         if r.get("시도명") != "충청북도" or not str(r.get("시군구명", "")).startswith(CITY):
             continue
@@ -62,6 +62,8 @@ def store_points(path):
             pts["pharmacy"].append([name, lat, lng])
         elif small in ("슈퍼마켓", "편의점"):
             pts["mart"].append([name, lat, lng])
+        elif small in ("입시·교과학원", "외국어학원"):  # 학군·사교육 여건 (예체능·직업훈련·성인 학원 제외)
+            pts["academy"].append([name, lat, lng])
     return pts
 
 
@@ -78,6 +80,7 @@ def main():
                 "hospital": "소상공인시장진흥공단 상가(상권)정보 202609 (보건의료 › 병원·의원, 치과·한의원 제외)",
                 "pharmacy": "소상공인시장진흥공단 상가(상권)정보 202609 (의약·화장품 소매 › 약국)",
                 "mart": "소상공인시장진흥공단 상가(상권)정보 202609 (종합 소매 › 슈퍼마켓·편의점)",
+                "academy": "소상공인시장진흥공단 상가(상권)정보 202609 (교육 › 입시·교과학원, 외국어학원)",
             },
         },
         "school": school, **stores,
