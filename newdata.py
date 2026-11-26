@@ -135,13 +135,12 @@ def get_safety():
         t, rows = latest_with(FILES["police"], ["주소"])
         src.append(t)
         for r in rows:
-            a, org, nm = val(r, "주소"), val(r, "기관"), val(r, "시설명", "명")
+            a, org = val(r, "주소"), val(r, "부처", "시도청", "기관")
+            nm = val(r, "치안센터명", "센터명", "시설명")
             if not is_cj(a):
                 continue
-            if "119" in nm or "소방" in org:
-                continue  # 119안전센터는 위 소방청 자료(더 최신)로 센다
-            if "해양" in org:
-                continue
+            if org != "경찰청" or "119" in nm:
+                continue  # 119안전센터는 위 소방청 자료(더 최신)로 세고, 해양경찰 파출장소는 뺀다
             out.append(item(nm, "치안센터", a))
     except Exception as e:  # noqa: BLE001
         print("  치안센터 자료 실패:", e)

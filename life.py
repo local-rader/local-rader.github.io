@@ -241,6 +241,10 @@ def build():
         if not u:
             m = re.match(r"^(\S+[읍면])", p["place"])
             u = units.get(m.group(1)) if m else units.get(p["place"])
+        if u and p.get("gu") and u["gu"] != p["gu"]:  # 대표점이 옆 구 행정동에 떨어진 경우 (예: 용담동 → 율량·사천동)
+            base = re.sub(r"\d*(동|가)$", "", p["place"].split(" ")[0])
+            alt = [w for w in units.values() if w["gu"] == p["gu"] and base and base in w["name"]]
+            u = alt[0] if len(alt) == 1 else u
         if u:
             places[p["place"]] = u["name"]
 
@@ -298,13 +302,16 @@ def build():
         return None
 
     pts = {k: [] for k, _ in KINDS}   # 시설 위치 (거리 계산용)
+    sub = {}                          # 한 항목 안의 다른 시설 (119안전센터 / 치안센터): 거리를 따로 잰 뒤 평균
 
-    def add(k, lat, lng, addr=""):
+    def add(k, lat, lng, addr="", typ=""):
         u = find(lat, lng) if lat is not None else None
         u = u or (by_addr(addr) if addr else None)
         pt = (lat, lng) if lat is not None else (addr_point(addr) if addr else None)
         if pt:
             pts[k].append(pt)
+            if k == "safety":
+                sub.setdefault(typ or "기타", []).append(pt)
         if u:
             u["n"][k] += 1
         return u
@@ -333,7 +340,7 @@ def build():
                 print(f"  {k}: 자료 없음 → 점수에서 뺌")
             continue
         active.add(k)
-        lost = [name for name, typ, addr, lat, lng in rows if not add(k, lat, lng, addr)]
+        lost = [name for name, typ, addr, lat, lng in rows if not add(k, lat, lng, addr, typ)]
         miss[k] = len(lost)
         print(f"  {k}: {len(rows)}곳 중 동 못 찾음 {len(lost)}곳 {lost[:8]}")
 
@@ -341,17 +348,19 @@ def build():
     # 드문 시설(절반 넘는 동에 하나도 없음): 동 안 개수 대신 '집에서 가장 가까운 시설까지 거리'(직선, 주민 수 가중 평균)
     kx, ky = 111.32 * math.cos(math.radians(36.64)), 110.57
     rare = [k for k, _ in KINDS if k in active and sum(1 for u in L if u["n"][k] == 0) > len(L) / 2]
+    def near(hs, P):
+        tot = sum(h[3] for h in hs)
+        return sum(h[3] * min(math.hypot((h[2] - q[1]) * kx, (h[1] - q[0]) * ky) for q in P) for h in hs) / tot
+
     for k in rare:
-        P = pts[k]
-        if not P:
+        groups = list(sub.values()) if k == "safety" and len(sub) > 1 else [pts[k]]
+        groups = [g for g in groups if g]
+        if not groups:
             continue
         for u in L:
             hs = [h for h in homes if h[0] is u]
-            if not hs:
-                continue
-            tot = sum(h[3] for h in hs)
-            d = sum(h[3] * min(math.hypot((h[2] - q[1]) * kx, (h[1] - q[0]) * ky) for q in P) for h in hs) / tot
-            u.setdefault("d", {})[k] = round(d, 2)
+            if hs:
+                u.setdefault("d", {})[k] = round(sum(near(hs, g) for g in groups) / len(groups), 2)
     for k, _ in KINDS:
         if k in rare:
             sc = pct_low([u.get("d", {}).get(k, 99) for u in L])
