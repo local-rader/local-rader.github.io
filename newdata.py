@@ -15,21 +15,19 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 UA = {"User-Agent": "Mozilla/5.0 turnoko-newdata"}
 
-# 공공데이터포털 검색어 (승인 목록 제목 그대로)
-QUERIES = [
-    "119안전센터 현황",
-    "119안전센터 파출장소 치안센터 주소",
-    "청주도시공사 운영 시설 위치 정보",
-    "청주시시설관리공단 운영 시설",
-    "충청북도 공공체육시설 현황",
-    "충청북도 청주시 의료시설",
-    "요양기관 개설 현황",
-    "병원코드정보서비스",
-    "전국주차장정보표준데이터",
-    "충청북도 어린이복지시설",
-]
-
-
+# 승인된 자료 (공공데이터포털 자료 번호). 파일데이터는 odcloud API로 받는다.
+FILES = {
+    "safety119": 15065056,     # 소방청_119안전센터 현황
+    "police": 15105156,        # 해양경찰청 파출장소·경찰청 치안센터·소방청 119안전센터 주소
+    "cityfac": 15143611,       # 청주도시공사_운영 시설 위치 정보
+    "sports": 15083343,        # 충청북도_공공체육시설 현황
+    "medical": 15110848,       # 충청북도 청주시_의료시설
+    "care": 15051057,          # 건강보험심사평가원_요양기관 개설 현황
+    "child": 15090401,         # 충청북도_어린이복지시설
+}
+STANDARD = {
+    "parking": ["https://api.data.go.kr/openapi/tn_pubr_prkplce_info_api"],  # 전국주차장정보표준데이터
+}
 def key():
     k = os.environ.get("DATA_GO_KR_KEY", "").strip()
     if not k:
@@ -37,11 +35,11 @@ def key():
     return k
 
 
-def fetch(url, tries=3):
+def fetch(url, tries=2):
     last = None
     for i in range(tries):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=40) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=25) as r:
                 raw = r.read()
             for enc in ("utf-8", "cp949"):
                 try:
@@ -59,22 +57,6 @@ def hide(s):
     return s.replace(key(), "KEY").replace(urllib.parse.quote(key(), safe=""), "KEY")
 
 
-def search(q):
-    url = "https://www.data.go.kr/tcs/dss/selectDataSetList.do?" + urllib.parse.urlencode(
-        {"dType": "", "keyword": q, "currentPage": 1, "perPage": 10, "sort": "_score"})
-    html = fetch(url)
-    out, seen = [], set()
-    for m in re.finditer(r'href="/data/(\d+)/(\w+)\.do[^"]*"', html):
-        pid, kind = m.group(1), m.group(2)
-        if (pid, kind) in seen:
-            continue
-        seen.add((pid, kind))
-        tail = re.sub(r"<[^>]+>", " ", html[m.end():m.end() + 600])
-        title = re.sub(r"\s+", " ", tail).strip()[:90]
-        out.append((pid, kind, title))
-    return out[:6]
-
-
 def probe_file(pid):
     doc = fetch(f"https://infuser.odcloud.kr/oas/docs?namespace={pid}/v1")
     try:
@@ -82,7 +64,7 @@ def probe_file(pid):
     except ValueError:
         print("    swagger 없음:", doc[:150].replace("\n", " "))
         return
-    for p, spec in paths[-3:]:  # 최신 버전이 보통 마지막
+    for p, spec in paths[-2:]:  # 최신 버전이 보통 마지막
         summ = (spec.get("get") or {}).get("summary", "")
         url = f"https://api.odcloud.kr/api{p}?" + urllib.parse.urlencode({"page": 1, "perPage": 2, "serviceKey": key()})
         txt = fetch(url)
@@ -96,29 +78,15 @@ def probe_file(pid):
             print(f"    [file] {p} | {summ} | 응답: {hide(txt[:200])}")
 
 
-def probe_api(pid, kind):
-    page = fetch(f"https://www.data.go.kr/data/{pid}/{kind}.do")
-    urls = sorted(set(re.findall(r"https?://apis?\.data\.go\.kr/[A-Za-z0-9_/\.\-]+", page)))
-    print("    API 주소 후보:", urls[:8])
-    for u in urls[:6]:
-        q = {"serviceKey": key(), "pageNo": 1, "numOfRows": 2, "type": "json", "_type": "json"}
-        txt = fetch(u + "?" + urllib.parse.urlencode(q), tries=1)
-        print(f"    → {u} : {hide(txt[:500]).replace(chr(10), ' ')}")
-
-
 def probe():
-    done = set()
-    for q in QUERIES:
-        print(f"\n## {q}")
-        for pid, kind, title in search(q):
-            print(f"  - {pid} {kind}: {title}")
-            if pid in done:
-                continue
-            done.add(pid)
-            if kind == "fileData":
-                probe_file(pid)
-            else:
-                probe_api(pid, kind)
+    for name, pid in FILES.items():
+        print(f"\n## {name} ({pid})")
+        probe_file(pid)
+    for name, urls in STANDARD.items():
+        print(f"\n## {name}")
+        for u in urls:
+            q = {"serviceKey": key(), "pageNo": 1, "numOfRows": 2, "type": "json"}
+            print("   ", u, hide(fetch(u + "?" + urllib.parse.urlencode(q), tries=1)[:900]).replace(chr(10), " "))
 
 
 if __name__ == "__main__":
