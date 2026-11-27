@@ -10,7 +10,7 @@
   환경       도시공원 면적(주민 1인당 ¼ · 동 면적 대비 ¼) · 1만㎡ 이상 공원까지 거리 ½ (묘지공원 제외)
   활력       최근 5년 인구 증감률 ½ · 0~14세 비율 ¼ · 20~44세 비율 ¼
   교통       500m 안 정류소를 지나는 버스 노선 수 60% · KTX역까지 거리 20% · 고속도로 IC까지 거리 20%
-  교육       학령기 아이 순유입(5년 전 2~10세 → 지금 7~15세 또래 증가율 − 전체 인구 증가율) ½ · 초등학교까지 거리 ½
+  교육       학령기 아이 순유입(몇 년 전 같은 또래 → 지금 7~15세 증가율 − 전체 인구 증가율) ½ · 초등학교까지 거리 ½
 거리·노선 수는 생활권 점수와 같은 '주민 위치'(법정동·리 대표점 + 아파트 단지, 세대 수 가중)에서 잼.
 """
 import json
@@ -255,14 +255,18 @@ def main(out_name):
     # ---- 교육: 학령기 아이 순유입 = 5년 전 2~10세였던 아이들(지금 7~15세)이 얼마나 늘었나 − 같은 기간 전체 인구 증가율
     #  아이들은 사망이 거의 없어 또래 수 변화 = 이사 온 아이 − 떠난 아이. 새 아파트 입주처럼 모두가 들어오는 효과는 전체 증가율로 뺌
     now_a, old_a = ages_by_unit("ages"), ages_by_unit("ages_5y")
-    note["kidsin"] = [(dict(L.get("ages_5y") or {}).get("title"), dict(L.get("ages") or {}).get("title")) for _, L in loadc("livable.json")][:1]
+    L0 = loadc("livable.json")[0][1]
+    t_now = re.findall(r"(\d{4})\d{4}", (L0.get("ages") or {}).get("title", ""))
+    t_old = re.findall(r"(\d{4})\d{4}", (L0.get("ages_5y") or {}).get("title", ""))
+    gap = int(t_now[-1]) - int(t_old[-1]) if t_now and t_old else 5
+    note["kidsin"] = f"{t_old[-1] if t_old else '?'}년 {7 - gap}~{15 - gap}세 → {t_now[-1] if t_now else '?'}년 7~15세 ({gap}년)"
     raw = {}
     for nm in val:
         a, b = now_a.get(nm), old_a.get(nm)
         if not a or not b:
             continue
         k_now = sum(a.get(x, 0) for x in range(7, 16))
-        k_old = sum(b.get(x, 0) for x in range(2, 11))
+        k_old = sum(b.get(x, 0) for x in range(7 - gap, 16 - gap))
         if k_old and b["_tot"]:
             raw[nm] = (k_now / k_old - 1) - (a["_tot"] / b["_tot"] - 1), k_old
     for c in CITIES:
