@@ -44,7 +44,7 @@ K_KIDS = 100             # 학령기 아이 순유입: 아이 수가 적은 동�
 LABEL = {"life": "생활권 점수", "new": "10년 안에 지은 집 비율", "trend": "아파트 매매가 추이", "jeonse": "㎡당 전세 보증금",
          "park_pc": "주민 1인당 공원 면적", "park_pa": "동 면적 대비 공원 면적", "park_d": "큰 공원까지 거리", "growth": "5년 인구 증감률",
          "kids": "0~14세 비율", "young": "20~44세 비율", "bus": "버스 노선 수", "ktx": "KTX역까지 거리", "ic": "고속도로 IC까지 거리",
-         "kidsin": "학령기 아이 순유입(전체 인구 증가 대비)", "elem": "초등학교까지 거리"}
+         "kidsin": "학령기 아이 순유입(전체 인구 증가 대비)", "elem": "초등학교까지 거리", "acad": "1㎞ 안 학원 수"}
 KX, KY = 111.32 * math.cos(math.radians(36.75)), 110.57
 
 
@@ -281,6 +281,13 @@ def main(out_name):
     elem = [(x[1], x[2]) for _, F in loadc("facilities.json") for x in (F or {}).get("school", []) if "초등" in x[0]]
     for nm in val:
         val[nm]["elem"] = hmean(nm, lambda h: min(km(h, q) for q in elem)) if elem else None
+
+    # ---- 교육: 집에서 1㎞ 안 입시·교과·외국어 학원 수 (학원가에 가까운가)
+    acad = [(x[1], x[2]) for _, E in loadc("extra.json") for x in (E or {}).get("academy", [])]
+    for nm in val:
+        def nacad(h):
+            return sum(1 for q in acad if abs(q[0] - h[0]) < 0.0095 and abs(q[1] - h[1]) < 0.012 and km(h, q) <= 1.0)
+        val[nm]["acad"] = hmean(nm, nacad) if acad else None
 
     # ---- 교통
     stops, ic, st = [], [], []
