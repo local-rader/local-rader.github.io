@@ -2,7 +2,7 @@
 
   python livable_score.py [출력 파일]     (기본: livable-score.json)
 
-5개 분야를 같은 비중(각 20%)으로 평균. 항목마다 61곳 안 백분위(0~100, 거리는 짧을수록 높음).
+6개 분야를 같은 비중(각 ⅙)으로 평균. 항목마다 61곳 안 백분위(0~100, 거리는 짧을수록 높음).
 자료가 없는 항목은 중간(50점)으로 계산.
   생활 편의  생활권 점수 그대로
   주거       10년 안에 지은 집 비율 ⅓ · 아파트 매매가 추이(같은 단지끼리 2년 전과 비교) ⅓ · ㎡당 전세 보증금 ⅓
@@ -10,6 +10,7 @@
   환경       도시공원 면적(주민 1인당 ¼ · 동 면적 대비 ¼) · 1만㎡ 이상 공원까지 거리 ½ (묘지공원 제외)
   활력       최근 5년 인구 증감률 ½ · 0~14세 비율 ¼ · 20~44세 비율 ¼
   교통       500m 안 정류소를 지나는 버스 노선 수 60% · KTX역까지 거리 20% · 고속도로 IC까지 거리 20%
+  교육       학령기 아이 순유입(5년 전 2~10세 → 지금 7~15세 또래 증가율 − 전체 인구 증가율) ½ · 초등학교까지 거리 ½
 거리·노선 수는 생활권 점수와 같은 '주민 위치'(법정동·리 대표점 + 아파트 단지, 세대 수 가중)에서 잼.
 """
 import json
@@ -36,11 +37,14 @@ AXES = {
     "환경": {"park_pc": 1, "park_pa": 1, "park_d": 2},
     "활력": {"growth": 2, "kids": 1, "young": 1},
     "교통": {"bus": 3, "ktx": 1, "ic": 1},
+    "교육": {"kidsin": 1, "elem": 1},
 }
-LOW_IS_GOOD = {"park_d", "ktx", "ic"}
+LOW_IS_GOOD = {"park_d", "ktx", "ic", "elem"}
+K_KIDS = 100             # 학령기 아이 순유입: 아이 수가 적은 동네는 도시 값 쪽으로 당김
 LABEL = {"life": "생활권 점수", "new": "10년 안에 지은 집 비율", "trend": "아파트 매매가 추이", "jeonse": "㎡당 전세 보증금",
          "park_pc": "주민 1인당 공원 면적", "park_pa": "동 면적 대비 공원 면적", "park_d": "큰 공원까지 거리", "growth": "5년 인구 증감률",
-         "kids": "0~14세 비율", "young": "20~44세 비율", "bus": "버스 노선 수", "ktx": "KTX역까지 거리", "ic": "고속도로 IC까지 거리"}
+         "kids": "0~14세 비율", "young": "20~44세 비율", "bus": "버스 노선 수", "ktx": "KTX역까지 거리", "ic": "고속도로 IC까지 거리",
+         "kidsin": "학령기 아이 순유입(전체 인구 증가 대비)", "elem": "초등학교까지 거리"}
 KX, KY = 111.32 * math.cos(math.radians(36.75)), 110.57
 
 
@@ -201,6 +205,25 @@ def main(out_name):
 
     # ---- 활력: 연령 (법정동·리별 주민등록 인구 → 행정동)
     code2place = {str(p["code"]): p["place"] for p in AG["places"] if p.get("code")}
+
+    def ages_by_unit(key):
+        """{동네: {나이: 인구}, '_tot': 전체}"""
+        out = {}
+        for c, L in loadc("livable.json"):
+            for r in (L.get(key) or {}).get("rows", []):
+                if not r.get("리명") and str(r.get("읍면동명", "")).endswith(("읍", "면")):
+                    continue
+                pl = code2place.get(str(r["법정동코드"])) or ((r["읍면동명"] + " " + r["리명"]) if r.get("리명") else r["읍면동명"])
+                nm = places.get(pl)
+                if not nm:
+                    continue
+                a = out.setdefault(nm, {"_tot": 0})
+                a["_tot"] += r.get("계") or 0
+                for k, v in r.items():
+                    m = re.match(r"^(\d+)세", k)
+                    if m and isinstance(v, (int, float)):
+                        a[int(m.group(1))] = a.get(int(m.group(1)), 0) + v
+        return out
     ag = {}
     for c, L in loadc("livable.json"):
         for r in (L.get("ages") or {}).get("rows", []):
@@ -228,6 +251,32 @@ def main(out_name):
         val[nm]["kids"] = a[1] / a[0] if a and a[0] else None
         val[nm]["young"] = a[2] / a[0] if a and a[0] else None
         val[nm]["_age_pop"] = a[0] if a else 0
+
+    # ---- 교육: 학령기 아이 순유입 = 5년 전 2~10세였던 아이들(지금 7~15세)이 얼마나 늘었나 − 같은 기간 전체 인구 증가율
+    #  아이들은 사망이 거의 없어 또래 수 변화 = 이사 온 아이 − 떠난 아이. 새 아파트 입주처럼 모두가 들어오는 효과는 전체 증가율로 뺌
+    now_a, old_a = ages_by_unit("ages"), ages_by_unit("ages_5y")
+    note["kidsin"] = [(dict(L.get("ages_5y") or {}).get("title"), dict(L.get("ages") or {}).get("title")) for _, L in loadc("livable.json")][:1]
+    raw = {}
+    for nm in val:
+        a, b = now_a.get(nm), old_a.get(nm)
+        if not a or not b:
+            continue
+        k_now = sum(a.get(x, 0) for x in range(7, 16))
+        k_old = sum(b.get(x, 0) for x in range(2, 11))
+        if k_old and b["_tot"]:
+            raw[nm] = (k_now / k_old - 1) - (a["_tot"] / b["_tot"] - 1), k_old
+    for c in CITIES:
+        xs = [(v, n) for nm, (v, n) in raw.items() if city_of[nm] == c]
+        m = sum(v * n for v, n in xs) / sum(n for _, n in xs) if xs else 0
+        for nm in val:
+            if city_of[nm] == c:
+                v, n = raw.get(nm, (m, 0))
+                val[nm]["kidsin"] = (n * v + K_KIDS * m) / (n + K_KIDS)
+                val[nm]["_kids_old"] = n
+    # ---- 교육: 초등학교까지 거리 (걸어서 다닐 수 있나)
+    elem = [(x[1], x[2]) for _, F in loadc("facilities.json") for x in (F or {}).get("school", []) if "초등" in x[0]]
+    for nm in val:
+        val[nm]["elem"] = hmean(nm, lambda h: min(km(h, q) for q in elem)) if elem else None
 
     # ---- 교통
     stops, ic, st = [], [], []
