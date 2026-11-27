@@ -241,10 +241,11 @@ def get_ages():
 
 # ---------- 고속도로 IC·KTX역 (오픈스트리트맵) ----------
 def get_transit():
-    """시 경계 밖 가까운 IC도 잡도록 범위를 넓혀서 받음. 분기점(JCT)은 드나들 수 없어 뺌"""
+    """시 경계 밖 가까운 IC도 잡도록 범위를 넓혀서 받음. 고속도로(motorway) 위의 나들목만 (국도 교차로 제외), 분기점(JCT)은 드나들 수 없어 뺌"""
     b = (BBOX[0] - 0.15, BBOX[1] + 0.15, BBOX[2] - 0.18, BBOX[3] + 0.18)
     q = f"""[out:json][timeout:90];(
-      node["highway"="motorway_junction"]({b[0]},{b[2]},{b[1]},{b[3]});
+      way["highway"="motorway"]({b[0]},{b[2]},{b[1]},{b[3]})->.m;
+      node(w.m)["highway"="motorway_junction"];
       nwr["railway"="station"]["name"~"^(오송|충주)(역)?$"]({b[0]},{b[2]},{b[1]},{b[3]});
     );out center tags;"""
     j, last = None, None
