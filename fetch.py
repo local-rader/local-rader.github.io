@@ -30,18 +30,25 @@ from datetime import datetime, timedelta, timezone
 
 BASE = "https://apis.data.go.kr/1613000/ArchPmsHubService/getApBasisOulnInfo"
 HERE = os.path.dirname(os.path.abspath(__file__))
-CODES = os.path.join(HERE, "codes.json")
-STORE = os.path.join(HERE, "permits.json")
-SITE = os.path.join(HERE, "data.js")
-PARCELS = os.path.join(HERE, "parcels.json")
-TRADE_SUMMARY = os.path.join(HERE, "trades-summary.json")
-PNUS = os.path.join(HERE, "pnus.json")  # 관리자 페이지(parcels-tool.html)가 받을 필지번호 목록
+
+# 도시 선택: TURNOKO_CITY=충주 로 실행하면 충주 자료를 chungju/ 폴더에 따로 저장 (기본 청주)
+CITYK = os.environ.get("TURNOKO_CITY", "청주").strip() or "청주"
+CITY_DIR = {"청주": "", "충주": "chungju"}[CITYK]
+CITY_ALL = CITYK + "시 전체"
+BB = {"청주": (36.4, 36.95, 127.2, 127.8), "충주": (36.75, 37.25, 127.6, 128.2)}[CITYK]
+CODES = os.path.join(HERE, CITY_DIR, "codes.json")
+STORE = os.path.join(HERE, CITY_DIR, "permits.json")
+SITE = os.path.join(HERE, CITY_DIR, "data.js")
+PARCELS = os.path.join(HERE, CITY_DIR, "parcels.json")
+TRADE_SUMMARY = os.path.join(HERE, CITY_DIR, "trades-summary.json")
+PNUS = os.path.join(HERE, CITY_DIR, "pnus.json")  # 관리자 페이지(parcels-tool.html)가 받을 필지번호 목록
 VWORLD = "https://api.vworld.kr/req/data"
 KST = timezone(timedelta(hours=9))
 PAUSE = 0.25  # 호출 사이 간격(초). 서버에 부담을 주지 않기 위함
 MAX_EVENTS = 800
 # 수집 지역 (시군구 코드, 이름). 순서대로 받는다.
-AREAS = [("43114", "청원구"), ("43111", "상당구"), ("43112", "서원구"), ("43113", "흥덕구")]
+AREAS = {"청주": [("43114", "청원구"), ("43111", "상당구"), ("43112", "서원구"), ("43113", "흥덕구")],
+         "충주": [("43130", "충주시")]}[CITYK]
 BACKFILL_FROM = "20230101"  # 새로 넣은 구는 이 날짜 이후 바뀐 기록을 모두 받는다
 BUDGET = 40 * 60  # 한 번 실행에서 쓸 시간(초). GitHub 실행 한도(90분) 안에서 넉넉히 저장하고 다음 실행 때 이어 받는다
 
@@ -251,7 +258,7 @@ def public_name(name, purp, place):
     if not n or "주택" in (purp or "") or "씨" in n or (place and n.startswith(place)):
         return ""
     # 이름 칸에 주소를 적은 경우(예: '충청북도 청주시 … 필지 공장')는 이름으로 보지 않는다
-    if re.search(r"(청주시|[가-힣]+구) ", n) or re.search(r"(번지|필지)", n):
+    if re.search(r"(청주시|충주시|[가-힣]+구) ", n) or re.search(r"(번지|필지)", n):
         return ""
     return n if PUBLIC_NAME.search(n) else ""
 
@@ -613,7 +620,7 @@ def build(store=None, codes=None):
     # 필지 중심 좌표와 개별공시지가는 parcels.json에서 붙인다 (원장에는 넣지 않음)
     # 청주시 밖으로 찍히는 좌표(브이월드 도형 오류)는 버리고, 사이트가 주소로 위치를 찾게 둔다
     have = {k: v for k, v in load(PARCELS, {}).get("parcels", {}).items()
-            if v and 36.4 < float(v[0] or 0) < 36.95 and 127.2 < float(v[1] or 0) < 127.8}
+            if v and BB[0] < float(v[0] or 0) < BB[1] and BB[2] < float(v[1] or 0) < BB[3]}
 
     def cell(r, f):
         if f in PARCEL_FIELDS:
@@ -647,7 +654,7 @@ def build(store=None, codes=None):
 
 # ---------------------------------------------------------------- AI 질문용 요약
 
-AI_CONTEXT = os.path.join(HERE, "ai-context.json")
+AI_CONTEXT = os.path.join(HERE, CITY_DIR, "ai-context.json")
 # 사이트(index.html)의 용도 분류와 같은 기준
 USE_CATS = [("주택", r"주택|기숙사"), ("가게·음식점·사무실", r"근린|근생"),
             ("학교·업무·공공", r"교육|연구|업무|노유자|공공"),
@@ -780,7 +787,7 @@ def ai_context(out):
         s["permitParcelLandPriceMedianWonPerM2"] = _median(jg)
         return s
 
-    places = {"청주시 전체": dict(level="시", **summary(rows))}
+    places = {CITY_ALL: dict(level="시", **summary(rows))}
     for g in sorted({r["gu"] for r in rows}):
         places[g] = dict(level="구", **summary([r for r in rows if r["gu"] == g]))
     for a in sorted({r["area1"] for r in rows if r["area1"]}):
@@ -809,7 +816,7 @@ def ai_context(out):
     ts = load(TRADE_SUMMARY, None)
     if ts:
         for key, val in ts.get("places", {}).items():
-            name = "청주시 전체" if key == "all" else key
+            name = CITY_ALL if key == "all" else key
             if name in places:
                 places[name]["실거래"] = val
         ctx["tradesComplete"] = ts.get("complete")
@@ -825,8 +832,8 @@ def ai_context(out):
 
 def add_pop(ctx, places):
     """population-trend.json(행정동 월별 주민등록 인구)이 있으면 동네마다 인구 변화를 붙인다."""
-    po = load(os.path.join(HERE, "population-trend.json"), None)
-    lf = load(os.path.join(HERE, "life.json"), None)
+    po = load(os.path.join(HERE, CITY_DIR, "population-trend.json"), None)
+    lf = load(os.path.join(HERE, CITY_DIR, "life.json"), None)
     if not po or not po.get("units"):
         return
     ms = po["months"]
@@ -847,8 +854,8 @@ def add_pop(ctx, places):
     for name, s in U.items():
         if name in places:
             places[name]["인구"] = brief(name, s)
-    if "청주시 전체" in places:
-        places["청주시 전체"]["인구"] = brief("청주시 전체", po["city"])
+    if CITY_ALL in places:
+        places[CITY_ALL]["인구"] = brief(CITY_ALL, po["city"])
     ch = sorted(({"행정동": k, "증감률": pct(v["pop"][0], v["pop"][-1]), "인구": v["pop"][-1]} for k, v in U.items()), key=lambda x: -x["증감률"])
     ctx.setdefault("rankings", {})[f"인구증가율_상위({ms[0]}~{ms[-1]})"] = ch[:5]
     ctx["rankings"][f"인구감소율_상위({ms[0]}~{ms[-1]})"] = ch[::-1][:5]
@@ -858,7 +865,7 @@ def add_pop(ctx, places):
 
 def add_life(ctx, places):
     """life.json(터놓고 생활권 점수, 행정동 단위)이 있으면 동네마다 점수를 붙인다."""
-    lf = load(os.path.join(HERE, "life.json"), None)
+    lf = load(os.path.join(HERE, CITY_DIR, "life.json"), None)
     if not lf or not lf.get("units"):
         return
     names = dict(lf["meta"]["kinds"])
@@ -886,7 +893,7 @@ def add_life(ctx, places):
 
 def add_aging(ctx, places):
     """aging.json(건축물대장 사용승인 연도 집계)이 있으면 동네마다 노후도 요약을 붙인다."""
-    ag = load(os.path.join(HERE, "aging.json"), None)
+    ag = load(os.path.join(HERE, CITY_DIR, "aging.json"), None)
     if not ag or not ag.get("places"):
         return
     year = now_kst().year
@@ -920,7 +927,7 @@ def add_aging(ctx, places):
     allp = ag["places"]
     city = summary(allp, lambda c: True)
     if city:
-        places.setdefault("청주시 전체", {"level": "시"})["노후도"] = city
+        places.setdefault(CITY_ALL, {"level": "시"})["노후도"] = city
     groups = {}
     for p in allp:
         groups.setdefault(("gu", p["gu"]), []).append(p)

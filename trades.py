@@ -23,13 +23,18 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-STORE = os.path.join(HERE, "trades.json")
-SITE = os.path.join(HERE, "trades.js")
-SUMMARY = os.path.join(HERE, "trades-summary.json")  # data.js(홈 브리핑)와 ai-context.json이 읽는 작은 요약
-CODES = os.path.join(HERE, "codes.json")
+
+# 도시 선택: TURNOKO_CITY=충주 로 실행하면 충주 자료를 chungju/ 폴더에 따로 저장 (기본 청주)
+CITYK = os.environ.get("TURNOKO_CITY", "청주").strip() or "청주"
+CITY_DIR = {"청주": "", "충주": "chungju"}[CITYK]
+STORE = os.path.join(HERE, CITY_DIR, "trades.json")
+SITE = os.path.join(HERE, CITY_DIR, "trades.js")
+SUMMARY = os.path.join(HERE, CITY_DIR, "trades-summary.json")  # data.js(홈 브리핑)와 ai-context.json이 읽는 작은 요약
+CODES = os.path.join(HERE, CITY_DIR, "codes.json")
 API = "https://apis.data.go.kr/1613000/"
 KST = timezone(timedelta(hours=9))
-AREAS = [("43111", "상당구"), ("43112", "서원구"), ("43113", "흥덕구"), ("43114", "청원구")]
+AREAS = {"청주": [("43111", "상당구"), ("43112", "서원구"), ("43113", "흥덕구"), ("43114", "청원구")],
+         "충주": [("43130", "충주시")]}[CITYK]
 # (코드, 이름, 주소, ㎡당 가격에 쓰는 면적 항목, 면적 이름)
 KINDS = [
     ("apt", "아파트", "RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev", ("excluUseAr",), "전용면적"),

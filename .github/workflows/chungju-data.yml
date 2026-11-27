@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       steps:
-        description: "받을 것 (쉼표): stops,pois,newdata,apts,aging"
+        description: "받을 것 (쉼표): stops,pois,newdata,apts,aging,trades,permits"
         required: false
         default: "stops,pois,newdata,apts,aging"
 
@@ -54,6 +54,18 @@ jobs:
         env:
           AGING_BUDGET: "4000"
         run: python aging.py update
+      - name: 실거래가
+        if: contains(env.STEPS, 'trades')
+        continue-on-error: true
+        timeout-minutes: 25
+        env:
+          RTMS_KEY: ${{ secrets.RTMS_KEY }}
+        run: python trades.py update
+      - name: 건축 인허가
+        if: contains(env.STEPS, 'permits')
+        continue-on-error: true
+        timeout-minutes: 45
+        run: python fetch.py update
       - name: 저장
         if: ${{ !cancelled() }}
         run: |
