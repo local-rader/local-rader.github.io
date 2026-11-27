@@ -97,8 +97,24 @@ def months(n):
 
 
 # ---------- 전월세 ----------
+def rent_key():
+    """전월세 활용신청이 어느 계정 키로 됐는지 모르므로 둘 다 시험"""
+    for name in ("RTMS_KEY", "DATA_GO_KR_KEY"):
+        k = os.environ.get(name, "").strip()
+        if not k:
+            continue
+        q = {"serviceKey": k, "LAWD_CD": SGG[0], "DEAL_YMD": months(1)[0], "pageNo": 1, "numOfRows": 1}
+        try:
+            items_of(fetch(RENT + "?" + urllib.parse.urlencode(q), tries=1))
+            print(f"  전월세: {name} 사용")
+            return k
+        except Exception as e:  # noqa: BLE001
+            print(f"  전월세 {name} 실패:", hide(str(e))[:120])
+    raise RuntimeError("전월세 API를 쓸 수 있는 키가 없습니다.")
+
+
 def get_rent():
-    k = env("RTMS_KEY")
+    k = rent_key()
     rows = []
     for sg in SGG:
         for ym in months(12):
@@ -250,9 +266,9 @@ def update(only=None):
 def probe():
     print("## rent")
     try:
-        q = {"serviceKey": env("RTMS_KEY"), "LAWD_CD": SGG[0], "DEAL_YMD": months(1)[0], "pageNo": 1, "numOfRows": 2}
-        t = fetch(RENT + "?" + urllib.parse.urlencode(q), tries=1)
-        print("  ", hide(t[:600]).replace("\n", " "))
+        k = rent_key()
+        q = {"serviceKey": k, "LAWD_CD": SGG[0], "DEAL_YMD": months(1)[0], "pageNo": 1, "numOfRows": 2}
+        print("  ", hide(fetch(RENT + "?" + urllib.parse.urlencode(q), tries=1)[:600]).replace("\n", " "))
     except Exception as e:  # noqa: BLE001
         print("  실패:", hide(str(e))[:300])
     print("## parks")
