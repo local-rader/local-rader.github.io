@@ -372,7 +372,17 @@ def apts():
       nwr["landuse"="residential"]["name"]({BBOX[0]},{BBOX[2]},{BBOX[1]},{BBOX[3]});
       nwr["place"~"neighbourhood|quarter|suburb|village|hamlet|town"]["name"]({BBOX[0]},{BBOX[2]},{BBOX[1]},{BBOX[3]});
     );out center tags;"""
-    j = json.loads(fetch("https://overpass-api.de/api/interpreter?" + urllib.parse.urlencode({"data": q}), timeout=150))
+    j, last = None, None
+    for ep in ("https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
+               "https://overpass.private.coffee/api/interpreter"):
+        try:
+            j = json.loads(fetch(ep + "?" + urllib.parse.urlencode({"data": q}), timeout=150))
+            break
+        except Exception as e:  # noqa: BLE001
+            last = e
+            print("  오버패스 실패, 다른 서버로:", ep, str(e)[:80])
+    if j is None:
+        raise RuntimeError(f"오버패스 서버 모두 실패: {last}")
     rows = []
     for e in j.get("elements", []):
         t = e.get("tags", {})
