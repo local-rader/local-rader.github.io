@@ -243,8 +243,16 @@ def get_ages(ym=None):
     ckey = next((k for k in r0 if "법정동코드" in k.replace(" ", "")), "법정동코드")
     out, page, per = [], 1, 1000
     seen, cb, cbx = 0, 0, []
-    while (page - 1) * per < total:
+    while seen < total:
         d = odc(path, page, per).get("data") or []
+        if not d:   # 빈 쪽: 한 번 더 시도 후 멈춤
+            time.sleep(3)
+            d = odc(path, page, per).get("data") or []
+            if not d:
+                print(f"  {page}쪽이 비어 멈춤")
+                break
+        if page == 1 and len(d) < per:   # 서버가 한 번에 주는 양이 더 적으면 거기에 맞춤
+            per = len(d) if len(d) < total else per
         seen += len(d)
         for r in d:
             if str(r.get(ckey, "")).startswith("43"):
