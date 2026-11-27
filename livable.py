@@ -221,8 +221,16 @@ def age_versions():
     return sorted(items, key=lambda x: re.findall(r"\d{6,8}", x[1])[-1:] or [""], reverse=True)
 
 
-def get_ages():
-    path, title = age_versions()[0]
+def get_ages(ym=None):
+    """ym(예: '202110')을 주면 그 달 판, 없으면 가장 최근 판"""
+    vs = age_versions()
+    print("  받을 수 있는 판:", [re.findall(r"\d{8}", t)[-1:] for _, t in vs][:40])
+    if ym:
+        hit = [(p, t) for p, t in vs if re.search(ym + r"\d\d", t)]
+        if not hit:
+            raise RuntimeError(f"{ym} 판 없음")
+        vs = hit
+    path, title = vs[0]
     head = odc(path, 1, 1)
     total = int(head.get("totalCount") or 0)
     print(f"  {title}: 전체 {total:,}행, 칸 예 {list((head.get('data') or [{}])[0].keys())[:12]}")
@@ -276,7 +284,9 @@ def get_transit():
     return {"fields": ["name", "lat", "lng"], "ic": ic, "station": st, "rows": ic + st}
 
 
-JOBS = {"rent": get_rent, "parks": get_parks, "routes": get_routes, "ages": get_ages, "transit": get_transit}
+JOBS = {"rent": get_rent, "parks": get_parks, "routes": get_routes, "ages": get_ages, "transit": get_transit,
+        # 5년 전 같은 달: 학령기 아이가 들어오는 동네인지(같은 나이 또래가 5년 사이 늘었나) 보려고
+        "ages_5y": lambda: get_ages(f"{int(datetime.now(KST).strftime('%Y')) - 5}10")}
 
 
 def update(only=None):
