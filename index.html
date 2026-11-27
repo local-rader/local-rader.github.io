@@ -2182,6 +2182,31 @@ button.nrow:hover .nk { color: var(--accent); }
     ev.addListener(M.map, "click", dotsHit);
     window.addEventListener("resize", dotsLater);
   }
+  // 다른 도시의 개발 기록: 지도를 넓게 볼 때 함께 보이도록 좌표가 있는 기록만 불러온다 (누르면 그 도시 화면으로)
+  var OTHER = { rows: null, loading: false };
+  function loadOther(cb) {
+    if (OTHER.rows || OTHER.loading) return;
+    OTHER.loading = true;
+    var oc = CJ ? window.TN_CITIES.cheongju : window.TN_CITIES.chungju;
+    fetch(oc.dir + "data.js", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (t) {
+      var a = t.indexOf("{"), b = t.lastIndexOf("}"), d = JSON.parse(t.slice(a, b + 1)), f = d.fields || [];
+      OTHER.rows = (d.rows || []).map(function (x) { var o = {}; f.forEach(function (k, i) { o[k] = x[i]; }); return o; }).filter(function (r) { return +r.lat && +r.lng; }).map(function (r) {
+        r.cat = catOf(r); r.stage = stageOf(r); r.known = r.cat !== "none"; r.area = +r.area || 0; r.use = plainUse(r.purp);
+        r.pms = r.pms || ""; r.stcns = r.stcns || ""; r.apr = r.apr || ""; r.lat = +r.lat; r.lng = +r.lng; r.jiga = +r.jiga || 0;
+        r.opk = r.pk; r.pk = oc.key + ":" + r.pk; r.other = oc.key; r.otherName = oc.name;
+        return r;
+      });
+      OTHER.loading = false; cb();
+    }).catch(function () { OTHER.loading = false; OTHER.rows = []; });
+  }
+  function otherShown() {
+    if (!OTHER.rows || state.place !== "all" || state.favOnly) return [];
+    var q = state.q.replace(/\s+/g, "");
+    return OTHER.rows.filter(function (r) {
+      return (state.blank || r.known) && moved(r, state.ev) && (state.cat === "all" || r.cat === state.cat) &&
+        (!q || (r.addr + (r.name || "") + (r.purp || "") + r.use).replace(/\s+/g, "").indexOf(q) >= 0);
+    });
+  }
   function dotsAdd(r, ll) {
     if (DOTS.idx[r.pk] !== undefined) return;
     DOTS.idx[r.pk] = DOTS.pts.length;
@@ -2218,7 +2243,7 @@ button.nrow:hover .nk { color: var(--accent); }
       if (x < -12 || y < -12 || x > w + 12 || y > h + 12) return;
       DOTS.vis.push(i);
       if (p.r.pk === M.sel) { sel = i; return; }
-      var k = Math.max(p.rk, 0) + "|" + (p.rk < 0 ? 1 : 0) + "|" + p.r.cat;
+      var k = Math.max(p.rk, 0) + "|" + (p.rk < 0 || p.r.other ? 1 : 0) + "|" + p.r.cat;
       if (!groups[k]) { groups[k] = []; keys.push(k); }
       groups[k].push(i);
       if (state.fav[p.r.pk]) fav.push(i);
@@ -2259,7 +2284,11 @@ button.nrow:hover .nk { color: var(--accent); }
       var dx = DOTS.xs[i] - pt.x, dy = DOTS.ys[i] - pt.y, d = dx * dx + dy * dy, lim = DOT_R[Math.max(DOTS.pts[i].rk, 0)] + 10;
       if (d <= lim * lim && (d < bd || (d === bd && DOTS.pts[i].rk > DOTS.pts[best].rk))) { bd = d; best = i; }
     });
-    if (best >= 0) selectPin(DOTS.pts[best].r);
+    if (best >= 0) {
+      var hr = DOTS.pts[best].r;
+      if (hr.other) { location.href = location.pathname + "?city=" + hr.other + "#p=" + encodeURIComponent(hr.opk); return; }
+      selectPin(hr);
+    }
   }
   function highlight(pk) {
     M.sel = pk;
@@ -2310,6 +2339,8 @@ button.nrow:hover .nk { color: var(--accent); }
       var t = "조건에 맞는 " + nf(all.length) + "건 중 " + nf(shown) + "건을 지도에 표시했습니다.";
       if (!done && j < geoList.length) t += " 주소로 위치 찾는 중 " + j + " / " + geoList.length;
       if (done && (miss + skipped)) t += " 위치를 알 수 없는 " + nf(miss + skipped) + "건은 빠졌습니다.";
+      var on = otherShown().length;
+      if (on) t += " 흐린 점 " + nf(on) + "개는 " + (CJ ? "청주" : "충주") + " 기록이에요(지도를 넓히면 보이고, 누르면 " + (CJ ? "청주" : "충주") + " 화면으로 가요).";
       stat.textContent = t;
     }
     function finish() {
@@ -2322,6 +2353,8 @@ button.nrow:hover .nk { color: var(--accent); }
     function drawKnown() {
       if (token !== M.token) return;
       for (; i < known.length; i++) put(known[i], [known[i].lat, known[i].lng]);
+      if (!OTHER.rows) loadOther(function () { if (screen === "map") { M.dirty = true; drawMap(); } });
+      otherShown().forEach(function (r) { dotsAdd(r, [r.lat, r.lng]); });
       dotsSort(); line(false);
       if (shown && geoList.length) M.map.setBounds(bounds, 40, 40, 40, 40);
       dotsLater();
