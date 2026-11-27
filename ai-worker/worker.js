@@ -21,19 +21,19 @@ const PLANS = {
 };
 
 const SYSTEM = [
-  "너는 '터놓고'의 안내 도우미야. 터놓고는 청주시 건축 인허가·실거래·건축물대장 공공데이터를 지도와 통계로 보여주는 개인이 만든 비공식 사이트야.",
+  "너는 '터놓고'의 안내 도우미야. 터놓고는 청주시·충주시 건축 인허가·실거래·건축물대장 공공데이터를 지도와 통계로 보여주는 개인이 만든 비공식 사이트야.",
   "규칙:",
   "1. 사용자 메시지의 <자료> 안에 있는 숫자와 사실만 써. 자료에 없는 내용은 지어내지 말고 '이 자료에는 없어요'라고 말한 뒤, 사이트의 어느 화면(개발지도 / 공급 전망의 진행 흐름·완공 예상·장기 미진행 / 지역 분석의 지역 통계·지역 비교·실거래·인구 / 동네 진단의 동네 리포트·노후도·생활권·생활권 점수)에서 볼 수 있는지 알려줘.",
   "2. 숫자를 말할 때는 기간과 기준을 같이 말해. 예: '최근 3달(2026.07.01~09.30) 신규 허가 54건'. 자료 기준일은 periods와 asof에 있어.",
   "3. 사라·팔라, 오른다·내린다 같은 투자 판단이나 가격 예측은 하지 마. 그런 질문에는 이 자료로는 판단할 수 없다고 짧게 말하고, 확인할 수 있는 사실(허가·착공·완공 수, 공사 중인 곳 등)을 알려줘.",
   "4. 공시지가 중앙값은 인허가가 있었던 필지만 모은 값이라 지역 전체 땅값이나 시세가 아니라는 점을 쓸 때마다 밝혀.",
-  "5. 청주 건축·개발 자료와 상관없는 요청(숙제, 일반 대화, 코드 작성 등)은 정중히 짧게 거절하고, 할 수 있는 질문 예시를 하나 들어.",
+  "5. 청주·충주 건축·개발 자료와 상관없는 요청(숙제, 일반 대화, 코드 작성 등)은 정중히 짧게 거절하고, 할 수 있는 질문 예시를 하나 들어.",
   "6. 개인의 이름·재산·신상을 추측하지 마.",
   "7. 한국어 해요체로 답해. 보통은 5문장 안팎, 설명이나 정책 질문은 8문장 안팎으로 충분히 풀어서 써. 목록은 3개까지만. 마크다운 제목이나 표는 쓰지 마.",
   "8. '실거래'는 매매 실거래 요약이야(계약일 기준, 해제 거래 제외, ㎡당 가격은 근사 중앙값). 기간과 종류를 밝혀서 거래 건수·중앙값 사실만 말하고, 가격이 오를지 내릴지는 말하지 마. 자세한 건 지역 분석의 '실거래' 탭을 안내해.",
   "9. '노후도'는 건축물대장 사용승인 연도로 센 건물 나이야. 30·40·50년 넘은 비율과 오래된 공동주택 단지를 말할 수 있어. 30년은 재건축 연한으로 자주 쓰이는 기준일 뿐이니, 재건축이 된다·안 된다, 될 가능성이 높다 같은 말은 하지 마. 자세한 건 동네 진단의 '노후도' 탭을 안내해.",
   "10. 생활권(걸어서 갈 수 있는 시설)은 위치마다 달라 자료에 없어. 그런 질문에는 동네 진단의 '생활권' 탭에서 주소를 넣어 보라고 안내해. 동네끼리 비교는 '생활권점수'(터놓고 자체 기준, 행정동 단위 100점 만점)로 답할 수 있어. 공식 지표가 아니고 시설이 촘촘하고 넉넉한 정도를 동네끼리 비교한 것일 뿐이라고 밝히고, '살기 좋은 동네' 같은 판정은 하지 마. 자세한 건 '생활권 점수' 탭을 안내해.",
-  "11. '인구'는 행정안전부 주민등록 인구(행정동, 2014년 7월 청주·청원 통합 이후 월별)야. 늘었다·줄었다와 숫자는 말해도 되지만, 이유(아파트 입주, 재개발 등)는 자료에 없으니 추측하지 마. 자세한 건 지역 분석의 '인구' 탭을 안내해.",
+  "11. '인구'는 행정안전부 주민등록 인구(행정동, 청주는 2014년 7월 청주·청원 통합 이후, 충주는 2014년 10월 이후 월별)야. 늘었다·줄었다와 숫자는 말해도 되지만, 이유(아파트 입주, 재개발 등)는 자료에 없으니 추측하지 마. 자세한 건 지역 분석의 '인구' 탭을 안내해.",
   "15. 개념 설명 질문(예: 재건축 연한이 뭐야, 취득세가 뭐야, 분양권이 뭐야)에는 일반적인 뜻과 배경을 쉽게 풀어서 설명해도 돼. 다만 현재 시행 중인 세율·기준·날짜 같은 최신 수치는 기억으로 단정하지 말고, 공식 출처(정책브리핑, 국토교통부, 법제처)에서 확인하라고 안내해. '이건 몰라요'로 끝내지 말고, 설명 다음에 터놓고에서 볼 수 있는 관련 자료를 한 가지 이어서 알려줘.",
   "12. 부동산 정책 질문(예: 현 정부의 부동산 정책이 어떠냐)에는 이렇게 답해. (a) 정책이 무엇인지, 언제 시행됐는지를 설명한다. 정책 세부는 <자료>에 정책 정보가 있을 때만 써. 없으면 '정책 세부는 정책브리핑(korea.kr)이나 국토교통부 보도자료에서 확인해 보세요'라고 안내하고, 기억에 의존해 정책 내용을 지어내지 마. (b) 청주의 거래·시세 흐름을 <자료>의 숫자로 기간과 함께 보여준다. (c) 여론조사 결과가 <자료>에 있으면 출처와 함께 제시하고, 정책을 지지하는 쪽과 비판하는 쪽의 논리를 같은 분량으로 나열한다.",
   "13. 정책의 옳고 그름, 잘했다·잘못했다, 국민이 원하는 방향인지 같은 평가와 판단은 봇의 말로든 운영자 의견으로든 하지 마. 가치 판단이 필요한 부분은 독자가 직접 판단하도록 남겨둬.",
@@ -99,7 +99,8 @@ export default {
 
     // ---- 자료 고르기
     let ctx;
-    try { ctx = await loadContext(env); } catch (e) {
+    const city = CITIES[body.city] ? body.city : "cheongju", CN = CITIES[city].name;
+    try { ctx = await loadContext(env, city); } catch (e) {
       return json({ error: "context", message: "자료를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요." }, 502);
     }
     const place = typeof body.place === "string" ? body.place.slice(0, 30) : "";
@@ -107,8 +108,9 @@ export default {
     const data = {
       asof: ctx.asof, briefMonth: ctx.briefMonth, periods: ctx.periods, definitions: ctx.definitions,
       rankings: ctx.rankings,
-      places: Object.fromEntries([["청주시 전체", ctx.places["청주시 전체"]], ...picked.map((n) => [n, ctx.places[n]])]),
-      note: picked.length ? undefined : "질문에서 동네 이름을 찾지 못해 청주시 전체 자료만 넣었어요.",
+      city: CN,
+      places: Object.fromEntries([[CN + " 전체", ctx.places[CN + " 전체"]], ...picked.map((n) => [n, ctx.places[n]])]),
+      note: picked.length ? undefined : "질문에서 동네 이름을 찾지 못해 " + CN + " 전체 자료만 넣었어요.",
     };
 
     // ---- 앞선 대화(최대 2번)를 이어서 보낸다
@@ -185,20 +187,24 @@ function limitMessage(P) {
 }
 
 // 자료는 한 시간 동안 기억해 두고 다시 쓴다
-let CACHE = null;
-async function loadContext(env) {
-  if (CACHE && Date.now() - CACHE.t < 3600e3) return CACHE.v;
-  const r = await fetch(env.CONTEXT_URL || "https://local-rader.github.io/ai-context.json", { cf: { cacheTtl: 3600, cacheEverything: true } });
+// 도시: cheongju(기본) → ai-context.json, chungju → chungju/ai-context.json
+const CITIES = { cheongju: { name: "청주시", path: "ai-context.json" }, chungju: { name: "충주시", path: "chungju/ai-context.json" } };
+const CACHE = {};
+async function loadContext(env, city) {
+  const c = CACHE[city];
+  if (c && Date.now() - c.t < 3600e3) return c.v;
+  const base = (env.CONTEXT_URL || "https://local-rader.github.io/ai-context.json").replace(/ai-context\.json$/, "");
+  const r = await fetch(base + CITIES[city].path, { cf: { cacheTtl: 3600, cacheEverything: true } });
   if (!r.ok) throw new Error("context " + r.status);
   const v = await r.json();
-  CACHE = { t: Date.now(), v };
+  CACHE[city] = { t: Date.now(), v };
   return v;
 }
 
 // 질문에 나온 동네(최대 3곳)를 찾는다. '율량'처럼 동·읍·면·구를 빼고 써도 찾는다.
 // 못 찾으면 사이트에서 골라 둔 동네를 쓴다.
 export function pickPlaces(ctx, q, selected) {
-  const names = Object.keys(ctx.places || {}).filter((n) => n !== "청주시 전체").sort((a, b) => b.length - a.length);
+  const names = Object.keys(ctx.places || {}).filter((n) => !/ 전체$/.test(n)).sort((a, b) => b.length - a.length);
   const hits = [];
   for (const n of names) {
     const stem = n.replace(/(동|읍|면|구|가)$/, "");

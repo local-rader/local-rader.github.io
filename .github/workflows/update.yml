@@ -1,4 +1,4 @@
-# 매일 새벽 건축인허가 자료를 받아 permits.json·data.js를 갱신하고 저장소에 커밋한다.
+# 매일 새벽 건축인허가·실거래 자료를 받아 청주(맨 위 폴더)와 충주(chungju/)를 갱신하고 저장소에 커밋한다.
 # 인증키는 저장소 Settings → Secrets and variables → Actions 에 넣는다.
 #   DATA_GO_KR_KEY  공공데이터포털 인증키 (건축인허가)
 #   RTMS_KEY        공공데이터포털 인증키 (실거래가, 다른 계정이라 따로 둔다)
@@ -64,6 +64,29 @@ jobs:
             python fetch.py update
           fi
 
+      - name: 충주 실거래가 받기
+        continue-on-error: true
+        timeout-minutes: 15
+        if: ${{ inputs.mode != 'keys' }}
+        env:
+          RTMS_KEY: ${{ secrets.RTMS_KEY }}
+          TURNOKO_CITY: 충주
+        run: |
+          if [ -z "$RTMS_KEY" ]; then echo "RTMS_KEY가 없어 건너뜁니다."; exit 0; fi
+          python trades.py update
+
+      - name: 충주 인허가 자료 받기
+        continue-on-error: true
+        timeout-minutes: 30
+        if: ${{ inputs.mode != 'keys' }}
+        env:
+          DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+          TURNOKO_CITY: 충주
+          FETCH_BUDGET: "1500"
+          SINCE: ${{ inputs.since }}
+        run: |
+          if [ -n "$SINCE" ]; then python fetch.py update --since "$SINCE"; else python fetch.py update; fi
+
       - name: 바뀐 자료 저장
         if: ${{ !cancelled() }}
         run: |
@@ -73,6 +96,7 @@ jobs:
           if [ -f ai-context.json ]; then git add ai-context.json; fi
           if [ -f pnus.json ]; then git add pnus.json; fi
           for f in trades.json trades.js trades-summary.json; do if [ -f "$f" ]; then git add "$f"; fi; done
+          for f in permits.json data.js codes.json ai-context.json pnus.json trades.json trades.js trades-summary.json; do if [ -f "chungju/$f" ]; then git add "chungju/$f"; fi; done
           if git diff --cached --quiet; then
             echo "바뀐 자료가 없습니다."
           else

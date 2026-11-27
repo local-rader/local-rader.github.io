@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>터놓고 - 청주 건축·개발 정보 지도</title>
+<title>터놓고 - 청주·충주 건축·개발 정보 지도</title>
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="192x192" href="/brand/icon-192.png">
 <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png">
-<meta name="description" content="터놓고는 국토교통부 건축 인허가 공공데이터로 청주시의 건축 허가·착공·사용승인을 지도와 동네별 통계로 보여주는 서비스입니다. 공사 중인 건물의 사용승인 예상 시기, 동네 비교, AI 질문도 제공합니다.">
+<meta name="description" content="터놓고는 국토교통부 건축 인허가 공공데이터로 청주시·충주시의 건축 허가·착공·사용승인을 지도와 동네별 통계로 보여주는 서비스입니다. 공사 중인 건물의 사용승인 예상 시기, 동네 비교, AI 질문도 제공합니다.">
 <link rel="canonical" href="https://local-rader.github.io/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="터놓고">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" content="터놓고 - 청주 건축·개발 정보 지도">
-<meta property="og:description" content="지역의 변화를 데이터로 읽다. 청주 건축 허가·착공·사용승인을 지도와 동네별 통계로 확인하세요.">
+<meta property="og:title" content="터놓고 - 청주·충주 건축·개발 정보 지도">
+<meta property="og:description" content="지역의 변화를 데이터로 읽다. 청주·충주 건축 허가·착공·사용승인을 지도와 동네별 통계로 확인하세요.">
 <meta property="og:url" content="https://local-rader.github.io/">
 <meta property="og:image" content="https://local-rader.github.io/brand/og.png">
 <meta property="og:image:width" content="1200">
@@ -21,7 +21,7 @@
 <meta property="og:image:alt" content="터놓고 로고와 '지역의 변화를 데이터로 읽다' 문구">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#F8F9FB">
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://local-rader.github.io/#website", "name": "터놓고", "alternateName": ["터놓고 청주", "Turnoko"], "url": "https://local-rader.github.io/", "inLanguage": "ko", "description": "터놓고는 국토교통부 건축 인허가 공공데이터로 청주시의 건축 허가·착공·사용승인을 지도와 동네별 통계로 보여주는 서비스입니다. 공사 중인 건물의 사용승인 예상 시기, 동네 비교, AI 질문도 제공합니다.", "publisher": {"@id": "https://local-rader.github.io/#org"}}, {"@type": "Organization", "@id": "https://local-rader.github.io/#org", "name": "터놓고", "url": "https://local-rader.github.io/", "logo": "https://local-rader.github.io/brand/icon-512.png", "sameAs": ["https://www.instagram.com/turnoko.kr/"]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://local-rader.github.io/#website", "name": "터놓고", "alternateName": ["터놓고 청주", "Turnoko"], "url": "https://local-rader.github.io/", "inLanguage": "ko", "description": "터놓고는 국토교통부 건축 인허가 공공데이터로 청주시·충주시의 건축 허가·착공·사용승인을 지도와 동네별 통계로 보여주는 서비스입니다. 공사 중인 건물의 사용승인 예상 시기, 동네 비교, AI 질문도 제공합니다.", "publisher": {"@id": "https://local-rader.github.io/#org"}}, {"@type": "Organization", "@id": "https://local-rader.github.io/#org", "name": "터놓고", "url": "https://local-rader.github.io/", "logo": "https://local-rader.github.io/brand/icon-512.png", "sameAs": ["https://www.instagram.com/turnoko.kr/"]}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -124,6 +124,16 @@ h1, h2, h3 { text-wrap: balance; }
 @media (max-width: 560px) { .topnav { gap: 0; justify-content: space-between; } .topnav a { padding: 0 3px; font-size: 14px; letter-spacing: -0.02em; } }
 @media (max-width: 340px) { .topnav a { font-size: 13px; padding: 0 2px; } }
 .place { margin-left: auto; flex: 0 1 200px; max-width: 55%; }
+.citysw { margin-left: auto; flex: none; display: inline-flex; height: 40px; border: 1px solid var(--rule-2); border-radius: var(--r-ctl); overflow: hidden; background: var(--surface); }
+.citysw button { border: 0; background: none; padding: 0 12px; font: inherit; font-size: 14px; color: var(--ink-2); cursor: pointer; }
+.citysw button + button { border-left: 1px solid var(--rule-2); }
+.citysw button[aria-pressed="true"] { background: var(--navy); color: #fff; font-weight: 700; }
+.citysw button:focus-visible { outline: 2px solid var(--sky); outline-offset: -2px; }
+.citysw + .place { margin-left: 0; }
+@media (max-width: 560px) { .citysw button { padding: 0 9px; font-size: 13px; } }
+/* 두 도시를 함께 보여주는 순위: 도시 표시 */
+.ctag { display: inline-block; font-size: 11px; font-weight: 700; line-height: 1; padding: 3px 5px; border-radius: 4px; margin-right: 5px; vertical-align: 1px; color: #fff; }
+.ctag.cc { background: #2F6FB0; } .ctag.cj { background: #C2652B; }
 @media (max-width: 560px) { .place { flex: 1 1 120px; max-width: none; } .appbar-in { flex-wrap: wrap; column-gap: 8px; } .appbar-in .favstar { order: 2; } }
 .favstar { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 40px; min-width: 40px; justify-content: center; border: 1px solid var(--rule-2); border-radius: var(--r-ctl); background: var(--surface); color: var(--ink-3); cursor: pointer; padding: 0 9px; font-size: 14px; font-weight: 500; }
 .favstar svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
@@ -782,6 +792,7 @@ button.nrow:hover .nk { color: var(--accent); }
 .near-box { margin: 14px 0 0; padding: 12px 14px; border: 1px solid var(--rule); border-radius: var(--r-card); background: var(--surface-2); }
 .near-box h3 { margin: 0 0 8px; font-size: 15px; }
 @media (max-width: 520px) { .nrow { grid-template-columns: 6.6em 3.8em minmax(0, 1fr) .8em; font-size: 13.5px; } .nlist li { flex-direction: column; gap: 0; } }
+  .city-chungju{display:none} html[data-city=chungju] .city-chungju{display:inline} html[data-city=chungju] p.city-chungju{display:block} html[data-city=chungju] .city-cheongju{display:none}
 </style>
 <script>if (navigator.maxTouchPoints > 0) document.documentElement.classList.add("touch");</script>
 </head>
@@ -804,6 +815,7 @@ button.nrow:hover .nk { color: var(--accent); }
       <a href="#town" data-nav="town">동네 진단</a>
       <a href="#ask" data-nav="ask">AI 질문</a>
     </nav>
+    <div class="citysw" role="group" aria-label="도시 고르기"><button type="button" data-city="cheongju" aria-pressed="false">청주</button><button type="button" data-city="chungju" aria-pressed="false">충주</button></div>
     <select class="sel place" id="f-place" aria-label="동네"></select>
     <button type="button" class="favstar lab" id="fav-star" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.5l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/></svg><span class="fs-t">관심 동네</span></button>
   </div>
@@ -893,7 +905,7 @@ button.nrow:hover .nk { color: var(--accent); }
           <li>신규 허가는 건축허가일, 착공은 실제 착공일, 사용승인은 사용승인일 기준입니다. 착공이나 사용승인이 늦게 등록되거나 빠진 경우가 있어 실제 현장과 다를 수 있습니다.</li>
           <li>기간을 고르면 그 안에 허가·착공·사용승인 중 하나라도 있었던 기록을 보여줍니다. ‘최근 1달·3달·1년’은 오늘이 아니라 데이터 기준일에서 셉니다.</li>
           <li>용도와 공사 종류가 비어 있는 소규모 기록은 기본으로 빼고, 필터에서 체크하면 함께 보여줍니다.</li>
-          <li>‘공급 예고’는 청주에서 비슷한 규모의 건물이 착공부터 사용승인까지 걸린 기간으로 완공 시기를 추정한 것이고, ‘장기 미진행’은 착공이나 사용승인 기록이 오래 없는 곳을 기계적으로 추린 것입니다. 둘 다 기록에 근거한 추정입니다.</li>
+          <li>‘공급 예고’는 <span class="cityname">청주</span>에서 비슷한 규모의 건물이 착공부터 사용승인까지 걸린 기간으로 완공 시기를 추정한 것이고, ‘장기 미진행’은 착공이나 사용승인 기록이 오래 없는 곳을 기계적으로 추린 것입니다. 둘 다 기록에 근거한 추정입니다.</li>
           <li>지도 위치는 연속지적도에서 계산한 필지의 가운데 점입니다. 필지 정보가 없는 일부 기록(블록 주소 등)은 지번 주소로 찾은 대략의 위치이거나 지도에 나오지 않습니다.</li>
           <li>개별공시지가는 매년 1월 1일 기준으로 시군구가 정해 5월 말에 공시하는 1㎡당 가격이며, 시세가 아닙니다.</li>
           <li>정확한 내용은 <a href="https://www.eais.go.kr" target="_blank" rel="noopener">세움터</a>에서 대지위치로 다시 확인하세요. 이 사이트는 투자 판단이나 법적 판단의 근거가 아닙니다.</li>
@@ -965,6 +977,7 @@ button.nrow:hover .nk { color: var(--accent); }
         <button type="button" role="tab" id="sub-report" aria-controls="pane-report" data-sub="report" data-grp="town">동네 리포트</button>
         <button type="button" role="tab" id="sub-aging" aria-controls="pane-aging" data-sub="aging" data-grp="town">노후도</button>
         <button type="button" role="tab" id="sub-near" aria-controls="pane-near" data-sub="near" data-grp="town">생활권</button>
+        <button type="button" role="tab" id="sub-livable" aria-controls="pane-livable" data-sub="livable" data-grp="town">살기 좋은 동네</button>
         <button type="button" role="tab" id="sub-quality" aria-controls="pane-quality" data-sub="quality" data-grp="none" hidden>자료 상태</button>
       </div>
 
@@ -1064,11 +1077,11 @@ button.nrow:hover .nk { color: var(--accent); }
 
       <div class="pane" id="pane-popu" role="tabpanel" aria-labelledby="sub-popu" hidden>
         <div class="sec-head"><h2 class="sec" id="po-h">인구</h2><span id="po-asof"></span></div>
-        <p class="panel-note">주민등록 인구로 동네(행정동)마다 사람이 늘었는지 줄었는지 봐요. 청주시와 청원군이 합쳐진 2014년 7월부터 매달의 기록이에요. 위에서 고른 동네가 반영돼요.</p>
+        <p class="panel-note">주민등록 인구로 동네(행정동)마다 사람이 늘었는지 줄었는지 봐요. <span class="city-cheongju">청주시와 청원군이 합쳐진 2014년 7월부터</span><span class="city-chungju">2014년 10월부터</span> 매달의 기록이에요. 위에서 고른 동네가 반영돼요.</p>
         <div id="po-body"><p class="result">인구 자료를 불러오는 중입니다…</p></div>
         <div class="disclaimer">
           <p>행정안전부 ‘행정동별 주민등록 인구 및 세대현황’(매월 말일 기준)입니다. 주민등록을 옮기지 않고 사는 사람(학생·외국인 등)은 빠지고, 실제로 그 동네에 사는 사람 수와 다를 수 있습니다.</p>
-          <p>청주 43개 행정동 중 복대1·2동처럼 한 법정동이 나뉜 6쌍은 합쳐서 37개 분석권역으로 봅니다. 위에서 고른 동네(법정동·리)는 그 동네가 속한 행정동 숫자로 보여줍니다. 2014년 7월 이전 청원군 지역(오창·오송·내수 등)은 이 자료에 없어서 통합 이후만 비교합니다.</p>
+          <p class="city-cheongju">청주 43개 행정동 중 복대1·2동처럼 한 법정동이 나뉜 6쌍은 합쳐서 37개 분석권역으로 봅니다. 위에서 고른 동네(법정동·리)는 그 동네가 속한 행정동 숫자로 보여줍니다. 2014년 7월 이전 청원군 지역(오창·오송·내수 등)은 이 자료에 없어서 통합 이후만 비교합니다.</p><p class="city-chungju">충주 25개 행정동 중 한 법정동(교현동)이 나뉜 교현·안림동과 교현2동은 합쳐서 24개 분석권역으로 봅니다. 위에서 고른 동네(법정동·리)는 그 동네가 속한 행정동 숫자로 보여줍니다.</p>
           <p>인구가 늘거나 줄어든 이유(아파트 입주, 재개발 철거 등)는 이 자료만으로 알 수 없습니다.</p>
         </div>
       </div>
@@ -1088,7 +1101,7 @@ button.nrow:hover .nk { color: var(--accent); }
       </div>
       <div class="pane" id="pane-supply" role="tabpanel" aria-labelledby="sub-supply" hidden>
       <div class="sec-head"><h2 class="sec" id="sup-h">완공 예상</h2><span id="sup-asof"></span></div>
-      <p class="panel-note">지금 착공 기록이 있는 새 건물이 언제쯤 사용승인을 받을지, 청주에서 비슷한 규모의 건물이 걸린 기간으로 <b>추정</b>했습니다. 확인된 사실은 착공 기록뿐이고, 완공 시기는 추정입니다.</p>
+      <p class="panel-note">지금 착공 기록이 있는 새 건물이 언제쯤 사용승인을 받을지, <span class="cityname">청주</span>에서 비슷한 규모의 건물이 걸린 기간으로 <b>추정</b>했습니다. 확인된 사실은 착공 기록뿐이고, 완공 시기는 추정입니다.</p>
       <article class="card" aria-labelledby="sup-chart-h">
         <div class="card-head"><h3 id="sup-chart-h">분기별 사용승인 예상 건수</h3><span class="badge est">추정</span></div>
         <p class="card-desc">진한 막대는 가운데 값 기준으로 그 분기에 끝날 것으로 보이는 곳, 빗금은 그 분기에 끝날 수도 있는 곳(예상 범위가 걸침)입니다. 예상 시점이 이미 지난 곳은 빗금에만 들어갑니다.</p>
@@ -1108,7 +1121,7 @@ button.nrow:hover .nk { color: var(--accent); }
         <div class="card-head"><h3>산출 기준</h3></div>
         <div id="sup-method"></div>
       </article>
-      <p class="disclaimer">예상 완공 시기는 착공일에 청주의 비슷한 건물(규모)이 착공부터 사용승인까지 걸린 기간을 더해 계산한 통계적 추정 범위이며, 건축주의 공식 일정이 아닙니다. 공사비·자금 사정, 설계 변경 등으로 크게 달라질 수 있고, 아파트 입주 물량은 한국부동산원 발표와 다를 수 있습니다.</p>
+      <p class="disclaimer">예상 완공 시기는 착공일에 <span class="cityname">청주</span>의 비슷한 건물(규모)이 착공부터 사용승인까지 걸린 기간을 더해 계산한 통계적 추정 범위이며, 건축주의 공식 일정이 아닙니다. 공사비·자금 사정, 설계 변경 등으로 크게 달라질 수 있고, 아파트 입주 물량은 한국부동산원 발표와 다를 수 있습니다.</p>
       </div>
 
       <div class="pane" id="pane-stall" role="tabpanel" aria-labelledby="sub-stall" hidden>
@@ -1176,23 +1189,45 @@ button.nrow:hover .nk { color: var(--accent); }
 
         <div class="lifeblock">
           <div class="sec-head"><h2 class="sec" id="lf-h">터놓고 생활권 점수</h2><span id="lf-asof"></span></div>
-          <p class="panel-note">생활 시설 17가지를 <b>교통·생활 / 의료·안전 / 여가·문화 / 돌봄·교육</b> 4개 분야로 묶어 청주 동네끼리 비교한 터놓고만의 상대 점수예요. 100점에 가까울수록 다른 동네보다 생활 시설이 잘 갖춰진 편이에요.</p>
+          <p class="panel-note">생활 시설 17가지를 <b>교통·생활 / 의료·안전 / 여가·문화 / 돌봄·교육</b> 4개 분야로 묶어 청주·충주 61개 동네를 한 줄로 비교한 터놓고만의 상대 점수예요. 순위의 <span class="ctag cc">청주</span><span class="ctag cj">충주</span> 표시로 도시를 구분해요. 100점에 가까울수록 다른 동네보다 생활 시설이 잘 갖춰진 편이에요.</p>
           <div id="lf-body"><p class="result">생활권 점수를 불러오는 중입니다…</p></div>
           <div class="disclaimer">
             <p><b>기준 한눈에</b></p>
             <ul class="lfrule">
-              <li><b>비교 단위</b>: 청주 37개 분석권역. 공식 43개 행정동 중 한 법정동이 둘로 나뉜 6쌍(복대·내덕·용암·사직·수곡·봉명송정)을 합쳤고, 시설 수·면적·인구를 먼저 합친 뒤 계산합니다.</li>
+              <li><b>비교 단위</b>: 청주 37개 + 충주 24개 = 61개 분석권역. 한 법정동이 둘로 나뉜 행정동(청주 복대·내덕·용암·사직·수곡·봉명송정 6쌍, 충주 교현·안림동과 교현2동)은 합쳤고, 시설 수·면적·인구를 먼저 합친 뒤 계산합니다.</li>
               <li><b>시설 17가지, 4개 분야</b>: 교통·생활(버스정류소, 슈퍼·편의점, 대형마트·백화점*, 전통시장*, 주차장) / 의료·안전(병원·의원, 약국, 119안전센터*) / 여가·문화(공원, 도서관*, 공공체육시설*, 문화시설*) / 돌봄·교육(학교, 학원, 어린이복지시설, 경로당, 요양병원*). 분야끼리 25%씩, 분야 안 시설도 같은 비중입니다.</li>
-              <li><b>흔한 시설</b>: 1㎢당 개수(시설 밀도)와 주민 1천 명당 개수(주민 대비 공급)를 청주 37곳끼리 백분위(0~100)로 바꿔 50%씩 합칩니다.</li>
-              <li><b>드문 시설(*)</b>: 37곳 중 절반 넘는 곳에 하나도 없는 시설은 개수만으로 차이를 가리기 어려워, 주민이 사는 곳에서 가장 가까운 시설까지의 직선거리로 봅니다. 가까울수록 높고, 동 경계 밖 시설도 셉니다.</li>
+              <li><b>흔한 시설</b>: 1㎢당 개수(시설 밀도)와 주민 1천 명당 개수(주민 대비 공급)를 61곳끼리 백분위(0~100)로 바꿔 50%씩 합칩니다.</li>
+              <li><b>드문 시설(*)</b>: 61곳 중 절반 넘는 곳에 하나도 없는 시설은 개수만으로 차이를 가리기 어려워, 주민이 사는 곳에서 가장 가까운 시설까지의 직선거리로 봅니다. 가까울수록 높고, 동 경계 밖 시설도 셉니다.</li>
               <li><b>주민이 사는 곳</b>: 위치를 찾은 아파트 단지(건축물대장 단지 이름을 오픈스트리트맵과 대조, 아파트 세대의 약 70%)는 단지 위치를, 나머지 아파트와 단독주택은 건축물대장의 법정동·리 대표 지점을 쓰고 세대 수만큼 무게를 둡니다.</li>
               <li><b>실제 비중</b>: 종합 점수에서 면적당 개수 약 29%, 인구당 개수 약 29%, 거리 약 42%입니다.</li>
-              <li><b>안정성</b>: 드문 시설을 가르는 기준을 15·19·22곳으로 바꿔도 분류가 같고, 면적·인구 비율을 40:60~60:40으로 바꿔도 순위는 최대 3계단, 상위 10곳은 9곳 이상 그대로입니다. 1~2점 차이는 의미 있는 차이로 보지 않는 게 좋습니다.</li>
+              <li><b>안정성</b>(청주 37곳으로 확인): 드문 시설을 가르는 기준을 15·19·22곳으로 바꿔도 분류가 같고, 면적·인구 비율을 40:60~60:40으로 바꿔도 순위는 최대 3계단, 상위 10곳은 9곳 이상 그대로입니다. 1~2점 차이는 의미 있는 차이로 보지 않는 게 좋습니다.</li>
             </ul>
-            <p><b>이 점수가 아닌 것.</b> 공식 지표가 아니라 터놓고가 공공데이터로 정한 기준입니다. 청주 안에서 비교한 상대 점수라 80점이 "생활 편의 80% 충족"을 뜻하지 않고, 다른 동네가 바뀌면 내 동네 점수도 달라질 수 있습니다. 시설 개수와 직선거리만 보므로 실제 걸리는 시간, 시설 규모·운영시간·품질, 집의 새 정도는 반영하지 않습니다. 주민 수 대비 시설 개수를 보기 때문에 주민이 많은 동네는 시설이 많아도 점수가 낮게 나올 수 있습니다.</p>
-            <p><b>자료.</b> 버스정류소는 국토교통부 TAGO, 공원·도서관·전통시장·경로당은 전국 표준데이터, 학교는 전국초중등학교위치 표준데이터 위치로 셉니다. 병원·의원(보건소·보건지소 포함)·약국·요양병원은 건강보험심사평가원 요양기관 개설 현황(치과·한방 제외), 슈퍼·편의점·학원(입시·교과, 외국어)은 소상공인시장진흥공단 상가(상권)정보 좌표로 셉니다. 대형마트·백화점·아울렛은 상가정보에 매장 자체가 없어, 매장 안에 입점한 가게들의 위치로 매장 위치를 정했습니다. 주차장은 전국주차장정보표준데이터, 119안전센터는 소방청 자료(경찰 치안센터는 청주에 2곳뿐이라 넣지 않음), 공공체육시설은 충청북도와 청주시시설관리공단, 문화시설(박물관·미술관·문예회관·문화원·문화의집·생활문화센터)은 문화체육관광부 문화기반시설 총람(2025), 어린이복지시설(지역아동센터 등)은 충청북도 자료입니다. 주소만 있는 시설은 주소로 위치를 찾았고, 위치를 못 찾은 일부(주차장 6곳, 어린이복지시설 5곳)는 빠져 있습니다. 도서관은 공공도서관만 들어 있고(작은도서관 제외), 공원은 자료에 빠진 동네가 있습니다. 인구는 행정안전부 행정동별 주민등록 인구(매월 말일)입니다. 청주 43개 행정동 중 복대1·2동처럼 한 법정동이 나뉜 6쌍은 합쳐서 37개 분석권역으로 봅니다. 아파트 단지 위치는 © OpenStreetMap 기여자(ODbL)의 자료를 썼습니다.</p>
+            <p><b>이 점수가 아닌 것.</b> 공식 지표가 아니라 터놓고가 공공데이터로 정한 기준입니다. 청주·충주 61곳 안에서 비교한 상대 점수라 80점이 "생활 편의 80% 충족"을 뜻하지 않고, 다른 동네가 바뀌면 내 동네 점수도 달라질 수 있습니다. 시설 개수와 직선거리만 보므로 실제 걸리는 시간, 시설 규모·운영시간·품질, 집의 새 정도는 반영하지 않습니다. 주민 수 대비 시설 개수를 보기 때문에 주민이 많은 동네는 시설이 많아도 점수가 낮게 나올 수 있습니다.</p>
+            <p><b>자료.</b> 버스정류소는 국토교통부 TAGO, 공원·도서관·전통시장·경로당은 전국 표준데이터, 학교는 전국초중등학교위치 표준데이터 위치로 셉니다. 병원·의원(보건소·보건지소 포함)·약국·요양병원은 건강보험심사평가원 요양기관 개설 현황(치과·한방 제외), 슈퍼·편의점·학원(입시·교과, 외국어)은 소상공인시장진흥공단 상가(상권)정보 좌표로 셉니다. 대형마트·백화점·아울렛은 상가정보에 매장 자체가 없어, 매장 안에 입점한 가게들의 위치로 매장 위치를 정했습니다. 주차장은 전국주차장정보표준데이터, 119안전센터는 소방청 자료(경찰 치안센터는 청주에 2곳뿐이라 넣지 않음), 공공체육시설은 충청북도와 청주시시설관리공단, 문화시설(박물관·미술관·문예회관·문화원·문화의집·생활문화센터)은 문화체육관광부 문화기반시설 총람(2025), 어린이복지시설(지역아동센터 등)은 충청북도 자료입니다. 주소만 있는 시설은 주소로 위치를 찾았고, 위치를 못 찾은 일부(주차장 6곳, 어린이복지시설 5곳)는 빠져 있습니다. 도서관은 공공도서관만 들어 있고(작은도서관 제외), 공원은 자료에 빠진 동네가 있습니다. 인구는 행정안전부 행정동별 주민등록 인구(매월 말일)입니다. 아파트 단지 위치는 © OpenStreetMap 기여자(ODbL)의 자료를 썼습니다.</p>
             <p>위에서 고른 동네(법정동·리)는 그 동네가 속한 행정동 점수로 보여줍니다. 동네 경계는 통계청 행정동 경계를 정리한 공개 자료(vuski/admdongkor)를 단순하게 다듬은 것입니다.</p>
           </div>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-livable" role="tabpanel" aria-labelledby="sub-livable" hidden>
+        <div class="sec-head"><h2 class="sec" id="lv-h">터놓고 살기 좋은 동네 지수</h2><span id="lv-asof"></span></div>
+        <p class="panel-note">생활 편의·주거·환경·활력·교통·교육 6개 분야로 청주·충주 61개 동네를 한 줄로 비교한 터놓고만의 상대 점수예요. 순위의 <span class="ctag cc">청주</span><span class="ctag cj">충주</span> 표시로 도시를 구분해요. 위에서 고른 동네가 반영돼요.</p>
+        <div id="lv-body"><p class="result">살기 좋은 동네 지수를 불러오는 중입니다…</p></div>
+        <div class="disclaimer">
+          <p><b>기준 한눈에</b></p>
+          <ul class="lfrule">
+            <li><b>계산</b>: 항목마다 61곳 안 백분위(0~100, 거리는 짧을수록 높음)로 바꾸고, 분야 안에서 가중평균한 뒤 6개 분야를 같은 비중(⅙)으로 평균합니다.</li>
+            <li><b>생활 편의</b>: 터놓고 생활권 점수 그대로.</li>
+            <li><b>주거</b>: 10년 안(2016년~)에 지은 집에 사는 세대 비율 ⅓ · 아파트 매매가 추이 ⅓(같은 단지끼리 2년 전과 ㎡당 가격 비교, 직거래·지분거래 제외) · ㎡당 전세 보증금 ⅓(최근 12개월, 월세 없는 계약).</li>
+            <li><b>환경</b>: 도시공원 면적(주민 1인당 ¼, 동 면적 대비 ¼) · 1만㎡ 넘는 공원까지 거리 ½. 묘지공원은 뺍니다.</li>
+            <li><b>활력</b>: 최근 5년 인구 증감률 ½ · 0~14세 비율 ¼ · 20~44세 비율 ¼.</li>
+            <li><b>교통</b>: 집에서 500m 안 정류소를 지나는 서로 다른 버스 노선 수 60% · KTX역(오송·충주)까지 거리 20% · 고속도로 IC까지 거리 20%.</li>
+            <li><b>교육</b>: 집에서 1㎞ 안 학원·교습소 수(교육청 등록, 입시·보습·외국어) ½ · 초등학교까지 거리 ½.</li>
+            <li><b>거래가 적은 동네</b>: 우연에 흔들리지 않게 도시 전체 값 쪽으로 당깁니다(전세 20건, 매매 추이 5개 단지 기준). 그래도 값이 없는 항목은 50점으로 둡니다.</li>
+            <li><b>거리·개수를 재는 곳</b>: 생활권 점수와 같이 주민이 사는 곳(아파트 단지 위치와 법정동·리 대표 지점, 세대 수만큼 무게)에서 잽니다.</li>
+          </ul>
+          <p><b>이 점수가 아닌 것.</b> 공식 지표가 아니라 터놓고가 공공데이터로 정한 기준이고, 61곳 안의 상대 점수입니다. 시설이 몰린 원도심은 생활 편의·교통·교육 점수가 함께 높게 나오는 경향이 있고, 새 아파트가 들어선 동네는 주거·활력 점수가 함께 높게 나오는 경향이 있습니다. 학군(학업 성취·진학), 소음·치안, 산·하천 같은 자연 녹지, 집 안의 상태는 믿을 만한 공개 자료가 없어 넣지 않았습니다. 집값이 오를지 같은 판단에 쓰는 점수가 아닙니다.</p>
+          <p><b>자료.</b> 국토교통부 아파트 매매·전월세 실거래가, 국토교통부 건축물대장, 전국도시공원정보표준데이터, 국토교통부 (TAGO) 버스노선정보, 행정안전부 행정동별 주민등록 인구, 행정안전부 지역별(법정동) 성별 연령별 주민등록 인구수, 나이스 교육정보 개방포털 학원교습소정보(충청북도교육청), 상가(상권)정보, 전국초중등학교위치표준데이터. KTX역·고속도로 나들목·아파트 단지 위치는 © OpenStreetMap 기여자(ODbL).</p>
         </div>
       </div>
 
@@ -1228,7 +1263,7 @@ button.nrow:hover .nk { color: var(--accent); }
   <section class="screen" id="scr-ask" aria-labelledby="ask-h" hidden>
     <div class="wrap narrow screen-pad">
       <div class="sec-head"><h2 class="sec" id="ask-h"><span class="teo">터</span>놓고 물어보기</h2><span id="ask-asof"></span></div>
-      <p class="panel-note">청주 건축 인허가·실거래·건축물대장(노후도) 자료로만 답해요. <b>질문 버튼</b>은 사이트 자료로 바로 계산해서 답하고 횟수 제한이 없어요. <b>직접 쓰는 질문</b>은 AI(Claude)가 같은 자료를 보고 답하고, 무료로 한 주에 2번 쓸 수 있어요.</p>
+      <p class="panel-note"><span class="cityname">청주</span> 건축 인허가·실거래·건축물대장(노후도) 자료로만 답해요. <b>질문 버튼</b>은 사이트 자료로 바로 계산해서 답하고 횟수 제한이 없어요. <b>직접 쓰는 질문</b>은 AI(Claude)가 같은 자료를 보고 답하고, 무료로 한 주에 2번 쓸 수 있어요.</p>
       <article class="card chat">
         <div class="chat-log" id="chat-log" aria-live="polite"></div>
         <p class="chat-chips-h" id="chat-chips-h"></p>
@@ -1285,11 +1320,44 @@ button.nrow:hover .nk { color: var(--accent); }
 </nav>
 
 <script src="config.js"></script>
-<script src="data.js"></script>
+<script>
+// 도시 고르기: 주소의 ?city=chungju(충주) / ?city=cheongju(청주), 없으면 이 기기에서 마지막에 본 도시, 처음이면 청주
+(function () {
+  var C = {
+    cheongju: { key: "cheongju", name: "청주", full: "청주시", dir: "", center: [36.64, 127.47], wide: [36.685, 127.475], hall: [36.6424, 127.489] },
+    chungju: { key: "chungju", name: "충주", full: "충주시", dir: "chungju/", center: [36.99, 127.93], wide: [37.0, 127.93], hall: [36.9910, 127.9259] }
+  };
+  var q = (/[?&]city=([a-z]+)/.exec(location.search) || [])[1], k = C[q] ? q : null;
+  if (!k) { try { k = localStorage.getItem("tn:city"); } catch (e) {} }
+  if (!C[k]) k = "cheongju";
+  try { localStorage.setItem("tn:city", k); } catch (e) {}
+  window.TN_CITY = C[k]; window.TN_CITIES = C;
+  document.documentElement.setAttribute("data-city", k);
+  document.write('<script src="' + C[k].dir + 'data.js"><\/script>');
+})();
+</script>
 <script>
 (function () {
   "use strict";
   var CFG = window.DONGNE_CONFIG || {};
+  var CITY = window.TN_CITY || { key: "cheongju", name: "청주", full: "청주시", dir: "", center: [36.64, 127.47], wide: [36.685, 127.475], hall: [36.6424, 127.489] };
+  var CJ = CITY.key === "chungju";
+  document.querySelectorAll(".cityname").forEach(function (el) { el.textContent = CITY.name; });
+  if (CJ) {
+    var nq = document.getElementById("nr-q"); if (nq) nq.placeholder = "예: 충주시청, 연수동 충주대로";
+    var hq = document.getElementById("home-q"); if (hq) hq.placeholder = "동네 검색 (예: 연수동)";
+  }
+  document.querySelectorAll(".citysw button").forEach(function (b) {
+    var k = b.getAttribute("data-city");
+    b.setAttribute("aria-pressed", String(k === CITY.key));
+    b.onclick = function () {
+      if (k === CITY.key) return;
+      try { localStorage.setItem("tn:city", k); } catch (e) {}
+      location.href = location.pathname + "?city=" + k + location.hash;
+    };
+  });
+  function SK(k) { return CJ ? k + ":chungju" : k; }   // 동네·관심 목록은 도시마다 따로 기억
+  function ctag(gu) { var c = gu === "충주시"; return '<span class="ctag ' + (c ? "cj" : "cc") + '">' + (c ? "충주" : "청주") + "</span>"; }
   var P = window.PERMITS || { fields: [], rows: [], meta: {}, places: [] };
   var F = P.fields || [];
   var rows = (P.rows || []).map(function (r) {
@@ -1404,7 +1472,7 @@ button.nrow:hover .nk { color: var(--accent); }
   });
   GU_LIST.sort(function (a, b) { return a.localeCompare(b, "ko"); });
   areas.sort(areaSort); GU_LIST.forEach(function (g) { areasOf[g].sort(areaSort); });
-  var REGION = GU_LIST.length > 1 ? "청주시" : (GU_LIST[0] || "청주시");
+  var REGION = GU_LIST.length > 1 ? CITY.full : (GU_LIST[0] || CITY.full);
   document.getElementById("region-name").textContent = REGION;
   var notes = [];
   if (meta.seed || areas.length <= 2) notes.push("지금은 " + areas.join("·") + " 자료만 들어 있어요. 자동 수집이 시작되면 " + REGION + " 전체가 채워집니다.");
@@ -1437,10 +1505,10 @@ button.nrow:hover .nk { color: var(--accent); }
     stKind: "all", stSize: 0, stSort: "big", shownS: 40, openS: null, openF: null, openQ: null, size: "area", favOnly: false, fav: {}, cmp: [] };
   state.from = addMonths(state.to, -11); if (state.from < MONTHS[0]) state.from = MONTHS[0];
   try {
-    var saved = JSON.parse(localStorage.getItem("dr:v2") || "{}");
+    var saved = JSON.parse(localStorage.getItem(SK("dr:v2")) || "{}");
     ["period", "from", "to", "place", "ev", "cat", "sort", "size", "favOnly", "cmp"].forEach(function (k) { if (saved[k]) state[k] = saved[k]; });
   } catch (e) {}
-  try { var fv0 = JSON.parse(localStorage.getItem("dr:fav") || "{}"); if (fv0 && typeof fv0 === "object") state.fav = fv0; } catch (e) {}
+  try { var fv0 = JSON.parse(localStorage.getItem(SK("dr:fav")) || "{}"); if (fv0 && typeof fv0 === "object") state.fav = fv0; } catch (e) {}
   if (["area", "jiga"].indexOf(state.size) < 0) state.size = "area";
   state.favOnly = !!state.favOnly;
   if (!PERIODS.some(function (p) { return p.v === state.period; })) state.period = "3m";
@@ -1451,10 +1519,10 @@ button.nrow:hover .nk { color: var(--accent); }
   if (MONTHS.indexOf(state.from) < 0) state.from = MONTHS[0];
   if (MONTHS.indexOf(state.to) < 0) state.to = MONTHS[MONTHS.length - 1];
   var FAVP = [];
-  try { FAVP = JSON.parse(localStorage.getItem("dr:favp") || "[]").filter(function (x) { return typeof x === "string"; }).slice(0, 5); } catch (e) { FAVP = []; }
-  function saveFavP() { try { localStorage.setItem("dr:favp", JSON.stringify(FAVP)); } catch (e) {} }
+  try { FAVP = JSON.parse(localStorage.getItem(SK("dr:favp")) || "[]").filter(function (x) { return typeof x === "string"; }).slice(0, 5); } catch (e) { FAVP = []; }
+  function saveFavP() { try { localStorage.setItem(SK("dr:favp"), JSON.stringify(FAVP)); } catch (e) {} }
   var STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.5l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/></svg>';
-  function remember() { try { localStorage.setItem("dr:v2", JSON.stringify({ period: state.period, from: state.from, to: state.to, place: state.place, ev: state.ev, cat: state.cat, sort: state.sort, size: state.size, favOnly: state.favOnly, cmp: state.cmp })); } catch (e) {} }
+  function remember() { try { localStorage.setItem(SK("dr:v2"), JSON.stringify({ period: state.period, from: state.from, to: state.to, place: state.place, ev: state.ev, cat: state.cat, sort: state.sort, size: state.size, favOnly: state.favOnly, cmp: state.cmp })); } catch (e) {} }
 
   // 고른 기간의 첫날과 마지막날. 자료 기준일이 달의 마지막 날이면 달력 달 단위로 센다.
   function range() {
@@ -1712,7 +1780,7 @@ button.nrow:hover .nk { color: var(--accent); }
     });
     var qk = Object.keys(bq).sort();
     document.getElementById("home-sup").textContent = qk.length ? qLabel(qk[0]) + " 사용승인 예상 " + nf(bq[qk[0]]) + "곳" : "예상되는 곳 없음";
-    document.getElementById("home-sup-why").textContent = qk.length ? "착공 기록이 있는 새 건물 기준, 청주 실적으로 추정" : "착공 기록이 있는 새 건물이 없습니다";
+    document.getElementById("home-sup-why").textContent = qk.length ? "착공 기록이 있는 새 건물 기준, " + CITY.name + " 실적으로 추정" : "착공 기록이 있는 새 건물이 없습니다";
 
     var ac = {};
     rows.forEach(function (r) {
@@ -1793,7 +1861,7 @@ button.nrow:hover .nk { color: var(--accent); }
     var key = v.replace(/\s+/g, ""), hit = null;
     if (key) [].concat(GU_LIST, areas).some(function (a) {
       var b = a.replace(/\s+/g, "");
-      if (b === key || b === key + "동" || b === key + "읍" || b === key + "면" || b === "청주시" + key) { hit = a; return true; }
+      if (b === key || b === key + "동" || b === key + "읍" || b === key + "면" || b === CITY.full + key) { hit = a; return true; }
       return false;
     });
     trackEv("search");
@@ -2016,7 +2084,7 @@ button.nrow:hover .nk { color: var(--accent); }
   var GEO_LIMIT = 300; // 필지 좌표가 없는 기록만 브라우저에서 주소로 찾는다 (지금 약 230건). 그 상한
   var M = { sdk: "idle", wait: [], geo: null, map: null, mini: null, overlays: [], miniOv: [], token: 0, miniToken: 0, dirty: true, focus: null, pins: {}, sel: null };
   function msg(id, t) { var el = document.getElementById(id); el.hidden = !t; el.textContent = t || ""; }
-  function geoAddr(r) { return "충청북도 청주시 " + guOf(r) + " " + r.addr.replace(/\s*\d+블록.*$/, ""); }
+  function geoAddr(r) { return "충청북도 " + CITY.full + " " + (CJ ? "" : guOf(r) + " ") + r.addr.replace(/\s*\d+블록.*$/, ""); }
   // 카카오 약관상 주소·좌표 결과를 오래 저장할 수 없어서, 화면이 열려 있는 동안만 메모리에 둔다 (브라우저 저장소에 남기지 않음)
   var GEO_MEM = {};
   // 예전에 남아 있던 주소·좌표 저장분을 지운다
@@ -2067,7 +2135,7 @@ button.nrow:hover .nk { color: var(--accent); }
   }
   function toggleFav(r, btn) {
     if (state.fav[r.pk]) delete state.fav[r.pk]; else state.fav[r.pk] = true;
-    try { localStorage.setItem("dr:fav", JSON.stringify(state.fav)); } catch (e) {}
+    try { localStorage.setItem(SK("dr:fav"), JSON.stringify(state.fav)); } catch (e) {}
     btn.textContent = state.fav[r.pk] ? "관심 필지 해제" : "관심 필지로 등록";
     dotsLater();
     if (state.favOnly) return changed();
@@ -2218,7 +2286,7 @@ button.nrow:hover .nk { color: var(--accent); }
     if (screen !== "map") return;
     if (!isWide() && mapView !== "map") { M.dirty = true; return; }
     if (!M.map) {
-      M.map = new kakao.maps.Map(document.getElementById("map"), { center: new kakao.maps.LatLng(36.685, 127.475), level: 9 });
+      M.map = new kakao.maps.Map(document.getElementById("map"), { center: new kakao.maps.LatLng(CITY.wide[0], CITY.wide[1]), level: 9 });
       M.map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
       dotsInit();
     }
@@ -2277,13 +2345,13 @@ button.nrow:hover .nk { color: var(--accent); }
   function drawMini() {
     if (M.sdk !== "ready") { loadSDK(drawMini); return; }
     if (screen !== "home") return;
-    if (!M.mini) M.mini = new kakao.maps.Map(document.getElementById("minimap"), { center: new kakao.maps.LatLng(36.685, 127.475), level: 10, scrollwheel: false, disableDoubleClickZoom: true });
+    if (!M.mini) M.mini = new kakao.maps.Map(document.getElementById("minimap"), { center: new kakao.maps.LatLng(CITY.wide[0], CITY.wide[1]), level: 10, scrollwheel: false, disableDoubleClickZoom: true });
     msg("minimsg", "");
     var token = ++M.miniToken;
     M.miniOv.forEach(function (o) { o.setMap(null); }); M.miniOv = [];
     M.mini.relayout();
     var list = topList(5), i = 0, n = 0, last = null, bounds = new kakao.maps.LatLngBounds();
-    if (!list.length) { M.mini.setCenter(new kakao.maps.LatLng(36.685, 127.475)); M.mini.setLevel(10); return; }
+    if (!list.length) { M.mini.setCenter(new kakao.maps.LatLng(CITY.wide[0], CITY.wide[1])); M.mini.setLevel(10); return; }
     function step() {
       if (token !== M.miniToken) return;
       if (i >= list.length) {
@@ -2602,7 +2670,7 @@ button.nrow:hover .nk { color: var(--accent); }
       : "허가받은 지 1년이 안 됐고 아직 착공 기록이 없는 곳은 없습니다.";
     var rowsM = Object.keys(SUPG).map(function (g) {
       var L = LAG[g];
-      var src = L.ref ? L.ref : "청주 " + nf(L.n) + "건" + (L.few ? " (표본이 적어 참고용)" : "");
+      var src = L.ref ? L.ref : CITY.name + " " + nf(L.n) + "건" + (L.few ? " (표본이 적어 참고용)" : "");
       return "<tr><td>" + SUPG[g].t + "<br><small>" + src + "</small></td><td>" + months(L.p25) + "</td><td>" + months(L.med) + "</td><td>" + months(L.p75) + "</td></tr>";
     }).join("");
     document.getElementById("sup-method").innerHTML = '<p class="panel-note">' + esc(dot(LAG_FROM) + "부터 " + dot(LAG_TO) + "까지 착공한 건을 2년 동안 지켜본 결과입니다. 예상 시기는 착공일에 가운데 값을 더하고, 범위는 4곳 중 1곳이 끝난 때부터 4곳 중 3곳이 끝난 때까지입니다.") + "</p>" +
@@ -2618,7 +2686,7 @@ button.nrow:hover .nk { color: var(--accent); }
     if (TR.loading) return;
     TR.loading = true; TR.failed = false;
     var s = document.createElement("script");
-    s.src = "trades.js";
+    s.src = CITY.dir + "trades.js";
     s.onload = function () { TR.loading = false; cb(); };
     s.onerror = function () { TR.loading = false; TR.failed = true; cb(); };
     document.head.appendChild(s);
@@ -2755,7 +2823,7 @@ button.nrow:hover .nk { color: var(--accent); }
   // ---------- 지역 분석: 지역 통계와 멈춘 기록
   var sub = "stats";
   function drawAnalysis() {
-    ["stats", "flow", "supply", "compare", "trade", "popu", "stall", "report", "aging", "near", "quality"].forEach(function (k) {
+    ["stats", "flow", "supply", "compare", "trade", "popu", "stall", "report", "aging", "near", "livable", "quality"].forEach(function (k) {
       document.getElementById("pane-" + k).hidden = k !== sub;
       var b = document.getElementById("sub-" + k);
       b.setAttribute("aria-selected", String(k === sub));
@@ -2764,7 +2832,7 @@ button.nrow:hover .nk { color: var(--accent); }
     document.querySelector("#scr-analysis .subtabs").hidden = grp === "none";
     document.getElementById("qlink").innerHTML = grp === "none" ? '<a href="#analysis">← 지역 분석으로</a>' : '<a href="#quality">자료 상태 보기</a> · 공공데이터에 빈칸이 얼마나 있는지 그대로 보여줍니다.';
     drawNext();
-    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") { drawNear(); drawLife(); } else if (sub === "popu") drawPopu(); else if (sub === "supply") drawSupply(); else if (sub === "report") drawReport(); else drawStall();
+    if (sub === "stats") drawStats(); else if (sub === "flow") drawFlow(); else if (sub === "compare") drawCompare(); else if (sub === "trade") drawTrade(); else if (sub === "quality") drawQuality(); else if (sub === "aging") drawAging(); else if (sub === "near") { drawNear(); drawLife(); } else if (sub === "livable") drawLivable(); else if (sub === "popu") drawPopu(); else if (sub === "supply") drawSupply(); else if (sub === "report") drawReport(); else drawStall();
   }
 
 
@@ -2828,7 +2896,7 @@ button.nrow:hover .nk { color: var(--accent); }
   // 휴대폰에서도 막대가 보이도록 이름·숫자 줄 아래에 막대를 둔다 (segs는 백분율)
   function fbars(el, list) {
     el.innerHTML = list.map(function (x) {
-      return '<div class="fb"><div class="fh"><span class="k">' + esc(x.k) + '</span><span class="v">' + x.label + '</span></div>' +
+      return '<div class="fb"><div class="fh"><span class="k">' + (x.pre || "") + esc(x.k) + '</span><span class="v">' + x.label + '</span></div>' +
         '<span class="track2" role="img" aria-label="' + esc(x.k + " " + x.label) + '">' +
         x.segs.map(function (s) { return '<span class="seg2" style="width:' + s[0] + "%;background:" + s[1] + '"></span>'; }).join("") + "</span></div>";
     }).join("");
@@ -3034,7 +3102,7 @@ button.nrow:hover .nk { color: var(--accent); }
   function loadAging(cb) {
     if (AG.data || AG.loading) return AG.data && cb();
     AG.loading = true;
-    fetch("aging.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    fetch(CITY.dir + "aging.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .then(function (d) { AG.data = d; AG.loading = false; cb(); })
       .catch(function () { AG.failed = true; AG.loading = false; cb(); });
   }
@@ -3098,7 +3166,7 @@ button.nrow:hover .nk { color: var(--accent); }
         '<div class="ctlrow"><span class="flabel">기준</span>' + seg("data-agth", AG_TH.map(function (t) { return { v: t, t: t + "년 이상" }; }), th) + "</div>" +
         '<div class="ctlrow"><span class="flabel">건물 종류</span>' + seg("data-agk", AG_KINDS, AG.kind) + "</div>" +
         '<div class="agbig"><span class="agpct" style="color:var(--ag' + (th === 30 ? 2 : th === 40 ? 3 : 4) + '-ink)">' + pct(agOld(tot), tot.n) + '%</span><span>' + esc(pl) + "의 " + (AG.kind === "all" ? "건물" : kindName) + " " + nf(tot.n) + "동 중 <b>" + nf(agOld(tot)) + "동</b>이 지은 지 " + th + "년 이상 (" + cut + "년 이전 사용승인)" +
-          (state.place !== "all" ? '<br><span class="result">청주 전체는 ' + pct(agOld(city), city.n) + "%</span>" : "") + "</span></div>" +
+          (state.place !== "all" ? '<br><span class="result">' + CITY.name + ' 전체는 ' + pct(agOld(city), city.n) + "%</span>" : "") + "</span></div>" +
         '<div class="agsteps">' + AG_TH.map(function (t) { return '<span' + (t === th ? ' class="on"' : "") + ">" + t + "년↑ <b>" + pct(tot["a" + t], tot.n) + "%</b></span>"; }).join("") +
           (tot.unknown ? '<span class="result">연도 없음 ' + nf(tot.unknown) + "동 별도</span>" : "") + "</div>" +
       "</article>" +
@@ -3118,7 +3186,7 @@ button.nrow:hover .nk { color: var(--accent); }
         '<form class="searchbox agsearch" id="ag-qf" role="search"><div class="field"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>' +
           '<input type="search" id="ag-q" placeholder="단지 이름, 동네, 지번" aria-label="공동주택 단지 찾기" value="' + esc(AG.q) + '"></div></form>' +
         '<div class="ctlrow" id="ag-cxseg"' + (AG.q ? " hidden" : "") + ">" + seg("data-agcx", AG_CX.map(function (b, i) { return { v: i, t: b.t + " " + nf(cxN[i]), off: !cxN[i] }; }), AG.cx) + "</div>" +
-        (!cxN[2] ? '<p class="card-desc" id="ag-cxnote" style="margin:0 0 10px"' + (AG.q ? " hidden" : "") + '>청주에는 50년 넘은 20세대 이상 단지가 아직 없어요 (가장 오래된 단지 ' + oldest + "년 사용승인).</p>" : "") +
+        (!cxN[2] ? '<p class="card-desc" id="ag-cxnote" style="margin:0 0 10px"' + (AG.q ? " hidden" : "") + '>' + CITY.name + '에는 50년 넘은 20세대 이상 단지가 아직 없어요 (가장 오래된 단지 ' + oldest + "년 사용승인).</p>" : "") +
         '<div id="ag-cx"></div></article>' : "");
     box.innerHTML = html;
     function drawCx() {
@@ -3133,7 +3201,7 @@ button.nrow:hover .nk { color: var(--accent); }
         (list.length ? '<div class="mtable-wrap"><table class="mtable ag"><thead><tr><th>단지</th><th>동네</th><th>사용승인</th><th>세대</th></tr></thead><tbody>' +
           list.slice(0, AG.shown).map(function (c) {
             var age = AG_Y - c.y;
-            return "<tr><td>" + esc(c.name || "이름 없음") + "<small>" + esc(c.addr.replace(/^충청북도 청주시 /, "")) + (c.lots > 1 ? " 외 " + (c.lots - 1) + "필지" : "") + "</small></td><td>" + esc(c.place) + '</td><td><span class="agyr" style="--c:var(--ag' + (age >= 50 ? 4 : age >= 40 ? 3 : age >= 30 ? 2 : 1) + ')">' + c.y + "년</span><small>" + age + "년 차</small></td><td>" + nf(c.hh) + "</td></tr>";
+            return "<tr><td>" + esc(c.name || "이름 없음") + "<small>" + esc(c.addr.replace(/^충청북도 (청주|충주)시 /, "")) + (c.lots > 1 ? " 외 " + (c.lots - 1) + "필지" : "") + "</small></td><td>" + esc(c.place) + '</td><td><span class="agyr" style="--c:var(--ag' + (age >= 50 ? 4 : age >= 40 ? 3 : age >= 30 ? 2 : 1) + ')">' + c.y + "년</span><small>" + age + "년 차</small></td><td>" + nf(c.hh) + "</td></tr>";
           }).join("") + "</tbody></table></div>" +
           (list.length > AG.shown ? '<button type="button" class="linkbtn" id="ag-more" style="margin-top:10px">더 보기 (' + nf(list.length - AG.shown) + "곳 남음)</button>" : "")
           : '<p class="empty" style="padding:0">' + (q ? "찾는 단지가 없어요. 이름 일부나 동네 이름으로 다시 찾아보세요. (20세대 이상 공동주택만 있어요)" : esc(pl) + "에는 해당하는 단지가 없어요.") + "</p>");
@@ -3167,7 +3235,7 @@ button.nrow:hover .nk { color: var(--accent); }
     if (M.sdk !== "ready") { if (M.sdk === "error") { msg("agmsg", "지도를 불러오지 못했습니다."); return; } loadSDK(function () { if (screen === "analysis" && sub === "aging") drawAgMap(groups); }); return; }
     var el = document.getElementById("ag-map"); if (!el) return;
     msg("agmsg", "");
-    var map = AG.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(36.64, 127.47), level: 10, scrollwheel: false });
+    var map = AG.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(CITY.center[0], CITY.center[1]), level: 10, scrollwheel: false });
     mapExtras(map, el.parentNode);
     var bounds = new kakao.maps.LatLngBounds(), n = 0, maxN = 1, tip = null;
     Object.keys(groups).forEach(function (k) { if (groups[k].n > maxN) maxN = groups[k].n; });
@@ -3218,14 +3286,14 @@ button.nrow:hover .nk { color: var(--accent); }
   function loadLife(cb) {
     if (LF.data || LF.loading) return LF.data && cb();
     LF.loading = true;
-    fetch("life.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    fetch("life-all.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .then(function (d) { LF.data = d; LF.loading = false; LF.by = {}; d.units.forEach(function (u) { LF.by[u.name] = u; }); cb(); })
       .catch(function () { LF.failed = true; LF.loading = false; cb(); });
   }
   // 위에서 고른 동네(법정동·리, 구, 전체) → 행정동 점수 단위
   function lfUnitOf(p) {
     if (!LF.data || !p || p === "all" || GU_LIST.indexOf(p) >= 0) return null;
-    var pl = LF.data.places || {}, n = pl[p];
+    var pl = LF.data.places || {}, n = (CJ && pl[p + "(충주)"]) || pl[p];
     if (!n) { var k = Object.keys(pl).filter(function (x) { return x.indexOf(p + " ") === 0; })[0]; n = k ? pl[k] : null; }
     return n ? LF.by[n] : (LF.by[p] || null);
   }
@@ -3253,9 +3321,9 @@ button.nrow:hover .nk { color: var(--accent); }
     var html = "";
     if (cur) {
       var avgK = lfKinds();
-      html += '<article class="card"><div class="card-head"><h3>' + esc(cur.name) + " <span class=\"meta\">" + esc(cur.gu) + "</span></h3>" +
+      html += '<article class="card"><div class="card-head"><h3>' + ctag(cur.gu) + esc(cur.name) + " <span class=\"meta\">" + esc(cur.gu) + "</span></h3>" +
         (mine && cur === mine && mine.name !== p ? '<span class="meta">' + esc(jo(p, "이", "가")) + " 속한 행정동</span>" : (LF.pick && mine && cur !== mine ? '<button type="button" class="linkbtn" id="lf-back">' + esc(jo(mine.name, "", "로")) + " 돌아가기</button>" : "")) + "</div>" +
-        '<div class="lfbig"><span class="lfscore">' + cur.score + "<small>점</small></span><span>청주 " + N + "개 동네 중 <b>" + cur.rank + "위</b><br>주민 " + nf(cur.pop) + "명 · 면적 " + cur.area.toFixed(1) + "㎢</span></div>" +
+        '<div class="lfbig"><span class="lfscore">' + cur.score + "<small>점</small></span><span>청주·충주 " + N + "개 동네 중 <b>" + cur.rank + "위</b><br>주민 " + nf(cur.pop) + "명 · 면적 " + cur.area.toFixed(1) + "㎢</span></div>" +
         '<div class="lfsplit"><span>촘촘함(면적당) <b>' + cur.sa + "점</b></span><span>넉넉함(인구당) <b>" + cur.sp + "점</b></span></div>" +
         (cur.cats ? '<p class="lfh4">분야별로 보면</p><div class="fbars" id="lf-cats"></div>' : "") +
         '<p class="lfh4">시설별로 보면</p><p class="card-desc" style="margin:0 0 6px">막대는 그 시설만 따로 본 점수예요. 흔한 시설은 면적당·인구당 개수, 드문 시설은 동네 대표 지점에서 가장 가까운 곳까지 직선거리로 봐요.</p><div class="fbars" id="lf-kinds"></div></article>';
@@ -3266,7 +3334,7 @@ button.nrow:hover .nk { color: var(--accent); }
       '<p class="card-desc">색이 진할수록 점수가 높아요. 동네를 누르면 점수가 나오고, 위 칸에 자세히 보여드려요.</p>' +
       '<div class="agmap lfmap"><div id="lf-map"></div><div class="mapmsg" id="lfmsg">지도를 불러오는 중입니다.</div></div>' +
       '<div class="agkey">' + LF_BIN_T.map(function (t, i) { return '<span><i style="background:' + LF_C[i] + '"></i>' + t + "</span>"; }).join("") + "</div></article>";
-    html += '<article class="card"><div class="card-head"><h3>' + (isGu ? esc(p) + " 동네 순위" : "청주 동네 순위") + '</h3><span class="meta">' + nf(scope.length) + "곳</span></div>" +
+    html += '<article class="card"><div class="card-head"><h3>' + (isGu ? esc(p) + " 동네 순위" : "청주·충주 동네 순위") + '</h3><span class="meta">' + nf(scope.length) + "곳</span></div>" +
       '<div class="fbars" id="lf-rank"></div>' +
       (scope.length > 10 ? '<button type="button" class="linkbtn" id="lf-more" style="margin-top:10px">' + (LF.all ? "10위까지만 보기" : "전체 " + scope.length + "곳 보기") + "</button>" : "") +
       '<div class="agfind"><label for="lf-pick">다른 동네 보기</label><select class="sel" id="lf-pick"><option value="">선택하세요</option>' +
@@ -3284,7 +3352,7 @@ button.nrow:hover .nk { color: var(--accent); }
     var shown = LF.all ? scope : scope.slice(0, 10);
     if (cur && scope.indexOf(cur) >= 10 && !LF.all) shown = shown.concat([cur]);
     fbars(document.getElementById("lf-rank"), shown.map(function (u) {
-      return { k: u.rank + ". " + u.name, label: "<b>" + u.score + "점</b> · " + esc(u.gu), segs: [[u.score, cur && u === cur ? "var(--brand)" : "var(--sky)"]] };
+      return { pre: ctag(u.gu), k: u.rank + ". " + u.name, label: "<b>" + u.score + "점</b> · " + esc(u.gu), segs: [[u.score, cur && u === cur ? "var(--brand)" : (u.gu === "충주시" ? "#E9A57C" : "var(--sky)")]] };
     }));
     var rows2 = document.querySelectorAll("#lf-rank .fb");
     shown.forEach(function (u, i) {
@@ -3302,10 +3370,11 @@ button.nrow:hover .nk { color: var(--accent); }
     var t = document.getElementById("lf-body"); if (n && t) t.scrollIntoView({ block: "start", behavior: "smooth" });
   }
   function drawLifeMap(scope, cur) {
+    var isGu = GU_LIST.indexOf(state.place) >= 0;
     if (M.sdk !== "ready") { if (M.sdk === "error") { msg("lfmsg", "지도를 불러오지 못했습니다."); return; } loadSDK(function () { if (screen === "analysis" && sub === "near") drawLifeMap(scope, cur); }); return; }
     var el = document.getElementById("lf-map"); if (!el) return;
     msg("lfmsg", "");
-    var map = LF.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(36.64, 127.47), level: 10, scrollwheel: false });
+    var map = LF.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(CITY.center[0], CITY.center[1]), level: 10, scrollwheel: false });
     mapExtras(map, el.parentNode);
     var bounds = new kakao.maps.LatLngBounds(), tip = null;
     function show(u, ll) {
@@ -3321,7 +3390,7 @@ button.nrow:hover .nk { color: var(--accent); }
         var pg = new kakao.maps.Polygon({ map: map, path: path, strokeWeight: sel ? 3 : 1, strokeColor: sel ? "#16325C" : "#FFFFFF", strokeOpacity: sel ? 1 : 0.9,
           fillColor: LF_HEX[lfIdx(u.score)], fillOpacity: inScope ? (sel ? 0.85 : 0.7) : 0.25, zIndex: sel ? 3 : 1 });
         kakao.maps.event.addListener(pg, "click", function (e) { show(u, e.latLng); if (!cur || cur.name !== u.name) setTimeout(function () { lfPick(u.name); }, 350); });
-        if (inScope) path[0].forEach(function (ll) { bounds.extend(ll); });
+        if (inScope && (isGu || (u.gu === "충주시") === CJ)) path[0].forEach(function (ll) { bounds.extend(ll); });
       });
     });
     if (cur) {
@@ -3329,6 +3398,106 @@ button.nrow:hover .nk { color: var(--accent); }
       cur.polys.forEach(function (poly) { poly[0].forEach(function (pt) { b2.extend(new kakao.maps.LatLng(pt[1], pt[0])); }); });
       if (cur.area < 30) { map.setBounds(b2, 60, 60, 60, 60); if (map.getLevel() < 6) map.setLevel(6); } else map.setBounds(b2, 30, 30, 30, 30);
     } else map.setBounds(bounds, 20, 20, 20, 20);
+  }
+
+  // ---------- 터놓고 살기 좋은 동네 지수 (livable-score.json, 청주·충주 61곳)
+  var LV = { data: null, loading: false, failed: false, pick: "", pickFor: null, all: false, city: "" };
+  function loadLivable(cb) {
+    if (LV.data || LV.loading) return LV.data && cb();
+    LV.loading = true;
+    fetch("livable-score.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (d) { LV.data = d; LV.loading = false; LV.by = {}; d.units.forEach(function (u) { LV.by[u.name] = u; }); cb(); })
+      .catch(function () { LV.failed = true; LV.loading = false; cb(); });
+  }
+  function lvFmt(k, v, u) {
+    if (v == null) return "자료 없음";
+    var pc = function (x, d) { return (x * 100).toFixed(d == null ? 1 : d) + "%"; }, sg = function (x) { return (x > 0 ? "+" : "") + (x * 100).toFixed(1) + "%"; };
+    var km = function (x) { return x < 1 ? Math.round(x * 1000) + "m" : x.toFixed(1) + "㎞"; };
+    switch (k) {
+      case "life": return "생활권 " + v + "점";
+      case "new": return pc(v, 0);
+      case "trend": return u.v._trend_n ? sg(Math.exp(u.v._trend_raw) - 1) + " (단지 " + u.v._trend_n + "곳" + (u.v._trend_n < 5 ? ", 적어서 도시 값 쪽으로 보정" : "") + ")" : "거래 없음 (도시 값 " + sg(v) + ")";
+      case "jeonse": return u.v._jeonse_n ? "㎡당 " + Math.round(u.v._jeonse_raw) + "만 원 (" + nf(u.v._jeonse_n) + "건" + (u.v._jeonse_n < 20 ? ", 적어서 도시 값 쪽으로 보정" : "") + ")" : "거래 없음 (도시 값 ㎡당 " + Math.round(v) + "만 원)";
+      case "park_pc": return "1인당 " + (v >= 10 ? Math.round(v) : v.toFixed(1)) + "㎡";
+      case "park_pa": return "면적의 " + (v / 1e4).toFixed(1) + "%";
+      case "growth": return sg(v);
+      case "kids": case "young": return pc(v);
+      case "bus": return "평균 " + v.toFixed(1) + "개 노선";
+      case "acad": return "평균 " + Math.round(v) + "곳";
+      default: return km(v);
+    }
+  }
+  function lvUnitOf(p) {
+    if (!LF.data) return null;
+    var u = lfUnitOf(p);
+    return u ? LV.by[u.name] || null : null;
+  }
+  function drawLivable() {
+    var box = document.getElementById("lv-body");
+    if (!LV.data || !LF.data) {
+      if (LV.failed || LF.failed) { box.innerHTML = '<article class="card"><p class="empty" style="padding:0">살기 좋은 동네 지수를 준비하고 있어요.</p></article>'; return; }
+      var again = function () { if (screen === "analysis" && sub === "livable" && LV.data && LF.data) drawLivable(); };
+      if (!LV.data) loadLivable(again);
+      if (!LF.data) loadLife(again);
+      return;
+    }
+    var D = LV.data, U = D.units, N = U.length, p = state.place, isGu = GU_LIST.indexOf(p) >= 0;
+    if (LV.pickFor !== p) { LV.pick = ""; LV.pickFor = p; LV.all = false; }
+    var mine = lvUnitOf(p), cur = LV.pick ? LV.by[LV.pick] : mine;
+    document.getElementById("lv-h").textContent = "터놓고 살기 좋은 동네 지수" + (p !== "all" ? " · " + p : "");
+    var scope = LV.city ? U.filter(function (u) { return u.city === LV.city; }) : (isGu ? U.filter(function (u) { return u.gu === p; }) : U);
+    var html = "";
+    if (cur) {
+      html += '<article class="card"><div class="card-head"><h3>' + ctag(cur.gu) + esc(cur.name) + ' <span class="meta">' + esc(cur.gu) + "</span></h3>" +
+        (mine && cur === mine && mine.name !== p ? '<span class="meta">' + esc(jo(p, "이", "가")) + " 속한 행정동</span>" : (LV.pick && mine && cur !== mine ? '<button type="button" class="linkbtn" id="lv-back">' + esc(jo(mine.name, "", "로")) + " 돌아가기</button>" : "")) + "</div>" +
+        '<div class="lfbig"><span class="lfscore">' + cur.score + "<small>점</small></span><span>청주·충주 " + N + "개 동네 중 <b>" + cur.rank + "위</b><br>주민 " + nf(cur.pop) + "명</span></div>" +
+        '<p class="lfh4">분야별로 보면</p><div class="fbars" id="lv-axes"></div>' +
+        '<p class="lfh4">항목별로 보면</p><p class="card-desc" style="margin:0 0 6px">막대는 그 항목만 따로 본 61곳 안 점수예요. 옆 숫자는 실제 값이에요.</p><div class="fbars" id="lv-items"></div></article>';
+    } else {
+      html += '<article class="card"><p class="result" style="margin:0">' + (isGu ? esc(p) + " 동네들의 점수예요. " : "") + "맨 위에서 동네를 고르거나, 아래 순위에서 동네를 누르면 분야별 점수가 나와요.</p></article>";
+    }
+    var tabs = [["", "전체 61곳"], ["청주", "청주만"], ["충주", "충주만"]];
+    html += '<article class="card"><div class="card-head"><h3>' + (LV.city ? LV.city + " 동네 순위" : (isGu ? esc(p) + " 동네 순위" : "청주·충주 동네 순위")) + '</h3><span class="meta">' + nf(scope.length) + "곳</span></div>" +
+      '<div class="hscroll tkinds" role="group" aria-label="도시" style="margin-bottom:10px">' + tabs.map(function (t) { return '<button type="button" class="chip" data-lvc="' + t[0] + '" aria-pressed="' + (LV.city === t[0]) + '">' + t[1] + "</button>"; }).join("") + "</div>" +
+      '<div class="fbars" id="lv-rank"></div>' +
+      (scope.length > 10 ? '<button type="button" class="linkbtn" id="lv-more" style="margin-top:10px">' + (LV.all ? "10위까지만 보기" : "전체 " + scope.length + "곳 보기") + "</button>" : "") +
+      '<div class="agfind"><label for="lv-pick">다른 동네 보기</label><select class="sel" id="lv-pick"><option value="">선택하세요</option>' +
+        U.slice().sort(function (a, b) { return a.name.localeCompare(b.name, "ko"); }).map(function (u) { return '<option value="' + esc(u.name) + '"' + (cur && cur.name === u.name ? " selected" : "") + ">" + esc(u.name) + " (" + esc(u.gu) + ")</option>"; }).join("") + "</select></div></article>";
+    box.innerHTML = html;
+    if (cur) {
+      fbars(document.getElementById("lv-axes"), Object.keys(D.meta.axes).map(function (a) {
+        return { k: a, label: "<b>" + cur.axes[a] + "점</b>", segs: [[cur.axes[a], "var(--brand)"]] };
+      }));
+      var items = [];
+      Object.keys(D.meta.axes).forEach(function (a) {
+        Object.keys(D.meta.axes[a]).forEach(function (k) {
+          if (k === "life") return;
+          var sc = cur.p[k] == null ? 50 : cur.p[k];
+          items.push({ k: a + " · " + (D.meta.labels[k] || k), label: "<b>" + sc + "점</b> · " + esc(lvFmt(k, cur.v[k], cur)), segs: [[sc, "var(--sky)"]] });
+        });
+      });
+      fbars(document.getElementById("lv-items"), items);
+    }
+    var ranked = scope.slice().sort(function (a, b) { return b.score - a.score || a.name.localeCompare(b.name, "ko"); });
+    var shown = LV.all ? ranked : ranked.slice(0, 10);
+    if (cur && ranked.indexOf(cur) >= 10 && !LV.all) shown = shown.concat([cur]);
+    fbars(document.getElementById("lv-rank"), shown.map(function (u) {
+      return { pre: ctag(u.gu), k: u.rank + ". " + u.name, label: "<b>" + u.score + "점</b> · " + esc(u.gu), segs: [[u.score, cur && u === cur ? "var(--brand)" : (u.gu === "충주시" ? "#E9A57C" : "var(--sky)")]] };
+    }));
+    var rows2 = document.querySelectorAll("#lv-rank .fb");
+    shown.forEach(function (u, i) {
+      var el = rows2[i]; if (!el) return;
+      if (cur && u === cur) el.classList.add("on");
+      el.style.cursor = "pointer"; el.onclick = function () { lvPick(u.name); };
+    });
+    box.querySelectorAll("[data-lvc]").forEach(function (b) { b.onclick = function () { LV.city = b.getAttribute("data-lvc"); LV.all = false; drawLivable(); }; });
+    var more = document.getElementById("lv-more"); if (more) more.onclick = function () { LV.all = !LV.all; drawLivable(); };
+    var back = document.getElementById("lv-back"); if (back) back.onclick = function () { lvPick(""); };
+    document.getElementById("lv-pick").onchange = function () { lvPick(this.value); };
+  }
+  function lvPick(n) {
+    LV.pick = n; trackEv("livablepick"); drawLivable();
+    var t = document.getElementById("lv-body"); if (n && t) t.scrollIntoView({ block: "start", behavior: "smooth" });
   }
 
   // ---------- 인구: 행정안전부 주민등록 인구, 2014년 7월(청주·청원 통합) 이후 월별 (population-trend.json)
@@ -3340,7 +3509,7 @@ button.nrow:hover .nk { color: var(--accent); }
   function loadPop(cb) {
     if (PO.data || PO.loading) return PO.data && cb();
     PO.loading = true;
-    fetch("population-trend.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    fetch(CITY.dir + "population-trend.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .then(function (d) { PO.data = d; PO.loading = false; cb(); })
       .catch(function () { PO.failed = true; PO.loading = false; cb(); });
   }
@@ -3425,7 +3594,7 @@ button.nrow:hover .nk { color: var(--accent); }
     if (M.sdk !== "ready") { if (M.sdk === "error") { msg("pomsg", "지도를 불러오지 못했습니다."); return; } loadSDK(function () { if (screen === "analysis" && sub === "popu") drawPopMap(ch12, cur, gu); }); return; }
     var el = document.getElementById("po-map"); if (!el) return;
     msg("pomsg", "");
-    var map = PO.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(36.64, 127.47), level: 10, scrollwheel: false });
+    var map = PO.map = new kakao.maps.Map(el, { center: new kakao.maps.LatLng(CITY.center[0], CITY.center[1]), level: 10, scrollwheel: false });
     mapExtras(map, el.parentNode);
     var byK = {}; ch12.forEach(function (x) { byK[x.k] = x; });
     var bounds = new kakao.maps.LatLngBounds(), tip = null;
@@ -3481,7 +3650,7 @@ button.nrow:hover .nk { color: var(--accent); }
   function loadBus(cb) {
     if (BUS.list || BUS.failed) return cb();
     BUS.wait.push(cb); if (BUS.wait.length > 1) return;
-    fetch("busstops.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    fetch(CITY.dir + "busstops.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .then(function (d) { BUS.list = d.stops; }).catch(function () { BUS.failed = true; })
       .then(function () { var w = BUS.wait; BUS.wait = []; w.forEach(function (f) { f(); }); });
   }
@@ -3507,7 +3676,7 @@ button.nrow:hover .nk { color: var(--accent); }
   function loadPoi(cb) {
     if (POI.d || POI.failed) return cb();
     POI.wait.push(cb); if (POI.wait.length > 1) return;
-    fetch("pois.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    fetch(CITY.dir + "pois.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .then(function (d) { POI.d = d; }).catch(function () { POI.failed = true; })
       .then(function () { var w = POI.wait; POI.wait = []; w.forEach(function (f) { f(); }); });
   }
@@ -3700,13 +3869,13 @@ button.nrow:hover .nk { color: var(--accent); }
     var out = document.getElementById("nr-out");
     out.innerHTML = '<article class="card"><p class="result">위치를 찾는 중입니다…</p></article>';
     loadSDK(function () {
-      var full = /청주/.test(q) ? q : "충청북도 청주시 " + q;
+      var full = /청주|충주/.test(q) ? q : "충청북도 " + CITY.full + " " + q;
       M.geo.addressSearch(full, function (res, st) {
         if (st === kakao.maps.services.Status.OK && res[0]) { NR.at = [+res[0].y, +res[0].x]; NR.label = res[0].address_name || q; NR.res = null; return drawNear(); }
         new kakao.maps.services.Places().keywordSearch(q, function (d, st2) {
           if (st2 === kakao.maps.services.Status.OK && d[0]) { NR.at = [+d[0].y, +d[0].x]; NR.label = d[0].place_name; NR.res = null; return drawNear(); }
-          out.innerHTML = '<article class="card"><p class="empty" style="padding:0">‘' + esc(q) + "’ 위치를 청주에서 찾지 못했어요. 동 이름과 번지, 또는 건물 이름으로 다시 넣어 보세요.</p></article>";
-        }, { location: new kakao.maps.LatLng(36.6424, 127.489), radius: 20000 });
+          out.innerHTML = '<article class="card"><p class="empty" style="padding:0">‘' + esc(q) + "’ 위치를 ' + CITY.name + '에서 찾지 못했어요. 동 이름과 번지, 또는 건물 이름으로 다시 넣어 보세요.</p></article>";
+        }, { location: new kakao.maps.LatLng(CITY.hall[0], CITY.hall[1]), radius: 20000 });
       });
     });
   };
@@ -3723,6 +3892,7 @@ button.nrow:hover .nk { color: var(--accent); }
     aging: ["노후도", "건물이 지어진 지 얼마나 됐는지"],
     near: ["생활권", "걸어서 갈 수 있는 생활 시설"],
     life: ["생활권 점수", "생활 시설이 얼마나 잘 갖춰졌는지 동네끼리"],
+    livable: ["살기 좋은 동네", "생활·주거·환경·활력·교통·교육 6개 분야로"],
     popu: ["인구", "12년 동안 사람이 늘었는지 줄었는지"],
     map: ["개발지도", "허가·착공·완공 위치를 지도에서"],
     report: ["동네 리포트", "이 동네 정보를 한 화면에 모아서"]
@@ -3730,7 +3900,7 @@ button.nrow:hover .nk { color: var(--accent); }
   var NEXT = {
     flow: ["supply", "stall", "map"], supply: ["stall", "trade", "map"], stall: ["flow", "map", "aging"],
     stats: ["report", "compare", "trade"], compare: ["report", "stats", "aging"], trade: ["report", "popu", "aging"], popu: ["report", "trade", "near"],
-    aging: ["report", "near", "trade"], near: [], life: [], report: [], quality: []
+    aging: ["report", "near", "trade"], near: ["livable"], livable: ["near", "report"], life: [], report: [], quality: []
   };
   var CHEV = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 5 5 5-5 5"/></svg>';
   function drawNext() {
@@ -3892,7 +4062,7 @@ button.nrow:hover .nk { color: var(--accent); }
         more("trade", "실거래 보기") + "</article>" +
       // 노후도
       '<article class="card"><div class="card-head"><h3>건물 노후도</h3><span class="meta">사용승인 연도 기준</span></div>' +
-        (o.ag && o.ag.n ? '<div class="rstats">' + stat(pct(o.ag.a30, o.ag.n) + "%", "30년 넘은 건물 (청주 " + pct(o.agCity.a30, o.agCity.n) + "%)") + stat(pct(o.ag.a40, o.ag.n) + "%", "40년 넘은 건물") + stat(nf(o.cx) + "곳", "30년 지난 공동주택 단지") + "</div>" +
+        (o.ag && o.ag.n ? '<div class="rstats">' + stat(pct(o.ag.a30, o.ag.n) + "%", "30년 넘은 건물 (" + CITY.name + " " + pct(o.agCity.a30, o.agCity.n) + "%)") + stat(pct(o.ag.a40, o.ag.n) + "%", "40년 넘은 건물") + stat(nf(o.cx) + "곳", "30년 지난 공동주택 단지") + "</div>" +
           (o.cxOld ? '<p class="result" style="margin:0 0 6px">가장 오래된 단지: ' + esc(o.cxOld.name || "이름 없음") + " (" + o.cxOld.y + "년, " + nf(o.cxOld.hh) + "세대)</p>" : "") : '<p class="result">노후도 자료를 불러오는 중이에요.</p>') +
         more("aging", "노후도 보기") + "</article>" +
       // 인구
@@ -3924,7 +4094,7 @@ button.nrow:hover .nk { color: var(--accent); }
       var btn = this; btn.disabled = true; btn.textContent = "위치를 찾는 중…";
       loadSDK(function () {
         var gu = rows.filter(function (r) { return placeOkP(r, p); })[0];
-        var q = "충청북도 청주시 " + (GU_LIST.indexOf(p) >= 0 ? p : (gu ? gu.gu + " " : "") + p);
+        var q = "충청북도 " + CITY.full + " " + (CJ ? (GU_LIST.indexOf(p) >= 0 ? "" : p) : (GU_LIST.indexOf(p) >= 0 ? p : (gu ? gu.gu + " " : "") + p));
         M.geo.addressSearch(q, function (res, st) {
           if (st === kakao.maps.services.Status.OK && res[0]) { NR.at = [+res[0].y, +res[0].x]; NR.label = p + " 중심"; NR.res = null; location.hash = "#near"; }
           else { btn.disabled = false; btn.textContent = "위치를 찾지 못했어요"; }
@@ -3937,7 +4107,8 @@ button.nrow:hover .nk { color: var(--accent); }
   });
 
   // ---------- AI 질문: 질문 버튼은 사이트 자료로 바로 답하고(횟수 없음), 직접 쓴 질문은 중계 서버를 거쳐 Claude가 답한다
-  var AI = { url: String(CFG.aiEndpoint || "").replace(/\/+$/, ""), busy: false, hist: [], quota: null, started: false };
+  // 충주 직접 질문은 AI 중계 서버가 충주 자료를 읽게 바뀐 뒤(config.js aiCities에 chungju) 켠다
+  var AI = { url: (CFG.aiCities || ["cheongju"]).indexOf(CITY.key) >= 0 ? String(CFG.aiEndpoint || "").replace(/\/+$/, "") : "", busy: false, hist: [], quota: null, started: false };
 
   // ---------- 방문 통계: 브라우저마다 하루 한 번, 들어온 사이트 이름(예: instagram.com)만 보낸다
   // 주소에 ?me=1을 붙여 한 번 열면 그 브라우저는 집계에서 빠진다 (?me=0으로 되돌림)
@@ -4026,7 +4197,7 @@ button.nrow:hover .nk { color: var(--accent); }
     var parts = Object.keys(bq).sort().slice(0, 4).map(function (q) { return qLabel(q) + " " + nf(bq[q]) + "곳"; });
     if (soon) parts.push("예상 시점이 지나 곧 끝날 것으로 보이는 곳 " + nf(soon) + "곳");
     if (late) parts.push("비슷한 건물보다 늦어지는 곳 " + nf(late) + "곳");
-    return "<p>" + esc(placeLabel()) + "에서 착공한 뒤 아직 사용승인 전인 새 건물은 <b>" + nf(list.length) + "곳</b>이에요. 청주에서 비슷한 규모의 건물이 걸린 기간으로 추정하면 이래요.</p><p>" + parts.join("<br>") + "</p>" +
+    return "<p>" + esc(placeLabel()) + "에서 착공한 뒤 아직 사용승인 전인 새 건물은 <b>" + nf(list.length) + "곳</b>이에요. " + CITY.name + "에서 비슷한 규모의 건물이 걸린 기간으로 추정하면 이래요.</p><p>" + parts.join("<br>") + "</p>" +
       "<p>건축주의 공식 일정이 아니라 통계로 낸 추정이에요.</p>" + '<a class="go" href="#supply">완공 예상에서 자세히 →</a>';
   }
   function chipFlow() {
@@ -4051,7 +4222,7 @@ button.nrow:hover .nk { color: var(--accent); }
     var p = state.place, o = townSummary(p), pl = placeLabel();
     if (!o.ag || !o.ag.n) return "<p>" + esc(pl) + "의 건축물대장 자료가 없어요.</p>";
     var h = "<p>" + esc(pl) + "에서 사용승인 연도가 기록된 건물 " + nf(o.ag.n) + "동 중 <b>지은 지 30년 넘은 곳은 " + pct(o.ag.a30, o.ag.n) + "%</b>예요. 40년 넘은 곳은 " + pct(o.ag.a40, o.ag.n) + "%, 50년 넘은 곳은 " + pct(o.ag.a50, o.ag.n) + "%예요." +
-      (p !== "all" ? " 청주 전체는 30년 넘은 곳이 " + pct(o.agCity.a30, o.agCity.n) + "%예요." : "") + "</p>";
+      (p !== "all" ? " " + CITY.name + " 전체는 30년 넘은 곳이 " + pct(o.agCity.a30, o.agCity.n) + "%예요." : "") + "</p>";
     if (p === "all" || GU_LIST.indexOf(p) >= 0) {
       var g = {};
       AG.data.places.forEach(function (x) { if (!agPlaceOkP(x, p)) return; var k = x.place.split(" ")[0]; var t = g[k] || (g[k] = { n: 0, a: 0 }); ["house", "apt", "etc"].forEach(function (kk) { var ys = (x.y || {})[kk] || {}; Object.keys(ys).forEach(function (y) { t.n += ys[y]; if (AG_Y - +y >= 30) t.a += ys[y]; }); }); });
@@ -4136,7 +4307,7 @@ button.nrow:hover .nk { color: var(--accent); }
     document.getElementById("chat-q").placeholder = AI.url ? "예: " + (state.place === "all" ? "오창읍" : state.place) + "에 요즘 공사 많아?" : "AI 질문 준비 중 (질문 버튼은 사용 가능)";
     if (!AI.started) {
       AI.started = true;
-      chatAdd("bot", '<span class="tag">터놓고</span><p>안녕하세요. 청주 건축 인허가 자료(' + dot(END) + " 기준)로 답해 드려요. 아래 질문 버튼을 누르거나 직접 물어보세요.</p>");
+      chatAdd("bot", '<span class="tag">터놓고</span><p>안녕하세요. ' + CITY.name + ' 건축 인허가 자료(' + dot(END) + " 기준)로 답해 드려요. 아래 질문 버튼을 누르거나 직접 물어보세요.</p>");
       if (AI.url) loadQuota();
     }
     setQuota(null);
@@ -4155,7 +4326,7 @@ button.nrow:hover .nk { color: var(--accent); }
     var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 30000);
     fetch(AI.url + "/ask", {
       method: "POST", headers: { "content-type": "application/json", "X-Device": aiDevice() },
-      body: JSON.stringify({ q: q, place: state.place, history: AI.hist.slice(-2) }), signal: ctl ? ctl.signal : undefined
+      body: JSON.stringify({ q: q, place: state.place, city: CITY.key, history: AI.hist.slice(-2) }), signal: ctl ? ctl.signal : undefined
     })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j || {} }; }); })
       .then(function (x) {
@@ -4174,7 +4345,7 @@ button.nrow:hover .nk { color: var(--accent); }
   var screen = "";
   var TITLES = { home: "터놓고", map: "개발지도", analysis: "지역 분석", ask: "AI 질문" };
   // 공급 전망·지역 분석·동네 진단은 한 화면(scr-analysis)을 나눠 쓰고, 묶음마다 보이는 탭이 다르다
-  var GRP = { report: "town", flow: "outlook", supply: "outlook", stall: "outlook", stats: "analysis", compare: "analysis", trade: "analysis", popu: "analysis", aging: "town", near: "town", life: "town", quality: "none" };
+  var GRP = { report: "town", flow: "outlook", supply: "outlook", stall: "outlook", stats: "analysis", compare: "analysis", trade: "analysis", popu: "analysis", aging: "town", near: "town", life: "town", livable: "town", quality: "none" };
   var GRP_T = { outlook: "공급 전망", analysis: "지역 분석", town: "동네 진단", none: "자료 상태" };
   var GRP_LAST = { outlook: "flow", analysis: "stats", town: "report" };
   var grp = "analysis";
@@ -4205,7 +4376,7 @@ button.nrow:hover .nk { color: var(--accent); }
       if (a.getAttribute("data-nav") === navKey) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
     setTitle();
-    document.title = screen === "home" ? "터놓고 - 청주 건축·개발 정보 지도" : (screen === "analysis" ? GRP_T[grp] : TITLES[screen]) + " · 터놓고";
+    document.title = screen === "home" ? "터놓고 - " + CITY.name + " 건축·개발 정보 지도" : (screen === "analysis" ? GRP_T[grp] : TITLES[screen]) + " · 터놓고";
     if (moved) window.scrollTo(0, 0);
     if (screen === "home") drawHome();
     if (screen === "map") {

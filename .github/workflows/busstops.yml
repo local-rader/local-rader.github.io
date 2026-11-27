@@ -43,13 +43,15 @@ jobs:
       - name: 생활권 점수 다시 계산
         continue-on-error: true
         if: ${{ inputs.mode != 'probe' }}
-        run: python life.py build
+        run: |
+          python life.py build
+          python livable_score.py   # 청주·충주 61곳 생활권(life-all.json)과 살기 좋은 동네 지수(livable-score.json)
       - name: 저장
         if: ${{ !cancelled() && inputs.mode != 'probe' }}
         run: |
           git config user.name "dongne-radar-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for f in busstops.json pois.json life.json; do if [ -f "$f" ]; then git add "$f"; fi; done
+          for f in busstops.json pois.json life.json life-all.json livable-score.json; do if [ -f "$f" ]; then git add "$f"; fi; done
           if git diff --cached --quiet; then echo "바뀐 자료가 없습니다."; else
             git commit -m "버스정류소 갱신 $(TZ=Asia/Seoul date +%F)"
             git pull --rebase -X theirs origin main
