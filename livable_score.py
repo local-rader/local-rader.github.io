@@ -10,7 +10,7 @@
   환경       도시공원 면적(주민 1인당 ¼ · 동 면적 대비 ¼) · 1만㎡ 이상 공원까지 거리 ½ (묘지공원 제외)
   활력       최근 5년 인구 증감률 ½ · 0~14세 비율 ¼ · 20~44세 비율 ¼
   교통       500m 안 정류소를 지나는 버스 노선 수 60% · KTX역까지 거리 20% · 고속도로 IC까지 거리 20%
-  교육       학령기 아이 순유입(몇 년 전 같은 또래 → 지금 7~15세 증가율 − 전체 인구 증가율) ½ · 초등학교까지 거리 ½
+  교육       집에서 1㎞ 안 학원·교습소 수(교육청 등록, 입시·보습·외국어) ½ · 초등학교까지 거리 ½
 거리·노선 수는 생활권 점수와 같은 '주민 위치'(법정동·리 대표점 + 아파트 단지, 세대 수 가중)에서 잼.
 """
 import json
@@ -37,14 +37,14 @@ AXES = {
     "환경": {"park_pc": 1, "park_pa": 1, "park_d": 2},
     "활력": {"growth": 2, "kids": 1, "young": 1},
     "교통": {"bus": 3, "ktx": 1, "ic": 1},
-    "교육": {"kidsin": 1, "elem": 1},
+    "교육": {"acad": 1, "elem": 1},   # 학령기 아이 순유입(kidsin)은 입주 시기를 재는 것으로 드러나 뺌(값은 참고로 남김)
 }
 LOW_IS_GOOD = {"park_d", "ktx", "ic", "elem"}
 K_KIDS = 100             # 학령기 아이 순유입: 아이 수가 적은 동네는 도시 값 쪽으로 당김
 LABEL = {"life": "생활권 점수", "new": "10년 안에 지은 집 비율", "trend": "아파트 매매가 추이", "jeonse": "㎡당 전세 보증금",
          "park_pc": "주민 1인당 공원 면적", "park_pa": "동 면적 대비 공원 면적", "park_d": "큰 공원까지 거리", "growth": "5년 인구 증감률",
          "kids": "0~14세 비율", "young": "20~44세 비율", "bus": "버스 노선 수", "ktx": "KTX역까지 거리", "ic": "고속도로 IC까지 거리",
-         "kidsin": "학령기 아이 순유입(전체 인구 증가 대비)", "elem": "초등학교까지 거리", "acad": "1㎞ 안 학원 수"}
+         "kidsin": "학령기 아이 순유입(전체 인구 증가 대비)", "elem": "초등학교까지 거리", "acad": "1㎞ 안 학원·교습소 수(입시·보습, 외국어)"}
 KX, KY = 111.32 * math.cos(math.radians(36.75)), 110.57
 
 
@@ -64,6 +64,67 @@ def pct(vals, low_good=False):
         below = sum(1 for w in have if (w > v if low_good else w < v))
         eq = sum(1 for w in have if w == v)
         out.append((below + (eq - 1) / 2) / (n - 1) * 100 if n > 1 else 50)
+    return out
+
+
+def norm_name(x):
+    return re.sub(r"(학원|교습소|어학원|\s|\(.*?\)|[^\w])", "", x or "").lower()
+
+
+def apt_key(x):
+    x = re.sub(r"\(.*?\)", "", x or "")
+    x = re.sub(r"(아파트|APT|apt|단지|\s|·|-|\.)", "", x.strip())
+    return re.sub(r"(청주|충주|충북|흥덕|상당|서원|청원)", "", x).lower()
+
+
+def academy_points(AG, places, homes):
+    """교육청 등록 학원·교습소(입시·보습, 국제화) 위치.
+    ① 상가정보에 같은 이름이 있으면 그 좌표 ② 주소 괄호 속 아파트 단지 이름 → 오픈스트리트맵 단지 위치
+    ③ 주소 괄호 속 법정동 → 그 법정동 대표점 ④ 읍·면만 알면 그 읍·면에서 집이 가장 많은 곳.
+    마지막 원소는 방법별 개수 (note용)"""
+    at0 = {p["place"]: p["at"] for p in AG["places"] if p.get("at")}
+    out, cnt = [], {"이름": 0, "단지": 0, "법정동": 0, "읍면": 0, "못 찾음": 0}
+    for c, L in loadc("livable.json"):
+        rows = (L.get("neis") or {}).get("rows", [])
+        E = {}
+        for x in (life.load(os.path.join(life.CITY_DIRS[c], "extra.json"), {}) or {}).get("academy", []):
+            E.setdefault(norm_name(x[0]), []).append((x[1], x[2]))
+        OSM = {}
+        for nm, typ, la, lo in (life.load(os.path.join(life.CITY_DIRS[c], "newdata.json"), {}) or {}).get("apts", []):
+            if typ in ("apartments", "residential") and len(apt_key(nm)) >= 3:
+                OSM.setdefault(apt_key(nm), []).append((la, lo))
+        if not rows:   # 교육청 자료가 없으면 상가정보 학원으로
+            out += [q for qs in E.values() for q in qs]
+            continue
+        for name, kind, addr, la, lo in rows:
+            if kind.split("|")[1] not in ("입시.검정 및 보습", "국제화"):
+                continue
+            pt, k = None, None
+            if la:
+                pt, k = (la, lo), "이름"
+            nn = norm_name(name)
+            if not pt and len(nn) >= 2 and len(E.get(nn, [])) == 1:
+                pt, k = E[nn][0], "이름"
+            m = re.search(r"\(([^()]*?)\)\s*$", addr)
+            inner = [x.strip() for x in m.group(1).split(",")] if m else []
+            if not pt and len(inner) >= 2:
+                ak = apt_key(inner[1])
+                hit = OSM.get(ak) or next((v for kk, v in OSM.items() if len(ak) >= 4 and (ak in kk or kk in ak)), None)
+                if hit:
+                    pt, k = (sorted(q[0] for q in hit)[len(hit) // 2], sorted(q[1] for q in hit)[len(hit) // 2]), "단지"
+            if not pt and inner and inner[0] in at0:
+                pt, k = tuple(at0[inner[0]]), "법정동"
+            if not pt:
+                mm = re.search(r"\s(\S+[읍면])\s", addr)
+                if mm:
+                    hs = [h for nm, h in homes.items() if nm == mm.group(1)]
+                    if hs and hs[0]:
+                        best = max(hs[0], key=lambda h: h[2])
+                        pt, k = (best[0], best[1]), "읍면"
+            if pt:
+                out.append(pt)
+            cnt[k or "못 찾음"] += 1
+    out.append(cnt)
     return out
 
 
@@ -283,7 +344,8 @@ def main(out_name):
         val[nm]["elem"] = hmean(nm, lambda h: min(km(h, q) for q in elem)) if elem else None
 
     # ---- 교육: 집에서 1㎞ 안 입시·교과·외국어 학원 수 (학원가에 가까운가)
-    acad = [(x[1], x[2]) for _, E in loadc("extra.json") for x in (E or {}).get("academy", [])]
+    acad, how = academy_points(AG, places, homes), None
+    note["acad"] = acad.pop()
     for nm in val:
         def nacad(h):
             return sum(1 for q in acad if abs(q[0] - h[0]) < 0.0095 and abs(q[1] - h[1]) < 0.012 and km(h, q) <= 1.0)
