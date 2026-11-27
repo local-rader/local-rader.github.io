@@ -207,7 +207,13 @@ def pct_ranks(vals):
 
 
 CITY_DIRS = {"청주": "", "충주": "chungju"}
-MERGE_CJ = {"교현2동": "교현·안림동"}   # 충주: 법정동 교현동이 두 행정동으로 나뉨
+MERGE_CJ = {"교현2동": "교현·안림동"}
+CJ_SUFFIX = "(충주)"   # 청주와 이름이 같은 충주 법정동 (places 키)
+
+
+def place_key(name, chungju, places):
+    """충주 자료의 법정동 이름 → places 키 (청주와 이름이 겹치면 '(충주)'가 붙어 있음)"""
+    return name + CJ_SUFFIX if chungju and (name + CJ_SUFFIX) in places else name   # 충주: 법정동 교현동이 두 행정동으로 나뉨
 
 
 def build(cities=("청주",), out_name="life.json"):
@@ -260,6 +266,11 @@ def build(cities=("청주",), out_name="life.json"):
     AG = {"places": [], "complexes": []}
     for a_ in loadc("aging.json", {"places": [], "complexes": []}):
         AG["places"] += a_.get("places", []); AG["complexes"] += a_.get("complexes", [])
+    # 두 도시에 같은 이름의 법정동이 있으면(예: 문화동) 충주 쪽 이름 뒤에 '(충주)'를 붙여 구별
+    cj_names = set(p_["place"] for p_ in AG["places"] if p_.get("gu") != "충주시")
+    for x_ in AG["places"] + AG["complexes"]:
+        if x_.get("gu") == "충주시" and x_.get("place") in cj_names:
+            x_["place"] = x_["place"] + CJ_SUFFIX
     OSM = [x for nd in loadc("newdata.json", {}) for x in (nd or {}).get("apts", [])]
     # 대표점이 없는 법정동·리(충주는 필지 자료가 없음): 오픈스트리트맵 마을·동 이름 점으로 채움
     vil = {}
@@ -269,7 +280,7 @@ def build(cities=("청주",), out_name="life.json"):
     for p in AG["places"]:
         if p.get("at"):
             continue
-        parts = p["place"].split(" ")
+        parts = p["place"].replace(CJ_SUFFIX, "").split(" ")
         cands = vil.get(parts[-1], [])
         # 같은 이름이 다른 지역에도 있음 (예: 대전 용산동) → 같은 시·구 행정동 안에 있는 점만
         cands = [q for q in cands if (lambda w: w is not None and w["gu"] == p.get("gu"))(find(q[0], q[1]))]
@@ -282,13 +293,13 @@ def build(cities=("청주",), out_name="life.json"):
         u = find(p["at"][0], p["at"][1]) if p.get("at") else None
         if not u:
             m = re.match(r"^(\S+[읍면])", p["place"])
-            u = units.get(m.group(1)) if m else units.get(p["place"])
+            u = units.get(m.group(1)) if m else units.get(p["place"].replace(CJ_SUFFIX, ""))
         if not u and p.get("gu") == "충주시":   # '성내동' → '성내·충인동'
-            b_ = re.sub(r"동$", "", p["place"])
+            b_ = re.sub(r"동$", "", p["place"].replace(CJ_SUFFIX, ""))
             alt = [w for w in units.values() if w["gu"] == "충주시" and b_ in [re.sub(r"동$", "", x) for x in w["name"].split("·")]]
             u = alt[0] if len(alt) == 1 else None
         if u and p.get("gu") and u["gu"] != p["gu"]:  # 대표점이 옆 구 행정동에 떨어진 경우 (예: 용담동 → 율량·사천동)
-            base = re.sub(r"\d*(동|가)$", "", p["place"].split(" ")[0])
+            base = re.sub(r"\d*(동|가)$", "", p["place"].replace(CJ_SUFFIX, "").split(" ")[0])
             alt = [w for w in units.values() if w["gu"] == p["gu"] and base and base in w["name"]]
             u = alt[0] if len(alt) == 1 else u
         if u:
@@ -302,7 +313,7 @@ def build(cities=("청주",), out_name="life.json"):
                 return u
         for pat in (r"\(([^,()\s]+?(?:동|가))[,)\s]", r"\s([^\s()]+?(?:동|가))\s+(?:산\s?)?\d"):
             for m in re.finditer(pat, a):
-                nm = m.group(1)
+                nm = place_key(m.group(1), "충주" in a, places)
                 if nm in places:
                     return units.get(places[nm])
                 if nm in units:
@@ -362,8 +373,9 @@ def build(cities=("청주",), out_name="life.json"):
         a = re.sub(r"\s+", " ", addr or "").replace("오송옵", "오송읍")
         for pat in (r"\(([^,()\s]+?(?:동|가))[,)\s]", r"\s([^\s()]+?(?:동|가))\s+(?:산\s?)?\d"):
             for m in re.finditer(pat, a):
-                if m.group(1) in ptof:
-                    return ptof[m.group(1)][:2]
+                k_ = place_key(m.group(1), "충주" in a, ptof)
+                if k_ in ptof:
+                    return ptof[k_][:2]
         for m in re.finditer(r"\s(\S+[읍면])\s?(\S+리)\b", a):
             k = f"{m.group(1)} {m.group(2)}"
             if k in ptof:

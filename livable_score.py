@@ -186,7 +186,7 @@ def main(out_name):
         if r[9] or r[10] or not r[3]:   # 직거래·지분거래 제외
             continue
         per = "A" if r[0][:7] in A else "B" if r[0][:7] in B else None
-        nm = places.get(r[1])
+        nm = places.get(life.place_key(r[1], c == "충주", places))
         if per and nm:
             cp.setdefault((nm, r[1], r[4]), {"A": [], "B": []})[per].append(r[2] / r[3])
     tr = {}
@@ -213,7 +213,7 @@ def main(out_name):
     js = {}
     for c, L in loadc("livable.json"):
         for sg, dong, apt, ym, dep, mon, ar in (L.get("rent") or {}).get("rows", []):
-            nm = places.get(dong)
+            nm = places.get(life.place_key(dong, c == "충주", places))
             if nm and mon == 0 and ar > 0 and dep > 0:
                 js.setdefault(nm, []).append(dep / ar)
     for nm in val:
