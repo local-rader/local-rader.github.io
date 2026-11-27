@@ -756451,16 +756451,16 @@
 "sh|43114|2026-11": "2026-11-27"
 },
 "meta": {
-"fetched": "2026-11-27 05:19",
+"fetched": "2026-11-28 05:50",
 "source": "국토교통부 실거래가 공개 자료 (공공데이터포털)",
 "status": {
-"apt": "ok",
-"indu": "ok",
-"land": "ok",
-"nrg": "ok",
-"offi": "ok",
+"apt": "error: resultCode  None",
+"indu": "error: resultCode  None",
+"land": "error: resultCode  None",
+"nrg": "error: resultCode  None",
+"offi": "error: resultCode  None",
 "rh": "not_registered",
-"sh": "ok"
+"sh": "error: resultCode  None"
 }
 }
 }
