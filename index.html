@@ -1719,33 +1719,19 @@ button.nrow:hover .nk { color: var(--accent); }
     });
     function opt(v, t, n) { return '<option value="' + esc(v) + '">' + esc(t) + " (" + nf(n || 0) + ")</option>"; }
     function optO(k, v, t) { return '<option value="@' + k + ":" + esc(v) + '">' + esc(t) + "</option>"; }
-    // 지금 도시는 건수와 함께, 다른 도시는 이름만 (고르면 그 도시 자료로 바뀐다). 청주 → 충주 순서
-    function mine() {
-      var x = "";
-      if (GU_LIST.length > 1) {
-        x += '<optgroup label="' + esc(REGION) + '">' + opt("all", REGION + " 전체", total) + "</optgroup>";
-        GU_LIST.forEach(function (g) {
-          x += '<optgroup label="' + esc(g) + '">' + opt(g, g + " 전체", gcnt[g]) +
-            areasOf[g].map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
-        });
-      } else {
-        x += '<optgroup label="' + esc(REGION) + '">' + opt("all", REGION + " 전체", total) + areas.map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
-      }
-      return x;
+    // 순서: 청주시 전체·충주시 전체 → 청주 4개 구 → 구별 동네 → 충주 동네. 지금 도시는 건수와 함께, 다른 도시는 이름만 (고르면 그 도시 자료로 바뀐다)
+    var OC = CJ ? "cheongju" : "chungju", OG = (PIDX || {})[OC];
+    function o(city, v, t) {
+      if (city === CITY.key) return opt(v, t, v === "all" ? total : (gcnt[v] != null ? gcnt[v] : cnt[v]));
+      return optO(city, v, t);
     }
-    function theirs() {
-      var oc = CJ ? "cheongju" : "chungju", G = (PIDX || {})[oc], x = "";
-      if (!G) return "";
-      var gus = Object.keys(G), full = CJ ? "청주시" : "충주시";
-      if (gus.length > 1) {
-        x += '<optgroup label="' + full + '">' + optO(oc, "all", full + " 전체") + "</optgroup>";
-        gus.forEach(function (g) { x += '<optgroup label="' + esc(g) + '">' + optO(oc, g, g + " 전체") + G[g].map(function (a) { return optO(oc, a, a); }).join("") + "</optgroup>"; });
-      } else {
-        x += '<optgroup label="' + full + '">' + optO(oc, "all", full + " 전체") + G[gus[0]].map(function (a) { return optO(oc, a, a); }).join("") + "</optgroup>";
-      }
-      return x;
-    }
-    var h = CJ ? theirs() + mine() : mine() + theirs();
+    function gusOf(city) { return city === CITY.key ? GU_LIST : (OG ? Object.keys(OG) : []); }
+    function areasIn(city, g) { return city === CITY.key ? (areasOf[g] || []) : ((OG || {})[g] || []); }
+    var h = '<optgroup label="전체">' + o("cheongju", "all", "청주시 전체") + ((CJ || OG) ? o("chungju", "all", "충주시 전체") : "") + "</optgroup>";
+    var cg = gusOf("cheongju");
+    if (cg.length) h += '<optgroup label="청주 구">' + cg.map(function (g) { return o("cheongju", g, g + " 전체"); }).join("") + "</optgroup>";
+    cg.forEach(function (g) { h += '<optgroup label="청주 ' + esc(g) + '">' + areasIn("cheongju", g).map(function (a) { return o("cheongju", a, a); }).join("") + "</optgroup>"; });
+    gusOf("chungju").forEach(function (g) { h += '<optgroup label="충주시">' + areasIn("chungju", g).map(function (a) { return o("chungju", a, a); }).join("") + "</optgroup>"; });
     if (FAVP.length) h = '<optgroup label="관심 동네">' + FAVP.map(function (p) { return opt(p, p, gcnt[p] || cnt[p]); }).join("") + "</optgroup>" + h;
     sel.innerHTML = h; sel.value = state.place;
     if (typeof drawFavUI === "function" && document.getElementById("favbar")) drawFavUI();
