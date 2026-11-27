@@ -1,0 +1,268 @@
+"""터놓고 살기 좋은 동네 지수 — 청주·충주 61곳 (기준은 결과를 보기 전에 고정, 2026-11-27)
+
+  python livable_score.py [출력 파일]     (기본: livable-score.json)
+
+5개 분야를 같은 비중(각 20%)으로 평균. 항목마다 61곳 안 백분위(0~100, 거리는 짧을수록 높음).
+자료가 없는 항목(거래가 적은 면 지역 등)은 그 분야의 나머지 항목만으로 계산.
+  생활 편의  생활권 점수 그대로
+  주거       10년 안에 지은 집 비율 ⅓ · 아파트 매매가 추이(같은 단지끼리 2년 전과 비교) ⅓ · ㎡당 전세 보증금 ⅓
+  환경       주민 1인당 도시공원 면적 ½ · 1만㎡ 이상 공원까지 거리 ½ (묘지공원 제외)
+  활력       최근 5년 인구 증감률 ½ · 0~14세 비율 ¼ · 20~44세 비율 ¼
+  교통       500m 안 정류소를 지나는 버스 노선 수 60% · KTX역까지 거리 20% · 고속도로 IC까지 거리 20%
+거리·노선 수는 생활권 점수와 같은 '주민 위치'(법정동·리 대표점 + 아파트 단지, 세대 수 가중)에서 잼.
+"""
+import json
+import math
+import os
+import re
+import statistics
+import sys
+
+import life
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+CITIES = ("청주", "충주")
+NEW_FROM = 2016          # 10년 안에 지은 집 = 2016년 이후 사용승인
+MIN_RENT = 10            # 전세 계약이 이보다 적으면 전세 항목 뺌
+MIN_CPX = 3              # 매매가 추이: 두 기간 모두 거래된 단지가 이보다 적으면 뺌
+BIG_PARK = 10000         # ㎡
+BUS_R = 0.5              # ㎞
+AXES = {
+    "생활 편의": {"life": 1},
+    "주거": {"new": 1, "trend": 1, "jeonse": 1},
+    "환경": {"park_pc": 1, "park_d": 1},
+    "활력": {"growth": 2, "kids": 1, "young": 1},
+    "교통": {"bus": 3, "ktx": 1, "ic": 1},
+}
+LOW_IS_GOOD = {"park_d", "ktx", "ic"}
+LABEL = {"life": "생활권 점수", "new": "10년 안에 지은 집 비율", "trend": "아파트 매매가 추이", "jeonse": "㎡당 전세 보증금",
+         "park_pc": "주민 1인당 공원 면적", "park_d": "큰 공원까지 거리", "growth": "5년 인구 증감률",
+         "kids": "0~14세 비율", "young": "20~44세 비율", "bus": "버스 노선 수", "ktx": "KTX역까지 거리", "ic": "고속도로 IC까지 거리"}
+KX, KY = 111.32 * math.cos(math.radians(36.75)), 110.57
+
+
+def km(a, b):
+    return math.hypot((a[1] - b[1]) * KX, (a[0] - b[0]) * KY)
+
+
+def pct(vals, low_good=False):
+    """None은 빼고 백분위 (같은 값은 가운데 순위)"""
+    have = [v for v in vals if v is not None]
+    n = len(have)
+    out = []
+    for v in vals:
+        if v is None:
+            out.append(None)
+            continue
+        below = sum(1 for w in have if (w > v if low_good else w < v))
+        eq = sum(1 for w in have if w == v)
+        out.append((below + (eq - 1) / 2) / (n - 1) * 100 if n > 1 else 50)
+    return out
+
+
+def loadc(name):
+    return [(c, life.load(os.path.join(life.CITY_DIRS[c], name), {})) for c in CITIES]
+
+
+def main(out_name):
+    ctx = life.build(CITIES, os.environ.get("LIFE_ALL", "life-all.json"))
+    U = ctx["units"]
+    byname = {u["name"]: u for u in U}
+    places, find, AG = ctx["places"], ctx["find"], ctx["aging"]
+    homes = {}
+    for nm, la, lo, w in ctx["homes"]:
+        homes.setdefault(nm, []).append((la, lo, w))
+    val = {u["name"]: {} for u in U}
+    note = {}
+
+    def hmean(nm, f):
+        hs = homes.get(nm) or []
+        tot = sum(h[2] for h in hs)
+        return sum(h[2] * f((h[0], h[1])) for h in hs) / tot if tot else None
+
+    # ---- 생활 편의
+    for u in U:
+        val[u["name"]]["life"] = u["score"]
+
+    # ---- 주거: 신축 비율 (단독·다가구는 건물 1채 = 1가구, 아파트는 세대 수)
+    tot, new = {}, {}
+    for p in AG["places"]:
+        nm = places.get(p["place"])
+        if not nm:
+            continue
+        for y, c in (p.get("y", {}).get("house") or {}).items():
+            tot[nm] = tot.get(nm, 0) + c
+            if int(y) >= NEW_FROM:
+                new[nm] = new.get(nm, 0) + c
+    for c in AG["complexes"]:
+        nm = places.get(c.get("place"))
+        if not nm or not c.get("hh"):
+            continue
+        tot[nm] = tot.get(nm, 0) + c["hh"]
+        if (c.get("y") or 0) >= NEW_FROM:
+            new[nm] = new.get(nm, 0) + c["hh"]
+    for nm in val:
+        val[nm]["new"] = new.get(nm, 0) / tot[nm] if tot.get(nm) else None
+
+    # ---- 주거: 매매가 추이 (같은 단지의 ㎡당 가격 중앙값, 처음 12개월 vs 마지막 12개월)
+    rows = []
+    for c, T in loadc("trades.json"):
+        for k, v in (T.get("data") or {}).items():
+            if k.startswith("apt|"):
+                rows += [(c, r) for r in v]
+    months = sorted(set(r[0][:7] for _, r in rows))
+    A, B = set(months[:12]), set(months[-13:-1] if months[-1] >= "2026-11" else months[-12:])
+    note["trend"] = f"{min(A)}~{max(A)} → {min(B)}~{max(B)}"
+    cp = {}
+    for c, r in rows:
+        if r[9] or r[10] or not r[3]:   # 직거래·지분거래 제외
+            continue
+        per = "A" if r[0][:7] in A else "B" if r[0][:7] in B else None
+        nm = places.get(r[1])
+        if per and nm:
+            cp.setdefault((nm, r[1], r[4]), {"A": [], "B": []})[per].append(r[2] / r[3])
+    tr = {}
+    for (nm, _, _), d in cp.items():
+        if len(d["A"]) >= 2 and len(d["B"]) >= 2:
+            tr.setdefault(nm, []).append((math.log(statistics.median(d["B"]) / statistics.median(d["A"])), min(len(d["A"]), len(d["B"]))))
+    for nm in val:
+        xs = tr.get(nm, [])
+        val[nm]["trend"] = (math.exp(sum(a * w for a, w in xs) / sum(w for _, w in xs)) - 1) if len(xs) >= MIN_CPX else None
+        val[nm]["_trend_n"] = len(xs)
+
+    # ---- 주거: ㎡당 전세 보증금 (최근 12개월, 월세 없는 계약)
+    js = {}
+    for c, L in loadc("livable.json"):
+        for sg, dong, apt, ym, dep, mon, ar in (L.get("rent") or {}).get("rows", []):
+            nm = places.get(dong)
+            if nm and mon == 0 and ar > 0 and dep > 0:
+                js.setdefault(nm, []).append(dep / ar)
+    for nm in val:
+        xs = js.get(nm, [])
+        val[nm]["jeonse"] = statistics.median(xs) if len(xs) >= MIN_RENT else None
+        val[nm]["_jeonse_n"] = len(xs)
+
+    # ---- 환경
+    parea, big = {}, []
+    for c, L in loadc("livable.json"):
+        for name, kind, la, lo, ar in (L.get("parks") or {}).get("rows", []):
+            if kind == "묘지공원":
+                continue
+            u = find(la, lo)
+            if u:
+                parea[u["name"]] = parea.get(u["name"], 0) + ar
+            if ar >= BIG_PARK:
+                big.append((la, lo))
+    for u in U:
+        nm = u["name"]
+        val[nm]["park_pc"] = parea.get(nm, 0) / max(1, u["pop"])
+        val[nm]["park_d"] = hmean(nm, lambda h: min(km(h, q) for q in big)) if big else None
+
+    # ---- 활력: 5년 인구 증감
+    for c, H in loadc("population-history.json"):
+        ms = H.get("months", [])
+        if not ms:
+            continue
+        i1 = len(ms) - 1
+        y0 = f"{int(ms[i1][:4]) - 5}{ms[i1][4:]}"
+        i0 = ms.index(y0) if y0 in ms else None
+        note["growth"] = f"{y0} → {ms[i1]}"
+        for nm, d in (H.get("units") or {}).items():
+            nm2 = life.MERGE_CJ.get(nm, nm) if c == "충주" else nm
+            if nm2 in val and i0 is not None:
+                v = val[nm2].setdefault("_pop", [0, 0])
+                v[0] += d["pop"][i0] or 0
+                v[1] += d["pop"][i1] or 0
+    for nm in val:
+        p = val[nm].pop("_pop", None)
+        val[nm]["growth"] = (p[1] / p[0] - 1) if p and p[0] else None
+
+    # ---- 활력: 연령 (법정동·리별 주민등록 인구 → 행정동)
+    code2place = {str(p["code"]): p["place"] for p in AG["places"] if p.get("code")}
+    ag = {}
+    for c, L in loadc("livable.json"):
+        for r in (L.get("ages") or {}).get("rows", []):
+            if not r.get("리명") and str(r.get("읍면동명", "")).endswith(("읍", "면")):
+                continue   # 읍·면 합계 행 (리 행과 겹침)
+            pl = code2place.get(str(r["법정동코드"]))
+            if not pl:
+                pl = (r["읍면동명"] + " " + r["리명"]) if r.get("리명") else r["읍면동명"]
+            nm = places.get(pl)
+            if not nm:
+                continue
+            a = ag.setdefault(nm, [0, 0, 0])
+            for k, v in r.items():
+                m = re.match(r"^(\d+)세", k)
+                if not m or not isinstance(v, (int, float)):
+                    continue
+                age = int(m.group(1))
+                if age <= 14:
+                    a[1] += v
+                if 20 <= age <= 44:
+                    a[2] += v
+            a[0] += r.get("계") or 0
+    for nm in val:
+        a = ag.get(nm)
+        val[nm]["kids"] = a[1] / a[0] if a and a[0] else None
+        val[nm]["young"] = a[2] / a[0] if a and a[0] else None
+        val[nm]["_age_pop"] = a[0] if a else 0
+
+    # ---- 교통
+    stops, ic, st = [], [], []
+    for c, L in loadc("livable.json"):
+        R = L.get("routes") or {}
+        # '314'와 '314(단)'처럼 괄호만 다른 것은 같은 노선으로 셈
+        canon = [re.sub(r"\(.*?\)$", "", x).strip() for x in R.get("routes", [])]
+        stops += [(c, la, lo, {canon[i] for i in ix}) for _, la, lo, ix in R.get("rows", []) if isinstance(ix, list)]
+        T = L.get("transit") or {}
+        # 이름이 도로명뿐인 점(예: '경부고속도로')은 나들목인지 알 수 없어 뺌
+        ic += [(la, lo) for nm, la, lo in T.get("ic", []) if not re.search(r"(고속도로|도로)$", nm)]
+        st += [(la, lo) for _, la, lo in T.get("station", [])]
+    note["bus_stops"] = len(stops)
+    for u in U:
+        nm = u["name"]
+        c = "충주" if u["gu"] == "충주시" else "청주"
+        mine = [s for s in stops if s[0] == c]
+
+        def nroutes(h, mine=mine):
+            seen = set()
+            for _, la, lo, ix in mine:
+                if abs(la - h[0]) < 0.006 and abs(lo - h[1]) < 0.007 and km(h, (la, lo)) <= BUS_R:
+                    seen |= ix
+            return len(seen)
+        val[nm]["bus"] = hmean(nm, nroutes) if mine else None
+        val[nm]["ktx"] = hmean(nm, lambda h: min(km(h, q) for q in st)) if st else None
+        val[nm]["ic"] = hmean(nm, lambda h: min(km(h, q) for q in ic)) if ic else None
+
+    # ---- 점수
+    names = [u["name"] for u in U]
+    P = {}
+    for k in LABEL:
+        for nm, p in zip(names, pct([val[nm].get(k) for nm in names], k in LOW_IS_GOOD)):
+            P.setdefault(nm, {})[k] = None if p is None else round(p)
+    res = []
+    for u in U:
+        nm = u["name"]
+        ax = {}
+        for a, items in AXES.items():
+            got = {k: w for k, w in items.items() if P[nm][k] is not None}
+            ax[a] = round(sum(w * P[nm][k] for k, w in got.items()) / sum(got.values())) if got else None
+        sc = round(sum(v for v in ax.values() if v is not None) / sum(1 for v in ax.values() if v is not None))
+        res.append({"name": nm, "gu": u["gu"], "city": "충주" if u["gu"] == "충주시" else "청주", "pop": u["pop"],
+                    "score": sc, "axes": ax, "p": P[nm],
+                    "v": {k: (round(x, 4) if isinstance(x, float) else x) for k, x in val[nm].items()}})
+    res.sort(key=lambda r: (-r["score"], r["name"]))
+    for r in res:
+        r["rank"] = 1 + sum(1 for w in res if w["score"] > r["score"])
+    out = {"meta": {"name": "터놓고 살기 좋은 동네 지수", "axes": AXES, "labels": LABEL, "note": note,
+                    "rules": {"new_from": NEW_FROM, "min_rent": MIN_RENT, "min_cpx": MIN_CPX, "big_park": BIG_PARK, "bus_r_km": BUS_R}},
+           "units": res}
+    with open(out_name, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=0)
+    print("\n살기 좋은 동네 지수", note)
+    for r in res:
+        print(f"{r['rank']:>2} {r['score']:>3} {r['city']} {r['name']:<12} {r['axes']}")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "livable-score.json"))
