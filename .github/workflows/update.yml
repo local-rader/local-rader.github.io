@@ -87,6 +87,10 @@ jobs:
         run: |
           if [ -n "$SINCE" ]; then python fetch.py update --since "$SINCE"; else python fetch.py update; fi
 
+      - name: 동네 목록 (청주·충주 함께 고르기)
+        continue-on-error: true
+        run: python places_index.py
+
       - name: 바뀐 자료 저장
         if: ${{ !cancelled() }}
         run: |
@@ -94,6 +98,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add permits.json data.js codes.json
           if [ -f ai-context.json ]; then git add ai-context.json; fi
+          if [ -f places-index.json ]; then git add places-index.json; fi
           if [ -f pnus.json ]; then git add pnus.json; fi
           for f in trades.json trades.js trades-summary.json; do if [ -f "$f" ]; then git add "$f"; fi; done
           for f in permits.json data.js codes.json ai-context.json pnus.json trades.json trades.js trades-summary.json; do if [ -f "chungju/$f" ]; then git add "chungju/$f"; fi; done

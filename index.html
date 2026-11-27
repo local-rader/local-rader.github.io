@@ -815,7 +815,6 @@ button.nrow:hover .nk { color: var(--accent); }
       <a href="#town" data-nav="town">동네 진단</a>
       <a href="#ask" data-nav="ask">AI 질문</a>
     </nav>
-    <div class="citysw" role="group" aria-label="도시 고르기"><button type="button" data-city="cheongju" aria-pressed="false">청주</button><button type="button" data-city="chungju" aria-pressed="false">충주</button></div>
     <select class="sel place" id="f-place" aria-label="동네"></select>
     <button type="button" class="favstar lab" id="fav-star" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6l2.5 5.3 5.8.7-4.3 4 1.1 5.7L12 16.5l-5.1 2.8 1.1-5.7-4.3-4 5.8-.7z"/></svg><span class="fs-t">관심 동네</span></button>
   </div>
@@ -838,7 +837,7 @@ button.nrow:hover .nk { color: var(--accent); }
         <form class="searchbox" id="home-search" role="search">
           <div class="field">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4"/></svg>
-            <input type="search" id="home-q" placeholder="동네 검색 (예: 율량동)" aria-label="동네, 지번, 건물 이름으로 찾기">
+            <input type="search" id="home-q" placeholder="동네 검색 (예: 율량동, 연수동)" aria-label="동네, 지번, 건물 이름으로 찾기">
           </div>
           <button type="submit">검색</button>
         </form>
@@ -1345,7 +1344,6 @@ button.nrow:hover .nk { color: var(--accent); }
   document.querySelectorAll(".cityname").forEach(function (el) { el.textContent = CITY.name; });
   if (CJ) {
     var nq = document.getElementById("nr-q"); if (nq) nq.placeholder = "예: 충주시청, 연수동 충주대로";
-    var hq = document.getElementById("home-q"); if (hq) hq.placeholder = "동네 검색 (예: 연수동)";
   }
   document.querySelectorAll(".citysw button").forEach(function (b) {
     var k = b.getAttribute("data-city");
@@ -1514,6 +1512,11 @@ button.nrow:hover .nk { color: var(--accent); }
   if (!PERIODS.some(function (p) { return p.v === state.period; })) state.period = "3m";
   if (!EVS.some(function (e) { return e.v === state.ev; })) state.ev = "all";
   if (["new", "old", "stage", "big"].indexOf(state.sort) < 0) state.sort = "new";
+  (function () {
+    var m = /[?&]place=([^&#]+)/.exec(location.search);
+    if (m) { try { state.place = decodeURIComponent(m[1]); } catch (e) {} }
+    if (m && history.replaceState) history.replaceState(null, "", location.pathname + "?city=" + CITY.key + location.hash);
+  })();
   if (state.place !== "all" && areas.indexOf(state.place) < 0 && (GU_LIST.length < 2 || GU_LIST.indexOf(state.place) < 0)) state.place = "all";
   if (state.cat !== "all" && !CATS.some(function (c) { return c.id === state.cat; })) state.cat = "all";
   if (MONTHS.indexOf(state.from) < 0) state.from = MONTHS[0];
@@ -1715,22 +1718,49 @@ button.nrow:hover .nk { color: var(--accent); }
       var a = r.place.split(" ")[0]; cnt[a] = (cnt[a] || 0) + 1; gcnt[r.gu] = (gcnt[r.gu] || 0) + 1; total++;
     });
     function opt(v, t, n) { return '<option value="' + esc(v) + '">' + esc(t) + " (" + nf(n || 0) + ")</option>"; }
-    var h = opt("all", REGION + " 전체", total);
-    if (GU_LIST.length > 1) {
-      GU_LIST.forEach(function (g) {
-        h += '<optgroup label="' + esc(g) + '">' + opt(g, g + " 전체", gcnt[g]) +
-          areasOf[g].map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
-      });
-    } else {
-      var dong = areas.filter(function (a) { return !isTown(a); }), town = areas.filter(isTown);
-      if (dong.length) h += '<optgroup label="동">' + dong.map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
-      if (town.length) h += '<optgroup label="읍·면">' + town.map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
+    function optO(k, v, t) { return '<option value="@' + k + ":" + esc(v) + '">' + esc(t) + "</option>"; }
+    // 지금 도시는 건수와 함께, 다른 도시는 이름만 (고르면 그 도시 자료로 바뀐다). 청주 → 충주 순서
+    function mine() {
+      var x = "";
+      if (GU_LIST.length > 1) {
+        x += '<optgroup label="' + esc(REGION) + '">' + opt("all", REGION + " 전체", total) + "</optgroup>";
+        GU_LIST.forEach(function (g) {
+          x += '<optgroup label="' + esc(g) + '">' + opt(g, g + " 전체", gcnt[g]) +
+            areasOf[g].map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
+        });
+      } else {
+        x += '<optgroup label="' + esc(REGION) + '">' + opt("all", REGION + " 전체", total) + areas.map(function (a) { return opt(a, a, cnt[a]); }).join("") + "</optgroup>";
+      }
+      return x;
     }
-    if (FAVP.length) h = opt("all", REGION + " 전체", total) + '<optgroup label="관심 동네">' + FAVP.map(function (p) { return opt(p, p, gcnt[p] || cnt[p]); }).join("") + "</optgroup>" + h.slice(opt("all", REGION + " 전체", total).length);
+    function theirs() {
+      var oc = CJ ? "cheongju" : "chungju", G = (PIDX || {})[oc], x = "";
+      if (!G) return "";
+      var gus = Object.keys(G), full = CJ ? "청주시" : "충주시";
+      if (gus.length > 1) {
+        x += '<optgroup label="' + full + '">' + optO(oc, "all", full + " 전체") + "</optgroup>";
+        gus.forEach(function (g) { x += '<optgroup label="' + esc(g) + '">' + optO(oc, g, g + " 전체") + G[g].map(function (a) { return optO(oc, a, a); }).join("") + "</optgroup>"; });
+      } else {
+        x += '<optgroup label="' + full + '">' + optO(oc, "all", full + " 전체") + G[gus[0]].map(function (a) { return optO(oc, a, a); }).join("") + "</optgroup>";
+      }
+      return x;
+    }
+    var h = CJ ? theirs() + mine() : mine() + theirs();
+    if (FAVP.length) h = '<optgroup label="관심 동네">' + FAVP.map(function (p) { return opt(p, p, gcnt[p] || cnt[p]); }).join("") + "</optgroup>" + h;
     sel.innerHTML = h; sel.value = state.place;
     if (typeof drawFavUI === "function" && document.getElementById("favbar")) drawFavUI();
   }
-  document.getElementById("f-place").onchange = function () { state.place = this.value; changed(); };
+  document.getElementById("f-place").onchange = function () {
+    var v = this.value, m = /^@(\w+):(.*)$/.exec(v);
+    if (m) {   // 다른 도시 동네: 그 도시 자료로 다시 연다
+      try { localStorage.setItem("tn:city", m[1]); } catch (e) {}
+      location.href = location.pathname + "?city=" + m[1] + "&place=" + encodeURIComponent(m[2]) + location.hash;
+      return;
+    }
+    state.place = v; changed();
+  };
+  var PIDX = null;
+  fetch("places-index.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) { PIDX = d; drawPlace(); }).catch(function () {});
 
   // ---------- 홈
   // 큰 사업: 같은 지번에 허가가 여러 번 난 경우(설계 변경 등)는 가장 큰 한 건만 남긴다
@@ -1865,6 +1895,12 @@ button.nrow:hover .nk { color: var(--accent); }
       return false;
     });
     trackEv("search");
+    // 다른 도시 동네면 그 도시 자료로 연다
+    if (!hit && key && PIDX) {
+      var oc = CJ ? "cheongju" : "chungju", G = PIDX[oc] || {}, oh = null;
+      Object.keys(G).forEach(function (g) { [g].concat(G[g]).forEach(function (a) { var b = a.replace(/\s+/g, ""); if (!oh && (b === key || b === key + "동" || b === key + "읍" || b === key + "면")) oh = a; }); });
+      if (oh) { try { localStorage.setItem("tn:city", oc); } catch (e2) {} location.href = location.pathname + "?city=" + oc + "&place=" + encodeURIComponent(oh) + "#report"; return; }
+    }
     if (hit) {
       document.getElementById("home-q").value = "";
       if (state.place !== hit) { state.place = hit; changed(); }
@@ -2243,7 +2279,7 @@ button.nrow:hover .nk { color: var(--accent); }
       if (x < -12 || y < -12 || x > w + 12 || y > h + 12) return;
       DOTS.vis.push(i);
       if (p.r.pk === M.sel) { sel = i; return; }
-      var k = Math.max(p.rk, 0) + "|" + (p.rk < 0 || p.r.other ? 1 : 0) + "|" + p.r.cat;
+      var k = Math.max(p.rk, 0) + "|" + (p.rk < 0 ? 1 : 0) + "|" + p.r.cat;
       if (!groups[k]) { groups[k] = []; keys.push(k); }
       groups[k].push(i);
       if (state.fav[p.r.pk]) fav.push(i);
@@ -2340,7 +2376,7 @@ button.nrow:hover .nk { color: var(--accent); }
       if (!done && j < geoList.length) t += " 주소로 위치 찾는 중 " + j + " / " + geoList.length;
       if (done && (miss + skipped)) t += " 위치를 알 수 없는 " + nf(miss + skipped) + "건은 빠졌습니다.";
       var on = otherShown().length;
-      if (on) t += " 흐린 점 " + nf(on) + "개는 " + (CJ ? "청주" : "충주") + " 기록이에요(지도를 넓히면 보이고, 누르면 " + (CJ ? "청주" : "충주") + " 화면으로 가요).";
+      if (on) t += " 지도를 넓히면 " + (CJ ? "청주" : "충주") + " 기록 " + nf(on) + "건도 함께 보여요.";
       stat.textContent = t;
     }
     function finish() {
@@ -2354,7 +2390,7 @@ button.nrow:hover .nk { color: var(--accent); }
       if (token !== M.token) return;
       for (; i < known.length; i++) put(known[i], [known[i].lat, known[i].lng]);
       if (!OTHER.rows) loadOther(function () { if (screen === "map") { M.dirty = true; drawMap(); } });
-      otherShown().forEach(function (r) { dotsAdd(r, [r.lat, r.lng]); });
+      otherShown().forEach(function (r) { dotsAdd(r, [r.lat, r.lng]); bounds.extend(new kakao.maps.LatLng(r.lat, r.lng)); });
       dotsSort(); line(false);
       if (shown && geoList.length) M.map.setBounds(bounds, 40, 40, 40, 40);
       dotsLater();
