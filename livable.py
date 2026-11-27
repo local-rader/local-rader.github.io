@@ -308,9 +308,49 @@ def get_transit():
     return {"fields": ["name", "lat", "lng"], "ic": ic, "station": st, "rows": ic + st}
 
 
+# ---------- 학원·교습소 (나이스 교육정보 개방포털, 교육청 등록 자료) ----------
+NEIS = "https://open.neis.go.kr/hub/acaInsTiInfo"
+
+
+def get_neis():
+    """충북교육청(M10) 등록 학원·교습소 중 이 도시, 등록 상태가 '개원'인 곳. 주소 → 좌표는 newdata.geocode
+    (주소에 '(가경동)'처럼 법정동이 있으면 좌표 없이 두고 life.py가 그 법정동 대표점에 놓음)"""
+    k = env("NEIS_KEY")
+    rows, page = [], 1
+    while True:
+        q = {"KEY": k, "Type": "json", "pIndex": page, "pSize": 1000, "ATPT_OFCDC_SC_CODE": "M10"}
+        j = json.loads(fetch(NEIS + "?" + urllib.parse.urlencode(q), timeout=60))
+        blk = j.get("acaInsTiInfo")
+        if not blk:
+            print("  응답:", str(j)[:300])
+            break
+        head = blk[0].get("head", [])
+        total = next((h["list_total_count"] for h in head if "list_total_count" in h), 0)
+        its = blk[1].get("row", []) if len(blk) > 1 else []
+        if page == 1:
+            print(f"  충북 전체 {total:,}곳, 칸 {list(its[0].keys()) if its else []}")
+            print("  예:", {kk: its[0].get(kk) for kk in list(its[0])[:30]} if its else None)
+        rows += its
+        if not its or page * 1000 >= total:
+            break
+        page += 1
+        time.sleep(0.3)
+    mine = [r for r in rows if CITYK in str(r.get("ADMST_ZONE_NM", "")) + str(r.get("FA_RDNMA", ""))]
+    live = [r for r in mine if "개원" in str(r.get("REG_STTUS_NM", "개원"))]
+    from collections import Counter
+    print(f"  {CITYK}: {len(mine):,}곳, 개원 {len(live):,}곳")
+    print("  분야:", Counter(r.get("REALM_SC_NM") for r in live).most_common(15))
+    print("  구분:", Counter(r.get("ACA_INSTI_SC_NM") for r in live).most_common(5))
+    items = [[r.get("ACA_NM", ""), f"{r.get('ACA_INSTI_SC_NM', '')}|{r.get('REALM_SC_NM', '')}|{r.get('LE_ORD_NM', '')}",
+              (str(r.get("FA_RDNMA") or "") + " " + str(r.get("FA_RDNDA") or "")).strip(), None, None] for r in live]
+    import newdata
+    newdata.geocode(items)
+    return {"fields": ["name", "kind(구분|분야|계열)", "addr", "lat", "lng"], "rows": items}
+
+
 JOBS = {"rent": get_rent, "parks": get_parks, "routes": get_routes, "ages": get_ages, "transit": get_transit,
         # 5년 전 같은 달: 학령기 아이가 들어오는 동네인지(같은 나이 또래가 5년 사이 늘었나) 보려고
-        "ages_5y": lambda: get_ages("oldest10")}
+        "ages_5y": lambda: get_ages("oldest10"), "neis": get_neis}
 
 
 def update(only=None):

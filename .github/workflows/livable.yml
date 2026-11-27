@@ -9,7 +9,7 @@ on:
         required: false
         default: "probe"
       only:
-        description: "update 때 받을 것만 (쉼표, 비우면 전부): rent,parks,routes,ages"
+        description: "update 때 받을 것만 (쉼표, 비우면 전부): rent,parks,routes,ages,ages_5y,transit,neis"
         required: false
         default: ""
 
@@ -27,6 +27,8 @@ jobs:
     env:
       RTMS_KEY: ${{ secrets.RTMS_KEY }}
       DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+      NEIS_KEY: ${{ secrets.NEIS_KEY }}
+      VWORLD_KEY: ${{ secrets.VWORLD_KEY }}
       MODE: ${{ inputs.mode }}
       ONLY: ${{ inputs.only }}
     steps:
