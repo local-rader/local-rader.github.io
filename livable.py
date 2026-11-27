@@ -242,8 +242,15 @@ def get_ages(ym=None):
     print(f"  {title}: 전체 {total:,}행, 나이 아닌 칸 {({k: v for k, v in r0.items() if '세' not in k})}")
     ckey = next((k for k in r0 if "법정동코드" in k.replace(" ", "")), "법정동코드")
     out, page, per = [], 1, 1000
+    seen, cb, cbx = 0, 0, []
     while (page - 1) * per < total:
         d = odc(path, page, per).get("data") or []
+        seen += len(d)
+        for r in d:
+            if str(r.get(ckey, "")).startswith("43"):
+                cb += 1
+                if len(cbx) < 3:
+                    cbx.append((r.get(ckey), r.get("시군구명"), r.get("읍면동명")))
         for r in d:   # 판마다 칸 이름이 조금씩 달라서(예: '0세남자'/'만0세남자') 법정동코드 앞 5자리로 거름
             if str(r.get(ckey, ""))[:5] in SGG:
                 if ckey != "법정동코드":
@@ -251,7 +258,7 @@ def get_ages(ym=None):
                 out.append(r)
         page += 1
         time.sleep(0.15)
-    print(f"  {CITYK} 행 {len(out)}")
+    print(f"  {CITYK} 행 {len(out)} (읽은 행 {seen:,}, 충북 행 {cb:,}, 충북 코드 예 {cbx[:3]})")
     return {"title": title, "rows": out}
 
 
