@@ -6,5 +6,5 @@ window.DONGNE_CONFIG = {
   // Claude API 키는 여기에 넣지 않습니다(누구나 볼 수 있음). 키는 Worker 설정에만 넣습니다.
   aiEndpoint: "https://turnoko-ai.turnoko-065f40.workers.dev",
   // AI 직접 질문을 켤 도시. 중계 서버(ai-worker)를 충주 지원 판으로 다시 배포한 뒤 "chungju"를 넣는다.
-  aiCities: ["cheongju"]
+  aiCities: ["cheongju", "chungju"]
 };
