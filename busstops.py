@@ -14,7 +14,12 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "busstops.json")
+
+# 도시 선택: TURNOKO_CITY=충주 로 실행하면 충주 자료를 chungju/ 폴더에 따로 저장 (기본 청주)
+CITYK = os.environ.get("TURNOKO_CITY", "청주").strip() or "청주"
+CITY_DIR = {"청주": "", "충주": "chungju"}[CITYK]
+CITY_BBOX = {"청주": (36.38, 36.86, 127.22, 127.78), "충주": (36.78, 37.23, 127.63, 128.15)}[CITYK]
+OUT = os.path.join(HERE, CITY_DIR, "busstops.json")
 BASE = "https://apis.data.go.kr/1613000/BusSttnInfoInqireService"
 KST = timezone(timedelta(hours=9))
 
@@ -54,7 +59,7 @@ def get(op, **q):
 def city_code():
     _, items = get("getCtyCodeList")
     for it in items:
-        if "청주" in str(it.get("cityname", "")):
+        if CITYK in str(it.get("cityname", "")):
             return str(it["citycode"]), it["cityname"]
     raise SystemExit("도시 목록에 청주가 없습니다: " + ", ".join(str(i.get("cityname")) for i in items[:50]))
 

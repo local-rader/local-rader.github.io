@@ -12,7 +12,8 @@
 import csv, json, sys, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CITY = "청주"
+CITY = os.environ.get("TURNOKO_CITY", "청주").strip() or "청주"   # 충주면 chungju/facilities.json
+CITY_DIR = {"청주": "", "충주": "chungju"}[CITY]
 
 
 def read_csv(path):
@@ -33,7 +34,7 @@ def school_points(path):
         if r.get("학교급구분") not in ("초등학교", "중학교", "고등학교"):
             continue
         addr = (r.get("소재지지번주소") or "") + " " + (r.get("소재지도로명주소") or "")
-        if "청주시" not in addr:
+        if CITY + "시" not in addr:
             continue
         try:
             lat, lng = float(r["위도"]), float(r["경도"])
@@ -72,7 +73,7 @@ def main():
     stores = store_points(sys.argv[2])
     out = {
         "meta": {
-            "name": "생활권 시설 좌표 (청주)",
+            "name": f"생활권 시설 좌표 ({CITY})",
             "sources": {
                 "school": "전국초중등학교위치표준데이터 (한국교육시설안전원, 수정일 2026-10-06 기준 파일)",
                 "hospital": "소상공인시장진흥공단 상가(상권)정보 202609 (보건의료 › 병원·의원, 치과·한의원 제외)",
@@ -82,7 +83,7 @@ def main():
         },
         "school": school, **stores,
     }
-    with open(os.path.join(HERE, "facilities.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(HERE, CITY_DIR, "facilities.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     print({k: len(v) for k, v in out.items() if k != "meta"})
 

@@ -15,7 +15,12 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "pois.json")
+
+# 도시 선택: TURNOKO_CITY=충주 로 실행하면 충주 자료를 chungju/ 폴더에 따로 저장 (기본 청주)
+CITYK = os.environ.get("TURNOKO_CITY", "청주").strip() or "청주"
+CITY_DIR = {"청주": "", "충주": "chungju"}[CITYK]
+CITY_BBOX = {"청주": (36.38, 36.86, 127.22, 127.78), "충주": (36.78, 37.23, 127.63, 128.15)}[CITYK]
+OUT = os.path.join(HERE, CITY_DIR, "pois.json")
 KST = timezone(timedelta(hours=9))
 SETS = {
     "park": (["https://api.data.go.kr/openapi/tn_pubr_public_cty_park_info_api"], ("parkNm",), ("parkSe",)),
@@ -27,7 +32,7 @@ SETS = {
     # 전국마을회관및경로당표준데이터 https://www.data.go.kr/data/15114136/standard.do
     "senior": (["https://api.data.go.kr/openapi/tn_pubr_public_vill_hall_sen_cent_api"], ("flctNm", "fcltyNm", "facltNm"), ("flctTyp", "fcltySe", "facltSe")),
 }
-REGION = "청주시"
+REGION = CITYK + "시"
 
 
 def key():
@@ -111,7 +116,7 @@ def fetch(kind):
             except (TypeError, ValueError):
                 why["nocoord"] += 1
                 continue
-            if not (36.38 < lat < 36.86 and 127.22 < lng < 127.78):  # 청주시 범위 밖 좌표 오류 제외
+            if not (CITY_BBOX[0] < lat < CITY_BBOX[1] and CITY_BBOX[2] < lng < CITY_BBOX[3]):  # 시 범위 밖 좌표 오류 제외
                 why["bbox"] += 1
                 if len(samples) < 5:
                     samples.append((pick(it, nm), lat, lng, it.get("rdnmadr") or it.get("lnmadr")))

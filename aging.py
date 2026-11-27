@@ -19,10 +19,15 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CODES = os.path.join(HERE, "codes.json")
+
+# 도시 선택: TURNOKO_CITY=충주 로 실행하면 충주 자료를 chungju/ 폴더에 따로 저장 (기본 청주)
+CITYK = os.environ.get("TURNOKO_CITY", "청주").strip() or "청주"
+CITY_DIR = {"청주": "", "충주": "chungju"}[CITYK]
+CITY_BBOX = {"청주": (36.38, 36.86, 127.22, 127.78), "충주": (36.78, 37.23, 127.63, 128.15)}[CITYK]
+CODES = os.path.join(HERE, CITY_DIR, "codes.json")
 PARCELS = os.path.join(HERE, "parcels.json")
-STORE = os.path.join(HERE, "aging-store.json")   # 동네별 집계 (이어 받기용)
-OUT = os.path.join(HERE, "aging.json")           # 사이트가 읽는 파일
+STORE = os.path.join(HERE, CITY_DIR, "aging-store.json")   # 동네별 집계 (이어 받기용)
+OUT = os.path.join(HERE, CITY_DIR, "aging.json")           # 사이트가 읽는 파일
 BASES = [
     "https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo",
     "https://apis.data.go.kr/1613000/BldRgstService_v2/getBrTitleInfo",

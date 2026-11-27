@@ -1,0 +1,67 @@
+# 충주 생활권 자료(버스정류소·공원 등·추가 시설·아파트/마을 위치·건축물대장)를 chungju/ 폴더에 받는다. 손으로 실행.
+name: 충주 자료
+
+on:
+  workflow_dispatch:
+    inputs:
+      steps:
+        description: "받을 것 (쉼표): stops,pois,newdata,apts,aging"
+        required: false
+        default: "stops,pois,newdata,apts,aging"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chungju-data
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      TURNOKO_CITY: 충주
+      DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+      VWORLD_KEY: ${{ secrets.VWORLD_KEY }}
+      VWORLD_DOMAIN: ${{ secrets.VWORLD_DOMAIN }}
+      STEPS: ${{ inputs.steps }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 버스정류소
+        if: contains(env.STEPS, 'stops')
+        continue-on-error: true
+        run: python busstops.py update
+      - name: 공원·도서관·시장·경로당
+        if: contains(env.STEPS, 'pois')
+        continue-on-error: true
+        run: python pois.py update
+      - name: 주차장·119·체육·병원·약국·요양병원·어린이복지·문화
+        if: contains(env.STEPS, 'newdata')
+        continue-on-error: true
+        run: python newdata.py update
+      - name: 아파트·마을 위치 (오픈스트리트맵)
+        if: contains(env.STEPS, 'apts')
+        continue-on-error: true
+        run: python newdata.py apts
+      - name: 건축물대장 (주택 수·아파트 단지)
+        if: contains(env.STEPS, 'aging')
+        continue-on-error: true
+        timeout-minutes: 75
+        env:
+          AGING_BUDGET: "4000"
+        run: python aging.py update
+      - name: 저장
+        if: ${{ !cancelled() }}
+        run: |
+          git config user.name "dongne-radar-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add chungju/
+          if git diff --cached --quiet; then echo "바뀐 자료가 없습니다."; else
+            git commit -m "충주 자료 $(TZ=Asia/Seoul date +%F)"
+            git pull --rebase -X theirs origin "$GITHUB_REF_NAME"
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi

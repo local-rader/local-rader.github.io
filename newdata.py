@@ -24,7 +24,12 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "newdata.json")
+
+# 도시 선택: TURNOKO_CITY=충주 로 실행하면 충주 자료를 chungju/ 폴더에 따로 저장 (기본 청주)
+CITYK = os.environ.get("TURNOKO_CITY", "청주").strip() or "청주"
+CITY_DIR = {"청주": "", "충주": "chungju"}[CITYK]
+CITY_BBOX = {"청주": (36.38, 36.86, 127.22, 127.78), "충주": (36.78, 37.23, 127.63, 128.15)}[CITYK]
+OUT = os.path.join(HERE, CITY_DIR, "newdata.json")
 KST = timezone(timedelta(hours=9))
 UA = {"User-Agent": "turnoko-newdata/1.0 (https://local-rader.github.io)"}
 
@@ -38,7 +43,7 @@ FILES = {
     "child": 15090401,         # 충청북도_어린이복지시설
 }
 PARKING = "https://api.data.go.kr/openapi/tn_pubr_prkplce_info_api"  # 전국주차장정보표준데이터
-BBOX = (36.38, 36.86, 127.22, 127.78)  # 청주시 범위 (lat, lat, lng, lng)
+BBOX = CITY_BBOX  # 시 범위 (lat, lat, lng, lng)
 
 
 def key():
@@ -105,7 +110,7 @@ def val(r, *names):
 
 
 def is_cj(addr):
-    return bool(re.search(r"(충청북도|충북)\s*청주", addr or ""))
+    return bool(re.search(r"(충청북도|충북)\s*" + CITYK, addr or ""))
 
 
 def num(v):
@@ -153,8 +158,10 @@ def get_sports():
     src.append(t)
     for r in rows:
         a = val(r, "소재지지번주소") or val(r, "소재지도로명주소", "주소")
-        if is_cj(a) or val(r, "소재지", "시군") == "청주시":
+        if is_cj(a) or val(r, "소재지", "시군") == CITYK + "시":
             out.append(item(val(r, "시설명"), "공공체육시설", a))
+    if CITYK != "청주":   # 청주시시설관리공단 자료는 청주만
+        return out, [], src
     t, rows = latest_with(FILES["cityfac"], ["위도", "주소"])
     src.append(t)
     culture = []
@@ -208,7 +215,7 @@ def get_parking():
             items = items.get("item", [])
         for it in items:
             a = it.get("rdnmadr") or it.get("lnmadr") or ""
-            if "청주" not in (a + (it.get("institutionNm") or "")):
+            if CITYK not in (a + (it.get("institutionNm") or "")):
                 continue
             out.append(item(it.get("prkplceNm", ""), f"{it.get('prkplceSe', '')}·{it.get('prkplceType', '')}",
                             it.get("lnmadr") or a, it.get("latitude"), it.get("longitude")))
@@ -228,7 +235,7 @@ def has_dong_hint(addr):
 
 def clean(addr):
     a = re.sub(r"^충북\s*", "충청북도 ", addr.strip())
-    a = re.sub(r"(충청북도|청주시|상당구|서원구|흥덕구|청원구)(?=\S)", r"\1 ", a)  # '충북청주시상당구단재로293'
+    a = re.sub(r"(충청북도|청주시|충주시|상당구|서원구|흥덕구|청원구)(?=\S)", r"\1 ", a)  # '충북청주시상당구단재로293'
     a = re.sub(r"\(.*?\)", "", a).split(",")[0]
     a = re.sub(r"(로|길)\s+(\d+번길)", r"\1\2", a)  # '충렬로 18번길' → '충렬로18번길' (도로명 표기)
     m = re.match(r"^(.*?\S(?:로|길))\s*(\d+(?:-\d+)?)(?!\d|-|번길)", a)
@@ -334,7 +341,7 @@ def update():
             if prev.get("items", {}).get(kind):
                 out["items"][kind] = prev["items"][kind]
     try:
-        C = json.load(open(os.path.join(HERE, "culture.json"), encoding="utf-8"))
+        C = json.load(open(os.path.join(HERE, CITY_DIR, "culture.json"), encoding="utf-8"))
         out["items"]["culture"] = [item(n, t, a) for n, t, a in C["culture"]] + out["items"].pop("culture_city", [])
         out["meta"]["source"]["culture"] = [C["meta"]["source"], "청주시시설관리공단 운영 시설(문화시설)"]
     except (OSError, ValueError, KeyError) as e:
@@ -363,7 +370,7 @@ def apts():
     q = f"""[out:json][timeout:120];(
       nwr["building"="apartments"]["name"]({BBOX[0]},{BBOX[2]},{BBOX[1]},{BBOX[3]});
       nwr["landuse"="residential"]["name"]({BBOX[0]},{BBOX[2]},{BBOX[1]},{BBOX[3]});
-      nwr["place"~"neighbourhood|quarter"]["name"]({BBOX[0]},{BBOX[2]},{BBOX[1]},{BBOX[3]});
+      nwr["place"~"neighbourhood|quarter|suburb|village|hamlet|town"]["name"]({BBOX[0]},{BBOX[2]},{BBOX[1]},{BBOX[3]});
     );out center tags;"""
     j = json.loads(fetch("https://overpass-api.de/api/interpreter?" + urllib.parse.urlencode({"data": q}), timeout=150))
     rows = []

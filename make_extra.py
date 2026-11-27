@@ -16,6 +16,8 @@ import statistics
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+CITYK = os.environ.get("TURNOKO_CITY", "청주").strip() or "청주"   # 충주면 chungju/extra.json
+CITY_DIR = {"청주": "", "충주": "chungju"}[CITYK]
 ACADEMY = {"입시·교과학원", "외국어학원"}
 # (점포 이름, 상호명 정규식, 법정동)
 STORES = [
@@ -30,6 +32,10 @@ STORES = [
     ("코스트코", r"코스트코", None),
     ("트레이더스", r"트레이더스\s?홀세일|이마트\s?트레이더스", None),
 ]
+STORES_BY_CITY = {"청주": STORES, "충주": [
+    ("이마트 충주점", r"이마트", "문화동"),
+    ("롯데마트 충주점", r"롯데마트", "칠금동"),
+]}
 SMALL = re.compile(r"이마트24|익스프레스|에브리데이|노브랜드")
 
 
@@ -39,7 +45,7 @@ def main(path):
         txt = raw.decode("utf-8-sig")
     except UnicodeDecodeError:
         txt = raw.decode("cp949")
-    rows = [r for r in csv.DictReader(io.StringIO(txt)) if "청주" in r.get("시군구명", "")]
+    rows = [r for r in csv.DictReader(io.StringIO(txt)) if CITYK in r.get("시군구명", "")]
     out = {"meta": {"source": os.path.basename(path), "fields": ["name", "lat", "lng", "kind"],
                     "note": "학원=입시·교과+외국어학원. 대형점=입점 가게 좌표 중앙값"}, "academy": [], "bigstore": []}
     for r in rows:
@@ -48,7 +54,7 @@ def main(path):
                 out["academy"].append([r["상호명"], round(float(r["위도"]), 6), round(float(r["경도"]), 6), r["상권업종소분류명"]])
             except ValueError:
                 pass
-    for name, pat, dong in STORES:
+    for name, pat, dong in STORES_BY_CITY[CITYK]:
         hit = [r for r in rows if re.search(pat, r["상호명"] + " " + r.get("지점명", "")) and not SMALL.search(r["상호명"]) and (dong is None or r["법정동명"] == dong)]
         if not hit:
             print(f"  {name}: 상가정보에 없음")
@@ -57,7 +63,7 @@ def main(path):
         lng = statistics.median(float(r["경도"]) for r in hit)
         out["bigstore"].append([name, round(lat, 6), round(lng, 6), f"입점 {len(hit)}곳"])
         print(f"  {name}: 입점 {len(hit)}곳 → {lat:.5f}, {lng:.5f} ({hit[0]['법정동명']})")
-    with open(os.path.join(HERE, "extra.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(HERE, CITY_DIR, "extra.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
     print("extra.json:", {k: len(v) for k, v in out.items() if k != "meta"})
 
