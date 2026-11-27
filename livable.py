@@ -244,13 +244,14 @@ def get_ages(ym=None):
     out, page, per = [], 1, 1000
     seen, cb, cbx = 0, 0, []
     while seen < total:
-        d = odc(path, page, per).get("data") or []
-        if not d:   # 빈 쪽: 한 번 더 시도 후 멈춤
-            time.sleep(3)
-            d = odc(path, page, per).get("data") or []
-            if not d:
-                print(f"  {page}쪽이 비어 멈춤")
-                break
+        j = odc(path, page, per)
+        d = j.get("data") or []
+        if not d:   # 빈 쪽: 쪽 크기를 줄여 다시
+            print(f"  {page}쪽 비어 있음(쪽 크기 {per}):", {k: v for k, v in j.items() if k != "data"})
+            if per > 100:
+                per, page = 100, (seen // 100) + 1
+                continue
+            break
         if page == 1 and len(d) < per:   # 서버가 한 번에 주는 양이 더 적으면 거기에 맞춤
             per = len(d) if len(d) < total else per
         seen += len(d)
