@@ -271,6 +271,8 @@ def build(cities=("청주",), out_name="life.json"):
             continue
         parts = p["place"].split(" ")
         cands = vil.get(parts[-1], [])
+        # 같은 이름이 다른 지역에도 있음 (예: 대전 용산동) → 같은 시·구 행정동 안에 있는 점만
+        cands = [q for q in cands if (lambda w: w is not None and w["gu"] == p.get("gu"))(find(q[0], q[1]))]
         if len(parts) == 2:   # '주덕읍 신양리': 같은 읍·면 행정동 안의 점만
             uu = units.get(parts[0])
             cands = [q for q in cands if uu and find(q[0], q[1]) is uu] or (vil.get(parts[0], []) if not cands else [])

@@ -19,7 +19,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     env:
       TURNOKO_CITY: 충주
       DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
@@ -64,7 +64,9 @@ jobs:
       - name: 건축 인허가
         if: contains(env.STEPS, 'permits')
         continue-on-error: true
-        timeout-minutes: 45
+        timeout-minutes: 100
+        env:
+          FETCH_BUDGET: "4800"
         run: python fetch.py update
       - name: 저장
         if: ${{ !cancelled() }}
