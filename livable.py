@@ -238,12 +238,16 @@ def get_ages(ym=None):
     path, title = vs[0]
     head = odc(path, 1, 1)
     total = int(head.get("totalCount") or 0)
-    print(f"  {title}: 전체 {total:,}행, 칸 예 {list((head.get('data') or [{}])[0].keys())[:12]}")
+    r0 = (head.get("data") or [{}])[0]
+    print(f"  {title}: 전체 {total:,}행, 나이 아닌 칸 {({k: v for k, v in r0.items() if '세' not in k})}")
+    ckey = next((k for k in r0 if "법정동코드" in k.replace(" ", "")), "법정동코드")
     out, page, per = [], 1, 1000
     while (page - 1) * per < total:
         d = odc(path, page, per).get("data") or []
         for r in d:   # 판마다 칸 이름이 조금씩 달라서(예: '0세남자'/'만0세남자') 법정동코드 앞 5자리로 거름
-            if str(r.get("법정동코드", ""))[:5] in SGG:
+            if str(r.get(ckey, ""))[:5] in SGG:
+                if ckey != "법정동코드":
+                    r["법정동코드"] = r.pop(ckey)
                 out.append(r)
         page += 1
         time.sleep(0.15)
