@@ -3,10 +3,11 @@
   python livable_score.py [출력 파일]     (기본: livable-score.json)
 
 5개 분야를 같은 비중(각 20%)으로 평균. 항목마다 61곳 안 백분위(0~100, 거리는 짧을수록 높음).
-자료가 없는 항목(거래가 적은 면 지역 등)은 그 분야의 나머지 항목만으로 계산.
+자료가 없는 항목은 중간(50점)으로 계산.
   생활 편의  생활권 점수 그대로
   주거       10년 안에 지은 집 비율 ⅓ · 아파트 매매가 추이(같은 단지끼리 2년 전과 비교) ⅓ · ㎡당 전세 보증금 ⅓
-  환경       주민 1인당 도시공원 면적 ½ · 1만㎡ 이상 공원까지 거리 ½ (묘지공원 제외)
+             (거래가 적은 동네는 도시 전체 값 쪽으로 당김)
+  환경       도시공원 면적(주민 1인당 ¼ · 동 면적 대비 ¼) · 1만㎡ 이상 공원까지 거리 ½ (묘지공원 제외)
   활력       최근 5년 인구 증감률 ½ · 0~14세 비율 ¼ · 20~44세 비율 ¼
   교통       500m 안 정류소를 지나는 버스 노선 수 60% · KTX역까지 거리 20% · 고속도로 IC까지 거리 20%
 거리·노선 수는 생활권 점수와 같은 '주민 위치'(법정동·리 대표점 + 아파트 단지, 세대 수 가중)에서 잼.
@@ -23,20 +24,22 @@ import life
 HERE = os.path.dirname(os.path.abspath(__file__))
 CITIES = ("청주", "충주")
 NEW_FROM = 2016          # 10년 안에 지은 집 = 2016년 이후 사용승인
-MIN_RENT = 10            # 전세 계약이 이보다 적으면 전세 항목 뺌
-MIN_CPX = 3              # 매매가 추이: 두 기간 모두 거래된 단지가 이보다 적으면 뺌
+# 거래가 적은 동네는 우연에 크게 흔들리므로 그 도시 전체 값 쪽으로 당김 (거래 n건 → 동네 값 n/(n+K), 도시 값 K/(n+K))
+#  거래가 하나도 없으면 도시 전체 값 = 중간 정도로 계산됨
+K_RENT = 20              # 전세 계약 수
+K_CPX = 5                # 매매가 추이: 두 기간 모두 거래된 단지 수
 BIG_PARK = 10000         # ㎡
 BUS_R = 0.5              # ㎞
 AXES = {
     "생활 편의": {"life": 1},
     "주거": {"new": 1, "trend": 1, "jeonse": 1},
-    "환경": {"park_pc": 1, "park_d": 1},
+    "환경": {"park_pc": 1, "park_pa": 1, "park_d": 2},
     "활력": {"growth": 2, "kids": 1, "young": 1},
     "교통": {"bus": 3, "ktx": 1, "ic": 1},
 }
 LOW_IS_GOOD = {"park_d", "ktx", "ic"}
 LABEL = {"life": "생활권 점수", "new": "10년 안에 지은 집 비율", "trend": "아파트 매매가 추이", "jeonse": "㎡당 전세 보증금",
-         "park_pc": "주민 1인당 공원 면적", "park_d": "큰 공원까지 거리", "growth": "5년 인구 증감률",
+         "park_pc": "주민 1인당 공원 면적", "park_pa": "동 면적 대비 공원 면적", "park_d": "큰 공원까지 거리", "growth": "5년 인구 증감률",
          "kids": "0~14세 비율", "young": "20~44세 비율", "bus": "버스 노선 수", "ktx": "KTX역까지 거리", "ic": "고속도로 IC까지 거리"}
 KX, KY = 111.32 * math.cos(math.radians(36.75)), 110.57
 
@@ -127,8 +130,19 @@ def main(out_name):
             tr.setdefault(nm, []).append((math.log(statistics.median(d["B"]) / statistics.median(d["A"])), min(len(d["A"]), len(d["B"]))))
     for nm in val:
         xs = tr.get(nm, [])
-        val[nm]["trend"] = (math.exp(sum(a * w for a, w in xs) / sum(w for _, w in xs)) - 1) if len(xs) >= MIN_CPX else None
+        val[nm]["_trend_raw"] = (sum(a * w for a, w in xs) / sum(w for _, w in xs)) if xs else None
         val[nm]["_trend_n"] = len(xs)
+    city_of = {u["name"]: ("충주" if u["gu"] == "충주시" else "청주") for u in U}
+    for c in CITIES:
+        xs_c = [a for nm in val if city_of[nm] == c for a, _ in tr.get(nm, [])]
+        m = statistics.median(xs_c) if xs_c else 0.0
+        note[f"trend_city_{c}"] = round(math.exp(m) - 1, 4)
+        for nm in val:
+            if city_of[nm] != c:
+                continue
+            n, raw = val[nm]["_trend_n"], val[nm]["_trend_raw"]
+            lg = (n * raw + K_CPX * m) / (n + K_CPX) if n else m
+            val[nm]["trend"] = math.exp(lg) - 1
 
     # ---- 주거: ㎡당 전세 보증금 (최근 12개월, 월세 없는 계약)
     js = {}
@@ -139,8 +153,15 @@ def main(out_name):
                 js.setdefault(nm, []).append(dep / ar)
     for nm in val:
         xs = js.get(nm, [])
-        val[nm]["jeonse"] = statistics.median(xs) if len(xs) >= MIN_RENT else None
+        val[nm]["_jeonse_raw"] = statistics.median(xs) if xs else None
         val[nm]["_jeonse_n"] = len(xs)
+    for c in CITIES:
+        m = statistics.median([x for nm, xs in js.items() if city_of[nm] == c for x in xs])
+        note[f"jeonse_city_{c}"] = round(m, 1)
+        for nm in val:
+            if city_of[nm] == c:
+                n, raw = val[nm]["_jeonse_n"], val[nm]["_jeonse_raw"]
+                val[nm]["jeonse"] = (n * raw + K_RENT * m) / (n + K_RENT) if n else m
 
     # ---- 환경
     parea, big = {}, []
@@ -156,6 +177,7 @@ def main(out_name):
     for u in U:
         nm = u["name"]
         val[nm]["park_pc"] = parea.get(nm, 0) / max(1, u["pop"])
+        val[nm]["park_pa"] = parea.get(nm, 0) / max(0.01, u["area"])
         val[nm]["park_d"] = hmean(nm, lambda h: min(km(h, q) for q in big)) if big else None
 
     # ---- 활력: 5년 인구 증감
@@ -245,8 +267,8 @@ def main(out_name):
         nm = u["name"]
         ax = {}
         for a, items in AXES.items():
-            got = {k: w for k, w in items.items() if P[nm][k] is not None}
-            ax[a] = round(sum(w * P[nm][k] for k, w in got.items()) / sum(got.values())) if got else None
+            # 그래도 값이 없는 항목은 중간(50점)으로: 자료 없음을 좋음이나 나쁨으로 보지 않음
+            ax[a] = round(sum(w * (50 if P[nm][k] is None else P[nm][k]) for k, w in items.items()) / sum(items.values()))
         sc = round(sum(v for v in ax.values() if v is not None) / sum(1 for v in ax.values() if v is not None))
         res.append({"name": nm, "gu": u["gu"], "city": "충주" if u["gu"] == "충주시" else "청주", "pop": u["pop"],
                     "score": sc, "axes": ax, "p": P[nm],
@@ -255,7 +277,7 @@ def main(out_name):
     for r in res:
         r["rank"] = 1 + sum(1 for w in res if w["score"] > r["score"])
     out = {"meta": {"name": "터놓고 살기 좋은 동네 지수", "axes": AXES, "labels": LABEL, "note": note,
-                    "rules": {"new_from": NEW_FROM, "min_rent": MIN_RENT, "min_cpx": MIN_CPX, "big_park": BIG_PARK, "bus_r_km": BUS_R}},
+                    "rules": {"new_from": NEW_FROM, "k_rent": K_RENT, "k_cpx": K_CPX, "big_park": BIG_PARK, "bus_r_km": BUS_R}},
            "units": res}
     with open(out_name, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=0)
