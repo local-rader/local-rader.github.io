@@ -206,19 +206,39 @@ def pct_ranks(vals):
     return out
 
 
-def build():
-    D = load("dongs.json")
-    PO = load("population.json")
-    if not D or not PO:
-        sys.exit("dongs.json 또는 population.json이 없습니다.")
+CITY_DIRS = {"청주": "", "충주": "chungju"}
+MERGE_CJ = {"교현2동": "교현·안림동"}   # 충주: 법정동 교현동이 두 행정동으로 나뉨
+
+
+def build(cities=("청주",), out_name="life.json"):
+    def loadc(name, default=None):
+        """도시별 같은 이름 파일을 모두 읽어 리스트로 (청주=저장소 맨 위, 충주=chungju/)"""
+        return [load(os.path.join(CITY_DIRS[c], name), default) for c in cities]
     units = {}
-    for d in D["dongs"]:
-        nm = MERGE.get(d["name"], d["name"])
-        u = units.setdefault(nm, {"name": nm, "gu": d["gu"], "codes": [], "polys": [], "pop": 0, "area": 0.0})
-        u["codes"].append(d["code"])
-        u["polys"].extend(d["polys"])
-        u["pop"] += PO["pop"].get(d["code"], 0)
-    lat0 = 36.64
+    if "청주" in cities:
+        D = load("dongs.json")
+        PO = load("population.json")
+        if not D or not PO:
+            sys.exit("dongs.json 또는 population.json이 없습니다.")
+        for d in D["dongs"]:
+            nm = MERGE.get(d["name"], d["name"])
+            u = units.setdefault(nm, {"name": nm, "gu": d["gu"], "codes": [], "polys": [], "pop": 0, "area": 0.0})
+            u["codes"].append(d["code"])
+            u["polys"].extend(d["polys"])
+            u["pop"] += PO["pop"].get(d["code"], 0)
+    if "충주" in cities:
+        CB = load("chungbuk-dongs.json")
+        PC = load(os.path.join("chungju", "population.json"))
+        for d in CB["dongs"]:
+            if d.get("sgg") != "43130":
+                continue
+            nm0 = d["name"].replace("충주시 ", "").strip()
+            nm = MERGE_CJ.get(nm0, nm0)
+            u = units.setdefault(nm, {"name": nm, "gu": "충주시", "codes": [], "polys": [], "pop": 0, "area": 0.0})
+            u["codes"].append(d["code"])
+            u["polys"].extend(d["polys"])
+            u["pop"] += PC["pop"].get(d["code"], 0)
+    lat0 = 36.8 if "충주" in cities else 36.64
     for u in units.values():
         u["area"] = sum(ring_km2(p[0], lat0) - sum(ring_km2(h, lat0) for h in p[1:]) for p in u["polys"])
         xs = [pt[0] for p in u["polys"] for pt in p[0]]; ys = [pt[1] for p in u["polys"] for pt in p[0]]
@@ -237,12 +257,34 @@ def build():
 
     # 법정동·리(사이트의 동네 이름) → 행정동: 건축물대장 집계의 동네 대표점으로 찾는다
     places = {}
-    AG = load("aging.json", {"places": []})
+    AG = {"places": [], "complexes": []}
+    for a_ in loadc("aging.json", {"places": [], "complexes": []}):
+        AG["places"] += a_.get("places", []); AG["complexes"] += a_.get("complexes", [])
+    OSM = [x for nd in loadc("newdata.json", {}) for x in (nd or {}).get("apts", [])]
+    # 대표점이 없는 법정동·리(충주는 필지 자료가 없음): 오픈스트리트맵 마을·동 이름 점으로 채움
+    vil = {}
+    for nm_, typ_, la_, lo_ in OSM:
+        if typ_ in ("village", "hamlet", "quarter", "neighbourhood", "suburb", "town"):
+            vil.setdefault(nm_, []).append((la_, lo_))
+    for p in AG["places"]:
+        if p.get("at"):
+            continue
+        parts = p["place"].split(" ")
+        cands = vil.get(parts[-1], [])
+        if len(parts) == 2:   # '주덕읍 신양리': 같은 읍·면 행정동 안의 점만
+            uu = units.get(parts[0])
+            cands = [q for q in cands if uu and find(q[0], q[1]) is uu] or (vil.get(parts[0], []) if not cands else [])
+        if cands:
+            p["at"] = [cands[0][0], cands[0][1]]
     for p in AG["places"]:
         u = find(p["at"][0], p["at"][1]) if p.get("at") else None
         if not u:
             m = re.match(r"^(\S+[읍면])", p["place"])
             u = units.get(m.group(1)) if m else units.get(p["place"])
+        if not u and p.get("gu") == "충주시":   # '성내동' → '성내·충인동'
+            b_ = re.sub(r"동$", "", p["place"])
+            alt = [w for w in units.values() if w["gu"] == "충주시" and b_ in [re.sub(r"동$", "", x) for x in w["name"].split("·")]]
+            u = alt[0] if len(alt) == 1 else None
         if u and p.get("gu") and u["gu"] != p["gu"]:  # 대표점이 옆 구 행정동에 떨어진 경우 (예: 용담동 → 율량·사천동)
             base = re.sub(r"\d*(동|가)$", "", p["place"].split(" ")[0])
             alt = [w for w in units.values() if w["gu"] == p["gu"] and base and base in w["name"]]
@@ -282,9 +324,9 @@ def build():
         x = re.sub(r"\(.*?\)", "", x or "")
         x = re.sub(r"\d+\s*동$", "", x.strip())
         x = re.sub(r"(아파트|APT|apt|단지|\s|·|-|\.)", "", x)
-        return re.sub(r"(청주|충북|흥덕|상당|서원|청원)", "", x).lower()
+        return re.sub(r"(청주|충주|충북|흥덕|상당|서원|청원)", "", x).lower()
     osm = {}
-    for nm, typ, la, lo in load("newdata.json", {}).get("apts", []):
+    for nm, typ, la, lo in OSM:
         k = apt_norm(nm)
         if len(k) >= 2:
             osm.setdefault(k, []).append((la, lo))
@@ -350,25 +392,34 @@ def build():
             u["n"][k] += 1
         return u
 
-    BS = load("busstops.json", {"stops": []})
-    for s in BS["stops"]:
-        add("bus", s[1], s[2])
-    PI = load("pois.json", {})
-    for k in ("park", "lib", "market", "senior"):
-        for s in PI.get(k, []):
-            add(k, s[1], s[2])
-    ND = load("newdata.json", {"items": {}, "meta": {}})   # newdata.py: 주소·좌표 [이름, 종류, 주소, 위도, 경도]
-    NDI = ND.get("items", {})
-    FA = load("facilities.json", {})   # make_facilities.py: 학교·병원·약국·슈퍼·편의점 좌표
-    for k in ("school", "hospital", "pharmacy", "mart"):
-        if NDI.get(k):
-            continue   # 병원·약국은 심평원 자료가 있으면 그것으로 셈 (상가정보는 의원이 많이 빠져 있음)
-        for s in FA.get(k, []):
-            add(k, s[1], s[2])
-    EX = load("extra.json", {})   # make_extra.py: 학원·대형마트·백화점 좌표
-    for k in ("academy", "bigstore"):
-        for x in EX.get(k, []):
-            add(k, x[1], x[2])
+    BSs = loadc("busstops.json", {"stops": []}); BS = BSs[0] or {}
+    for b_ in BSs:
+        for s in (b_ or {}).get("stops", []):
+            add("bus", s[1], s[2])
+    PIs = loadc("pois.json", {}); PI = PIs[0] or {}
+    for p_ in PIs:
+        for k in ("park", "lib", "market", "senior"):
+            for s in (p_ or {}).get(k, []):
+                add(k, s[1], s[2])
+    NDs = loadc("newdata.json", {"items": {}, "meta": {}})   # newdata.py: 주소·좌표 [이름, 종류, 주소, 위도, 경도]
+    ND = NDs[0] or {}
+    NDI = {}
+    for n_ in NDs:
+        for k, v in (n_ or {}).get("items", {}).items():
+            NDI.setdefault(k, []).extend(v)
+    for c_, FA in zip(cities, loadc("facilities.json", {})):   # make_facilities.py: 학교·병원·약국·슈퍼·편의점 좌표
+        mine = load(os.path.join(CITY_DIRS[c_], "newdata.json"), {}).get("items", {})
+        for k in ("school", "hospital", "pharmacy", "mart"):
+            if mine.get(k):
+                continue   # 병원·약국은 심평원 자료가 있으면 그것으로 셈 (상가정보는 의원이 많이 빠져 있음)
+            for s in (FA or {}).get(k, []):
+                add(k, s[1], s[2])
+    EXs = loadc("extra.json", {}); EX = {}   # make_extra.py: 학원·대형마트·백화점 좌표
+    for e_ in EXs:
+        for k in ("academy", "bigstore"):
+            for x in (e_ or {}).get(k, []):
+                add(k, x[1], x[2])
+                EX.setdefault(k, []).append(x)
     active = set(k for k, _ in KINDS if k not in NEW_KINDS and (k not in ("academy", "bigstore") or EX.get(k)))
     miss = {}
     for k in NEW_KINDS + ("hospital", "pharmacy"):
@@ -453,7 +504,7 @@ def build():
         } for u in L],
         "places": places,
     }
-    save("life.json", out)
+    save(out_name, out)
     print(f"life.json: 동네 {len(L)}곳 · 인구 {PO['meta'].get('month')} · 1위 {L[0]['name']} {L[0]['score']}점 · 법정동 연결 {len(places)}곳")
     for u in L:
         print(f"  {u['rank']:>2} {u['score']:>3} (면적 {u['sa']:>3} / 인구 {u['sp']:>3}) {u['gu']} {u['name']} {u['n']} 인구 {u['pop']:,}")
@@ -465,5 +516,7 @@ if __name__ == "__main__":
         pop(sys.argv[2:])
     elif cmd == "hist":
         build_hist()
+    elif cmd == "all":   # 청주+충주 함께 (확인용 파일)
+        build(("청주", "충주"), "life-all.json")
     else:
         build()
