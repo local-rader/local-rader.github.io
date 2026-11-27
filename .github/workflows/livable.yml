@@ -1,0 +1,55 @@
+# 살기 좋은 동네 지수용 자료(전월세·공원 면적·버스 노선·연령별 인구) 받기. 손으로 실행.
+name: 살기 좋은 동네 자료
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe 또는 update"
+        required: false
+        default: "probe"
+      only:
+        description: "update 때 받을 것만 (쉼표, 비우면 전부): rent,parks,routes,ages"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: livable
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      RTMS_KEY: ${{ secrets.RTMS_KEY }}
+      DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
+      MODE: ${{ inputs.mode }}
+      ONLY: ${{ inputs.only }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 청주
+        continue-on-error: true
+        run: python livable.py "${MODE:-probe}" $ONLY
+      - name: 충주
+        continue-on-error: true
+        env:
+          TURNOKO_CITY: 충주
+        run: python livable.py "${MODE:-probe}" $ONLY
+      - name: 저장
+        if: ${{ inputs.mode == 'update' }}
+        run: |
+          git config user.name "dongne-radar-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for f in livable.json chungju/livable.json; do if [ -f "$f" ]; then git add "$f"; fi; done
+          if git diff --cached --quiet; then echo "바뀐 자료가 없습니다."; else
+            git commit -m "살기 좋은 동네 자료 $(TZ=Asia/Seoul date +%F)"
+            git pull --rebase -X theirs origin "$GITHUB_REF_NAME"
+            git push origin HEAD:"$GITHUB_REF_NAME"
+          fi
