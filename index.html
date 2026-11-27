@@ -3317,7 +3317,7 @@ button.nrow:hover .nk { color: var(--accent); }
     var pm = D.meta.pop_month || "";
     document.getElementById("lf-h").textContent = "터놓고 생활권 점수" + (p !== "all" ? " · " + p : "");
     document.getElementById("lf-asof").textContent = pm ? "인구 " + pm.replace("-", ".") + " 기준" : "";
-    var scope = isGu ? U.filter(function (u) { return u.gu === p; }) : U;
+    var scope = LF.city ? U.filter(function (u) { return (u.gu === "충주시" ? "충주" : "청주") === LF.city; }) : (isGu ? U.filter(function (u) { return u.gu === p; }) : U);
     var html = "";
     if (cur) {
       var avgK = lfKinds();
@@ -3334,7 +3334,8 @@ button.nrow:hover .nk { color: var(--accent); }
       '<p class="card-desc">색이 진할수록 점수가 높아요. 동네를 누르면 점수가 나오고, 위 칸에 자세히 보여드려요.</p>' +
       '<div class="agmap lfmap"><div id="lf-map"></div><div class="mapmsg" id="lfmsg">지도를 불러오는 중입니다.</div></div>' +
       '<div class="agkey">' + LF_BIN_T.map(function (t, i) { return '<span><i style="background:' + LF_C[i] + '"></i>' + t + "</span>"; }).join("") + "</div></article>";
-    html += '<article class="card"><div class="card-head"><h3>' + (isGu ? esc(p) + " 동네 순위" : "청주·충주 동네 순위") + '</h3><span class="meta">' + nf(scope.length) + "곳</span></div>" +
+    html += '<article class="card"><div class="card-head"><h3>' + (LF.city ? LF.city + " 동네 순위" : (isGu ? esc(p) + " 동네 순위" : "청주·충주 동네 순위")) + '</h3><span class="meta">' + nf(scope.length) + "곳</span></div>" +
+      '<div class="hscroll tkinds" role="group" aria-label="도시" style="margin-bottom:10px">' + [["", "전체 61곳"], ["청주", "청주만"], ["충주", "충주만"]].map(function (t) { return '<button type="button" class="chip" data-lfc="' + t[0] + '" aria-pressed="' + ((LF.city || "") === t[0]) + '">' + t[1] + "</button>"; }).join("") + "</div>" +
       '<div class="fbars" id="lf-rank"></div>' +
       (scope.length > 10 ? '<button type="button" class="linkbtn" id="lf-more" style="margin-top:10px">' + (LF.all ? "10위까지만 보기" : "전체 " + scope.length + "곳 보기") + "</button>" : "") +
       '<div class="agfind"><label for="lf-pick">다른 동네 보기</label><select class="sel" id="lf-pick"><option value="">선택하세요</option>' +
@@ -3352,7 +3353,8 @@ button.nrow:hover .nk { color: var(--accent); }
     var shown = LF.all ? scope : scope.slice(0, 10);
     if (cur && scope.indexOf(cur) >= 10 && !LF.all) shown = shown.concat([cur]);
     fbars(document.getElementById("lf-rank"), shown.map(function (u) {
-      return { pre: ctag(u.gu), k: u.rank + ". " + u.name, label: "<b>" + u.score + "점</b> · " + esc(u.gu), segs: [[u.score, cur && u === cur ? "var(--brand)" : (u.gu === "충주시" ? "#E9A57C" : "var(--sky)")]] };
+      var r = LF.city ? 1 + scope.filter(function (w) { return w.score > u.score; }).length : u.rank;
+      return { pre: ctag(u.gu), k: r + ". " + u.name, label: "<b>" + u.score + "점</b> · " + (LF.city ? "전체 " + u.rank + "위" : esc(u.gu)), segs: [[u.score, cur && u === cur ? "var(--brand)" : (u.gu === "충주시" ? "#E9A57C" : "var(--sky)")]] };
     }));
     var rows2 = document.querySelectorAll("#lf-rank .fb");
     shown.forEach(function (u, i) {
@@ -3360,6 +3362,7 @@ button.nrow:hover .nk { color: var(--accent); }
       if (cur && u === cur) el.classList.add("on");
       el.style.cursor = "pointer"; el.onclick = function () { lfPick(u.name); };
     });
+    box.querySelectorAll("[data-lfc]").forEach(function (b) { b.onclick = function () { LF.city = b.getAttribute("data-lfc"); LF.all = false; drawLife(); }; });
     var more = document.getElementById("lf-more"); if (more) more.onclick = function () { LF.all = !LF.all; drawLife(); };
     var back = document.getElementById("lf-back"); if (back) back.onclick = function () { lfPick(""); };
     document.getElementById("lf-pick").onchange = function () { lfPick(this.value); };
@@ -3390,7 +3393,7 @@ button.nrow:hover .nk { color: var(--accent); }
         var pg = new kakao.maps.Polygon({ map: map, path: path, strokeWeight: sel ? 3 : 1, strokeColor: sel ? "#16325C" : "#FFFFFF", strokeOpacity: sel ? 1 : 0.9,
           fillColor: LF_HEX[lfIdx(u.score)], fillOpacity: inScope ? (sel ? 0.85 : 0.7) : 0.25, zIndex: sel ? 3 : 1 });
         kakao.maps.event.addListener(pg, "click", function (e) { show(u, e.latLng); if (!cur || cur.name !== u.name) setTimeout(function () { lfPick(u.name); }, 350); });
-        if (inScope && (isGu || (u.gu === "충주시") === CJ)) path[0].forEach(function (ll) { bounds.extend(ll); });
+        if (inScope && (isGu || LF.city || (u.gu === "충주시") === CJ)) path[0].forEach(function (ll) { bounds.extend(ll); });
       });
     });
     if (cur) {
@@ -3482,7 +3485,8 @@ button.nrow:hover .nk { color: var(--accent); }
     var shown = LV.all ? ranked : ranked.slice(0, 10);
     if (cur && ranked.indexOf(cur) >= 10 && !LV.all) shown = shown.concat([cur]);
     fbars(document.getElementById("lv-rank"), shown.map(function (u) {
-      return { pre: ctag(u.gu), k: u.rank + ". " + u.name, label: "<b>" + u.score + "점</b> · " + esc(u.gu), segs: [[u.score, cur && u === cur ? "var(--brand)" : (u.gu === "충주시" ? "#E9A57C" : "var(--sky)")]] };
+      var r = LV.city ? 1 + scope.filter(function (w) { return w.score > u.score; }).length : u.rank;
+      return { pre: ctag(u.gu), k: r + ". " + u.name, label: "<b>" + u.score + "점</b> · " + (LV.city ? "전체 " + u.rank + "위" : esc(u.gu)), segs: [[u.score, cur && u === cur ? "var(--brand)" : (u.gu === "충주시" ? "#E9A57C" : "var(--sky)")]] };
     }));
     var rows2 = document.querySelectorAll("#lv-rank .fb");
     shown.forEach(function (u, i) {
