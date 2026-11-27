@@ -510,6 +510,9 @@ def build(cities=("청주",), out_name="life.json"):
     print(f"life.json: 동네 {len(L)}곳 · 인구 {PO['meta'].get('month')} · 1위 {L[0]['name']} {L[0]['score']}점 · 법정동 연결 {len(places)}곳")
     for u in L:
         print(f"  {u['rank']:>2} {u['score']:>3} (면적 {u['sa']:>3} / 인구 {u['sp']:>3}) {u['gu']} {u['name']} {u['n']} 인구 {u['pop']:,}")
+    # livable.py(살기 좋은 동네 지수)가 같은 동네 경계·주민 위치를 쓰도록 넘겨줌
+    return {"units": L, "homes": [(h[0]["name"], h[1], h[2], h[3]) for h in homes], "places": places,
+            "find": find, "aging": AG}
 
 
 if __name__ == "__main__":

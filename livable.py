@@ -202,9 +202,11 @@ def get_routes():
             st = stops.setdefault(key, [s.get("nodenm", ""), round(lat, 6), round(lng, 6), set()])
             st[3].add(str(r.get("routeno", rid)))
         time.sleep(0.1)
-    rows = [[v[0], v[1], v[2], len(v[3])] for v in stops.values()]
-    print(f"  노선 {len(routes)}개, 정류소 {len(rows)}곳")
-    return {"fields": ["name", "lat", "lng", "routes"], "rows": rows, "route_count": len(routes)}
+    names = sorted(set(x for v in stops.values() for x in v[3]))
+    ix = {x: i for i, x in enumerate(names)}
+    rows = [[v[0], v[1], v[2], sorted(ix[x] for x in v[3])] for v in stops.values()]
+    print(f"  노선 {len(routes)}개, 정류소 {len(rows)}곳, 정류소당 노선 최대 {max((len(r[3]) for r in rows), default=0)}")
+    return {"fields": ["name", "lat", "lng", "route_idx"], "routes": names, "rows": rows, "route_count": len(routes)}
 
 
 # ---------- 연령별 인구 (odcloud 파일데이터) ----------
