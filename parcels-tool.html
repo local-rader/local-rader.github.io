@@ -41,7 +41,8 @@ ol { padding-left: 20px; color: var(--ink-2); }
   <ol>
     <li>브이월드 인증키를 붙여넣고 <b>받기 시작</b>을 눌러요. 키는 이 화면에서만 쓰고 어디에도 저장하지 않아요.</li>
     <li>끝날 때까지 화면을 켜 두세요 (몇 분 걸려요). 중간에 끊겨도 받은 만큼은 이 기기에 남아서 다시 누르면 이어서 받아요.</li>
-    <li>끝나면 <b>파일 저장</b>을 눌러 <code>parcels.json</code>을 받고, Claude 대화창에 그 파일을 올려 주세요.</li>
+    <li>끝나면 <b>파일 저장</b>을 눌러 파일(청주 <code>parcels.json</code>, 충주 <code>parcels-chungju.json</code>)을 받고, Claude 대화창에 그 파일을 올려 주세요.</li>
+    <li>충주는 주소 끝에 <code>?city=chungju</code>를 붙여 열어요.</li>
   </ol>
 
   <section class="card">
@@ -73,7 +74,13 @@ ol { padding-left: 20px; color: var(--ink-2); }
   "use strict";
   var DOMAIN = "https://local-rader.github.io";
   var API = "https://api.vworld.kr/req/data";
-  var KEEP = "dr:parcels-progress";
+  // 도시: 주소 끝에 ?city=chungju 를 붙이면 충주 필지 (chungju/ 폴더)
+  var CJ = /[?&]city=(chungju|%EC%B6%A9%EC%A3%BC|충주)/i.test(location.search);
+  var DIR = CJ ? "chungju/" : "";
+  var KEEP = CJ ? "dr:parcels-progress-chungju" : "dr:parcels-progress";
+  var OUTNAME = CJ ? "parcels-chungju.json" : "parcels.json";
+  document.title = (CJ ? "충주 " : "청주 ") + document.title;
+  (function () { var h = document.querySelector("h1"); if (h) h.textContent = (CJ ? "충주" : "청주") + " 필지 위치 받기"; })();
   var pnus = [], have = {}, missing = {}, todo = [], running = false, stopFlag = false, mode = "", lock = null;
   var n = { done: 0, ok: 0, none: 0, fail: 0 }, errs = [];
   function $(id) { return document.getElementById(id); }
@@ -88,8 +95,8 @@ ol { padding-left: 20px; color: var(--ink-2); }
 
   // 이미 사이트에 있는 결과와 이 기기에 남은 중간 결과를 합친다
   Promise.all([
-    fetch("pnus.json", { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error("pnus.json " + r.status); return r.json(); }),
-    fetch("parcels.json", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; })
+    fetch(DIR + "pnus.json", { cache: "no-store" }).then(function (r) { if (!r.ok) throw new Error(DIR + "pnus.json " + r.status); return r.json(); }),
+    fetch(DIR + "parcels.json", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; })
   ]).then(function (res) {
     pnus = res[0] || [];
     have = (res[1] && res[1].parcels) || {};
@@ -225,7 +232,7 @@ ol { padding-left: 20px; color: var(--ink-2); }
   $("save").onclick = function () {
     var out = { parcels: have, missing: missing, checked: stamp(), source: "parcels-tool" };
     var blob = new Blob([JSON.stringify(out)], { type: "application/json" });
-    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "parcels.json";
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = OUTNAME;
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
   };
