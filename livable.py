@@ -60,7 +60,7 @@ def fetch(url, tries=3, timeout=30):
 
 
 def hide(s):
-    for k in ("RTMS_KEY", "DATA_GO_KR_KEY"):
+    for k in ("RTMS_KEY", "DATA_GO_KR_KEY", "NEIS_KEY"):
         v = os.environ.get(k, "")
         if v:
             s = s.replace(v, "KEY").replace(urllib.parse.quote(v, safe=""), "KEY")
