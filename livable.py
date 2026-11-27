@@ -237,7 +237,43 @@ def get_ages():
     return {"title": title, "rows": out}
 
 
-JOBS = {"rent": get_rent, "parks": get_parks, "routes": get_routes, "ages": get_ages}
+# ---------- 고속도로 IC·KTX역 (오픈스트리트맵) ----------
+def get_transit():
+    """시 경계 밖 가까운 IC도 잡도록 범위를 넓혀서 받음. 분기점(JCT)은 드나들 수 없어 뺌"""
+    b = (BBOX[0] - 0.15, BBOX[1] + 0.15, BBOX[2] - 0.18, BBOX[3] + 0.18)
+    q = f"""[out:json][timeout:90];(
+      node["highway"="motorway_junction"]({b[0]},{b[2]},{b[1]},{b[3]});
+      nwr["railway"="station"]["name"~"^(오송|충주)(역)?$"]({b[0]},{b[2]},{b[1]},{b[3]});
+    );out center tags;"""
+    j, last = None, None
+    for ep in ("https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
+               "https://overpass.private.coffee/api/interpreter"):
+        try:
+            j = json.loads(fetch(ep + "?" + urllib.parse.urlencode({"data": q}), timeout=120))
+            break
+        except Exception as e:  # noqa: BLE001
+            last = e
+            print("  오버패스 실패, 다른 서버로:", ep, str(e)[:80])
+    if j is None:
+        raise RuntimeError(f"오버패스 서버 모두 실패: {last}")
+    ic, st = [], []
+    for e in j.get("elements", []):
+        t = e.get("tags", {})
+        lat = e.get("lat") or (e.get("center") or {}).get("lat")
+        lng = e.get("lon") or (e.get("center") or {}).get("lon")
+        nm = t.get("name", "")
+        if not (lat and lng):
+            continue
+        if t.get("railway") == "station":
+            st.append([nm, round(lat, 6), round(lng, 6)])
+        elif nm and not re.search(r"분기점|JC|JCT|휴게소", nm, re.I):
+            ic.append([nm, round(lat, 6), round(lng, 6)])
+    print(f"  IC {len(ic)}개 {sorted(set(x[0] for x in ic))[:30]}")
+    print(f"  역 {st}")
+    return {"fields": ["name", "lat", "lng"], "ic": ic, "station": st, "rows": ic + st}
+
+
+JOBS = {"rent": get_rent, "parks": get_parks, "routes": get_routes, "ages": get_ages, "transit": get_transit}
 
 
 def update(only=None):
