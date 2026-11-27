@@ -220,7 +220,7 @@ def main(out_name):
                 a = out.setdefault(nm, {"_tot": 0})
                 a["_tot"] += r.get("계") or 0
                 for k, v in r.items():
-                    m = re.match(r"^(\d+)세", k)
+                    m = re.match(r"^만?(\d+)세", k)
                     if m and isinstance(v, (int, float)):
                         a[int(m.group(1))] = a.get(int(m.group(1)), 0) + v
         return out

@@ -242,9 +242,8 @@ def get_ages(ym=None):
     out, page, per = [], 1, 1000
     while (page - 1) * per < total:
         d = odc(path, page, per).get("data") or []
-        for r in d:
-            s = json.dumps(r, ensure_ascii=False)
-            if CITYK + "시" in s:
+        for r in d:   # 판마다 칸 이름이 조금씩 달라서(예: '0세남자'/'만0세남자') 법정동코드 앞 5자리로 거름
+            if str(r.get("법정동코드", ""))[:5] in SGG:
                 out.append(r)
         page += 1
         time.sleep(0.15)
