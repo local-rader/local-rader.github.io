@@ -31,7 +31,7 @@ CITY_DIR = {"청주": "", "충주": "chungju"}[CITYK]
 CITY_BBOX = {"청주": (36.38, 36.86, 127.22, 127.78), "충주": (36.78, 37.23, 127.63, 128.15)}[CITYK]
 OUT = os.path.join(HERE, CITY_DIR, "newdata.json")
 KST = timezone(timedelta(hours=9))
-UA = {"User-Agent": "turnoko-newdata/1.0 (https://local-rader.github.io)"}
+UA = {"User-Agent": "turnoko-newdata/1.0 (https://turnoko.kr)"}
 
 # 승인된 자료 (공공데이터포털 자료 번호). 파일데이터는 odcloud API로 받는다.
 FILES = {

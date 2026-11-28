@@ -89,7 +89,7 @@ async function adminStats(request, env) {
 }
 // 사이트 data.js 맨 앞의 meta(자료 기준일, 마지막 확인 시각, 실패 목록)만 읽는다
 async function siteMeta(env) {
-  const base = (env.SITE_URL || "https://local-rader.github.io").replace(/\/+$/, "");
+  const base = (env.SITE_URL || "https://turnoko.kr").replace(/\/+$/, "");
   const r = await fetch(base + "/data.js", { cf: { cacheTtl: 300 } });
   if (!r.ok) throw new Error("data.js " + r.status);
   const reader = r.body.getReader(), dec = new TextDecoder();
@@ -185,7 +185,7 @@ form button{background:var(--ink);color:#fff;border-color:var(--ink);border-radi
 <p class="mut">국토교통부는 월 단위로 자료를 공개해요. 사이트는 매일 새벽 확인해요. 마지막 확인이 하루 넘게 지났으면 GitHub Actions의 자동 갱신 작업을 확인하세요.</p>
 </section>
 <section class="card"><h2>바로가기</h2><div class="links">
-<a href="https://local-rader.github.io" target="_blank" rel="noopener">터놓고 사이트</a>
+<a href="https://turnoko.kr" target="_blank" rel="noopener">터놓고 사이트</a>
 <a href="https://github.com/local-rader/local-rader.github.io/actions" target="_blank" rel="noopener">GitHub Actions</a>
 <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener">Claude 결제·잔액</a>
 <a href="https://dash.cloudflare.com" target="_blank" rel="noopener">Cloudflare</a>

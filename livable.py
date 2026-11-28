@@ -27,7 +27,7 @@ OUT = os.path.join(HERE, CITY_DIR, "livable.json")
 SGG = {"청주": ["43111", "43112", "43113", "43114"], "충주": ["43130"]}[CITYK]
 BBOX = {"청주": (36.38, 36.86, 127.22, 127.78), "충주": (36.78, 37.23, 127.63, 128.15)}[CITYK]
 KST = timezone(timedelta(hours=9))
-UA = {"User-Agent": "turnoko-livable/1.0 (https://local-rader.github.io)"}
+UA = {"User-Agent": "turnoko-livable/1.0 (https://turnoko.kr)"}
 RENT = "https://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent"
 PARK = "https://api.data.go.kr/openapi/tn_pubr_public_cty_park_info_api"
 ROUTE = "https://apis.data.go.kr/1613000/BusRouteInfoInqireService/"
